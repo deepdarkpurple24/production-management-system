@@ -24,6 +24,72 @@
   </head>
 
   <body>
-    <%= yield %>
+    <!-- 네비게이션 바 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container-fluid">
+        <%= link_to "생산관리 시스템", root_path, class: "navbar-brand" %>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <%= link_to "홈", root_path, class: "nav-link #{'active' if current_page?(root_path)}" %>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                생산관리
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">생산계획</a></li>
+                <li><a class="dropdown-item" href="#">반죽일지</a></li>
+              </ul>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                재고관리
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">입고</a></li>
+                <li><a class="dropdown-item" href="#">개봉품관리</a></li>
+                <li><a class="dropdown-item" href="#">출고</a></li>
+                <li><a class="dropdown-item" href="#">재고현황</a></li>
+                <li><a class="dropdown-item" href="#">품목관리</a></li>
+              </ul>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                레시피관리
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">레시피관리</a></li>
+                <li><a class="dropdown-item" href="#">완제품관리</a></li>
+              </ul>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                기기관리
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">장비목록</a></li>
+                <li><a class="dropdown-item" href="#">유지보수기록</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 메인 컨텐츠 -->
+    <main>
+      <%= yield %>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+      <div class="container">
+        <p class="mb-0">&copy; 2025 생산관리 통합 시스템. All rights reserved.</p>
+      </div>
+    </footer>
   </body>
 </html>

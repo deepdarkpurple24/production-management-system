@@ -10,5 +10,35 @@ Rails.application.routes.draw do
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   # Defines the root path route ("/")
-  # root "posts#index"
+  root "home#index"
+
+  # 각 모듈 메인 페이지
+  get "production", to: "production#index", as: "production"
+  get "inventory", to: "inventory#index", as: "inventory"
+  get "recipe", to: "recipe#index", as: "recipe"
+  get "equipment", to: "equipment#index", as: "equipment"
+
+  # 각 모듈별 라우트 (추후 구현)
+  # namespace :production do
+  #   resources :plans
+  #   resources :logs
+  # end
+
+  # namespace :inventory do
+  #   resources :receipts
+  #   resources :opened_items
+  #   resources :shipments
+  #   resources :stocks
+  #   resources :items
+  # end
+
+  # namespace :recipe do
+  #   resources :recipes
+  #   resources :products
+  # end
+
+  # namespace :equipment do
+  #   resources :machines
+  #   resources :maintenances
+  # end
 end

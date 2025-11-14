@@ -1,0 +1,111 @@
+<div class="container mt-5">
+  <!-- 헤더 섹션 -->
+  <div class="text-center mb-5">
+    <h1 class="display-4 fw-bold text-primary">생산관리 통합 시스템</h1>
+    <p class="lead text-muted">Production Management System</p>
+    <hr class="my-4">
+  </div>
+
+  <!-- 모듈 카드 그리드 -->
+  <div class="row g-4">
+    <!-- 생산관리 모듈 -->
+    <div class="col-md-6 col-lg-3">
+      <div class="card h-100 shadow-sm border-0 hover-card">
+        <div class="card-body text-center p-4">
+          <div class="mb-3">
+            <i class="bi bi-clipboard-data fs-1 text-primary"></i>
+          </div>
+          <h5 class="card-title fw-bold">생산관리</h5>
+          <p class="card-text text-muted small">Production Management</p>
+          <ul class="list-unstyled text-start small mt-3">
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>생산계획</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>반죽일지</li>
+          </ul>
+        </div>
+        <div class="card-footer bg-transparent border-0 p-3">
+          <%= link_to "바로가기", production_path, class: "btn btn-outline-primary w-100" %>
+        </div>
+      </div>
+    </div>
+
+    <!-- 재고관리 모듈 -->
+    <div class="col-md-6 col-lg-3">
+      <div class="card h-100 shadow-sm border-0 hover-card">
+        <div class="card-body text-center p-4">
+          <div class="mb-3">
+            <i class="bi bi-box-seam fs-1 text-success"></i>
+          </div>
+          <h5 class="card-title fw-bold">재고관리</h5>
+          <p class="card-text text-muted small">Inventory Management</p>
+          <ul class="list-unstyled text-start small mt-3">
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>입고/출고</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>재고현황</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>품목관리</li>
+          </ul>
+        </div>
+        <div class="card-footer bg-transparent border-0 p-3">
+          <%= link_to "바로가기", inventory_path, class: "btn btn-outline-success w-100" %>
+        </div>
+      </div>
+    </div>
+
+    <!-- 레시피관리 모듈 -->
+    <div class="col-md-6 col-lg-3">
+      <div class="card h-100 shadow-sm border-0 hover-card">
+        <div class="card-body text-center p-4">
+          <div class="mb-3">
+            <i class="bi bi-book fs-1 text-warning"></i>
+          </div>
+          <h5 class="card-title fw-bold">레시피관리</h5>
+          <p class="card-text text-muted small">Recipe Management</p>
+          <ul class="list-unstyled text-start small mt-3">
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>레시피관리</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>완제품관리</li>
+          </ul>
+        </div>
+        <div class="card-footer bg-transparent border-0 p-3">
+          <%= link_to "바로가기", recipe_path, class: "btn btn-outline-warning w-100" %>
+        </div>
+      </div>
+    </div>
+
+    <!-- 기기관리 모듈 -->
+    <div class="col-md-6 col-lg-3">
+      <div class="card h-100 shadow-sm border-0 hover-card">
+        <div class="card-body text-center p-4">
+          <div class="mb-3">
+            <i class="bi bi-gear-fill fs-1 text-danger"></i>
+          </div>
+          <h5 class="card-title fw-bold">기기관리</h5>
+          <p class="card-text text-muted small">Equipment Management</p>
+          <ul class="list-unstyled text-start small mt-3">
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>장비목록</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>유지보수기록</li>
+          </ul>
+        </div>
+        <div class="card-footer bg-transparent border-0 p-3">
+          <%= link_to "바로가기", equipment_path, class: "btn btn-outline-danger w-100" %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 정보 -->
+  <div class="text-center mt-5">
+    <p class="text-muted small">
+      <i class="bi bi-info-circle me-1"></i>
+      각 모듈을 선택하여 세부 기능에 접근할 수 있습니다.
+    </p>
+  </div>
+</div>
+
+<!-- 커스텀 스타일 -->
+<style>
+  .hover-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  }
+</style>

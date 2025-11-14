@@ -48,9 +48,9 @@
       </label>
       <%= f.number_field :quantity,
                          class: "form-control",
-                         step: "0.01",
-                         placeholder: "0.00",
-                         min: "0.01",
+                         step: "1",
+                         placeholder: "0",
+                         min: "1",
                          required: true %>
       <small class="text-muted">입고 수량을 입력하세요</small>
     </div>
@@ -62,8 +62,8 @@
       </label>
       <%= f.number_field :unit_weight,
                          class: "form-control",
-                         step: "0.01",
-                         placeholder: "0.00",
+                         step: "1",
+                         placeholder: "0",
                          min: "0" %>
       <small class="text-muted">개당 중량</small>
     </div>
@@ -87,8 +87,8 @@
       </label>
       <%= f.number_field :unit_price,
                          class: "form-control",
-                         step: "0.01",
-                         placeholder: "0.00",
+                         step: "1",
+                         placeholder: "0",
                          min: "0" %>
       <small class="text-muted">개당 단가 (선택사항)</small>
     </div>

@@ -60,8 +60,8 @@
       </label>
       <%= f.number_field :minimum_stock,
                          class: "form-control",
-                         step: "0.01",
-                         placeholder: "0.00",
+                         step: "1",
+                         placeholder: "0",
                          min: "0" %>
       <small class="text-muted">이 수량 이하로 떨어지면 경고가 표시됩니다</small>
     </div>
@@ -73,8 +73,8 @@
       </label>
       <%= f.number_field :optimal_stock,
                          class: "form-control",
-                         step: "0.01",
-                         placeholder: "0.00",
+                         step: "1",
+                         placeholder: "0",
                          min: "0" %>
       <small class="text-muted">권장 재고 유지량</small>
     </div>

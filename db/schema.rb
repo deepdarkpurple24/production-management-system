@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_14_031601) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_14_062020) do
   create_table "items", force: :cascade do |t|
     t.string "category"
     t.datetime "created_at", null: false
@@ -36,6 +36,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_14_031601) do
     t.date "receipt_date", null: false
     t.string "supplier"
     t.decimal "unit_price", precision: 10, scale: 2
+    t.decimal "unit_weight", precision: 10, scale: 2
     t.datetime "updated_at", null: false
     t.index ["item_id"], name: "index_receipts_on_item_id"
     t.index ["receipt_date"], name: "index_receipts_on_receipt_date"

@@ -49,6 +49,6 @@ class Inventory::ReceiptsController < ApplicationController
   end
 
   def receipt_params
-    params.require(:receipt).permit(:item_id, :receipt_date, :quantity, :manufacturing_date, :expiration_date, :unit_price, :supplier, :notes)
+    params.require(:receipt).permit(:item_id, :receipt_date, :quantity, :unit_weight, :manufacturing_date, :expiration_date, :unit_price, :supplier, :notes)
   end
 end

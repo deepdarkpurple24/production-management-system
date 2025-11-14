@@ -55,6 +55,19 @@
       <small class="text-muted">입고 수량을 입력하세요</small>
     </div>
 
+    <!-- 개당 중량 -->
+    <div class="col-md-6">
+      <label for="receipt_unit_weight" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        개당 중량
+      </label>
+      <%= f.number_field :unit_weight,
+                         class: "form-control",
+                         step: "0.01",
+                         placeholder: "0.00",
+                         min: "0" %>
+      <small class="text-muted">개당 중량 (선택사항)</small>
+    </div>
+
     <!-- 단가 -->
     <div class="col-md-6">
       <label for="receipt_unit_price" class="form-label" style="font-weight: 500; font-size: 0.875rem;">

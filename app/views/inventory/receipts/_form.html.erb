@@ -16,31 +16,58 @@
   <% end %>
 
   <div class="row g-3">
+    <!-- 바코드 입력/스캔 -->
+    <div class="col-12">
+      <label for="barcode_input" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        바코드
+      </label>
+      <div class="input-group">
+        <input type="text" id="barcode_input" class="form-control" placeholder="바코드 번호를 입력하거나 스캔하세요">
+        <button type="button" class="btn btn-outline-primary" id="barcode_scan_btn">
+          <i class="bi bi-camera"></i> 바코드 스캔
+        </button>
+      </div>
+      <small class="text-muted">바코드를 입력하거나 스캔하면 품목이 자동으로 선택됩니다</small>
+      <!-- 카메라 프리뷰 영역 -->
+      <div id="barcode_scanner" style="display: none; margin-top: 10px;">
+        <div id="barcode_camera" style="width: 100%; max-width: 640px;"></div>
+        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="barcode_scan_stop">
+          <i class="bi bi-x-circle"></i> 스캔 중지
+        </button>
+      </div>
+    </div>
+
     <!-- 품목 선택 -->
     <div class="col-md-6">
       <label for="receipt_item_id" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
         품목 <span class="text-danger">*</span>
       </label>
-      <%= f.collection_select :item_id,
-                              @items,
-                              :id,
-                              :name,
-                              { include_blank: "품목을 선택하세요", selected: receipt.item_id },
-                              { class: "form-select", required: true, id: "receipt_item_id" } %>
+      <div class="input-group">
+        <%= f.collection_select :item_id,
+                                @items,
+                                :id,
+                                :name,
+                                { include_blank: "품목을 선택하세요", selected: receipt.item_id },
+                                { class: "form-select", required: true, id: "receipt_item_id" } %>
+        <%= link_to new_inventory_item_path, class: "btn btn-outline-primary", target: "_blank" do %>
+          <i class="bi bi-plus-circle"></i> 새 품목
+        <% end %>
+      </div>
       <small class="text-muted">입고할 품목을 선택하세요</small>
     </div>
 
     <!-- 입고일 -->
     <div class="col-md-6">
-      <label for="receipt_receipt_date" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+      <label for="receipt_date_input" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
         입고일 <span class="text-danger">*</span>
       </label>
-      <%= f.date_field :receipt_date,
-                       class: "form-control",
-                       value: receipt.receipt_date || Date.today,
+      <%= f.text_field :receipt_date,
+                       value: receipt.receipt_date&.strftime('%Y-%m-%d'),
                        required: true,
-                       id: "receipt_date_input" %>
-      <small class="text-muted" id="receipt_date_day"></small>
+                       id: "receipt_date_input",
+                       class: "form-control flatpickr",
+                       placeholder: "날짜를 선택하세요",
+                       readonly: true %>
     </div>
 
     <!-- 수량 -->
@@ -84,23 +111,33 @@
 
     <!-- 제조일 -->
     <div class="col-md-6">
-      <label for="receipt_manufacturing_date" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+      <label for="manufacturing_date_input" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
         제조일
         <i class="bi bi-info-circle text-muted"
            data-bs-toggle="tooltip"
            title="제조일을 입력하면 품목에 설정된 유통기한 일수에 따라 자동으로 유통기한이 계산됩니다"></i>
       </label>
-      <%= f.date_field :manufacturing_date, class: "form-control", id: "manufacturing_date_input" %>
-      <small class="text-muted" id="manufacturing_date_day">제조일 입력 시 유통기한 자동 계산</small>
+      <%= f.text_field :manufacturing_date,
+                       value: receipt.manufacturing_date&.strftime('%Y-%m-%d'),
+                       id: "manufacturing_date_input",
+                       class: "form-control flatpickr",
+                       placeholder: "날짜를 선택하세요",
+                       readonly: true %>
+      <small class="text-muted">제조일 입력 시 유통기한 자동 계산</small>
     </div>
 
     <!-- 유통기한 -->
     <div class="col-md-6">
-      <label for="receipt_expiration_date" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+      <label for="expiration_date_input" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
         유통기한
       </label>
-      <%= f.date_field :expiration_date, class: "form-control", id: "expiration_date_input" %>
-      <small class="text-muted" id="expiration_date_day">직접 입력 또는 제조일을 통한 자동 계산</small>
+      <%= f.text_field :expiration_date,
+                       value: receipt.expiration_date&.strftime('%Y-%m-%d'),
+                       id: "expiration_date_input",
+                       class: "form-control flatpickr",
+                       placeholder: "날짜를 선택하세요",
+                       readonly: true %>
+      <small class="text-muted">직접 입력 또는 제조일을 통한 자동 계산</small>
     </div>
 
     <!-- 개당 단가 -->
@@ -124,7 +161,22 @@
       <label for="receipt_supplier" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
         공급업체
       </label>
-      <%= f.text_field :supplier, class: "form-control", placeholder: "예: 주식회사 ABC" %>
+      <div class="input-group">
+        <select id="supplier_select" class="form-select" data-lpignore="true" data-form-type="other">
+          <option value="">공급업체를 선택하세요</option>
+        </select>
+        <%= f.hidden_field :supplier, id: "receipt_supplier_hidden" %>
+        <button type="button" class="btn btn-outline-primary" id="add-new-supplier-btn">
+          <i class="bi bi-plus-circle"></i> 새 공급업체
+        </button>
+      </div>
+      <div id="new-supplier-input" style="display: none;" class="mt-2">
+        <div class="input-group">
+          <input type="text" id="new_supplier_text" class="form-control" placeholder="새 공급업체 이름을 입력하세요">
+          <button type="button" class="btn btn-success" id="save-new-supplier">저장</button>
+          <button type="button" class="btn btn-outline-secondary" id="cancel-new-supplier">취소</button>
+        </div>
+      </div>
     </div>
 
     <!-- 비고 -->
@@ -141,79 +193,186 @@
 
   <!-- 버튼 그룹 -->
   <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
-    <%= link_to "취소", inventory_receipts_path, class: "btn-apple btn-apple-outline" %>
     <%= f.submit "#{receipt.new_record? ? '등록' : '수정'}하기", class: "btn-apple btn-apple-primary" %>
+    <%= link_to "취소", inventory_receipts_path, class: "btn-apple btn-apple-outline" %>
   </div>
 <% end %>
 
-<!-- Tooltip 초기화, 개당 단가 포맷팅, 요일 표시 -->
+<!-- Tooltip 초기화, 개당 단가 포맷팅, Flatpickr 초기화, 공급업체 관리 -->
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  // Turbo 환경에서도 작동하도록 turbo:load 이벤트 사용
+  document.addEventListener('turbo:load', function() {
     // Tooltip 초기화
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
       return new bootstrap.Tooltip(tooltipTriggerEl)
     })
 
-    // 요일 표시 함수
-    function showDayOfWeek(dateInput, dayElement, prefix) {
-      var date = new Date(dateInput.value);
-      if (dateInput.value && !isNaN(date)) {
-        var days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
-        var dayOfWeek = days[date.getDay()];
-        dayElement.textContent = prefix ? prefix + ' (' + dayOfWeek + ')' : '(' + dayOfWeek + ')';
-      } else {
-        dayElement.textContent = prefix || '';
-      }
-    }
+    // Flatpickr 초기화 (한국어, YYYY-MM-DD 형식)
+    flatpickr('.flatpickr', {
+      locale: 'ko',
+      dateFormat: 'Y-m-d',
+      allowInput: false,
+      disableMobile: true
+    });
 
-    // 입고일 요일 표시
-    var receiptDateInput = document.getElementById('receipt_date_input');
-    var receiptDateDay = document.getElementById('receipt_date_day');
-    if (receiptDateInput && receiptDateDay) {
-      // 초기 로드 시 요일 표시
-      showDayOfWeek(receiptDateInput, receiptDateDay, '');
-      // 날짜 변경 시 요일 업데이트
-      receiptDateInput.addEventListener('change', function() {
-        showDayOfWeek(receiptDateInput, receiptDateDay, '');
-      });
-    }
+    // 품목 선택 시 공급업체 목록 업데이트
+    var itemSelect = document.getElementById('receipt_item_id');
+    var supplierSelect = document.getElementById('supplier_select');
+    var supplierHidden = document.getElementById('receipt_supplier_hidden');
+    var currentItemId = null;
 
-    // 제조일 요일 표시
-    var manufacturingDateInput = document.getElementById('manufacturing_date_input');
-    var manufacturingDateDay = document.getElementById('manufacturing_date_day');
-    if (manufacturingDateInput && manufacturingDateDay) {
-      // 초기 로드 시 요일 표시
-      if (manufacturingDateInput.value) {
-        showDayOfWeek(manufacturingDateInput, manufacturingDateDay, '제조일 입력 시 유통기한 자동 계산');
-      }
-      // 날짜 변경 시 요일 업데이트
-      manufacturingDateInput.addEventListener('change', function() {
-        if (manufacturingDateInput.value) {
-          showDayOfWeek(manufacturingDateInput, manufacturingDateDay, '제조일 입력 시 유통기한 자동 계산');
+    console.log('supplierSelect 요소:', supplierSelect);
+    console.log('supplierSelect가 존재하는가?', supplierSelect !== null);
+
+    <% if receipt.persisted? && receipt.item %>
+      // 수정 모드: 초기 공급업체 목록 로드
+      currentItemId = <%= receipt.item.id %>;
+      loadSuppliers(<%= receipt.item.id %>, '<%= receipt.supplier %>');
+    <% end %>
+
+    if (itemSelect) {
+      itemSelect.addEventListener('change', function() {
+        var itemId = this.value;
+        console.log('품목 선택됨:', itemId);
+        currentItemId = itemId;
+        if (itemId) {
+          console.log('공급업체 로딩 시작:', itemId);
+          loadSuppliers(itemId);
         } else {
-          manufacturingDateDay.textContent = '제조일 입력 시 유통기한 자동 계산';
+          supplierSelect.innerHTML = '<option value="">공급업체를 선택하세요</option>';
+          supplierHidden.value = '';
         }
       });
+      console.log('품목 선택 이벤트 리스너 등록 완료');
+    } else {
+      console.error('품목 선택 요소를 찾을 수 없습니다');
     }
 
-    // 유통기한 요일 표시
-    var expirationDateInput = document.getElementById('expiration_date_input');
-    var expirationDateDay = document.getElementById('expiration_date_day');
-    if (expirationDateInput && expirationDateDay) {
-      // 초기 로드 시 요일 표시
-      if (expirationDateInput.value) {
-        showDayOfWeek(expirationDateInput, expirationDateDay, '직접 입력 또는 제조일을 통한 자동 계산');
-      }
-      // 날짜 변경 시 요일 업데이트
-      expirationDateInput.addEventListener('change', function() {
-        if (expirationDateInput.value) {
-          showDayOfWeek(expirationDateInput, expirationDateDay, '직접 입력 또는 제조일을 통한 자동 계산');
-        } else {
-          expirationDateDay.textContent = '직접 입력 또는 제조일을 통한 자동 계산';
-        }
-      });
+    // 공급업체 선택 시 hidden 필드 업데이트
+    supplierSelect.addEventListener('change', function() {
+      supplierHidden.value = this.value;
+    });
+
+    // 공급업체 목록 로드 함수
+    function loadSuppliers(itemId, selectedSupplier) {
+      console.log('loadSuppliers 함수 호출됨, itemId:', itemId, 'selectedSupplier:', selectedSupplier);
+      var url = '/inventory/items/' + itemId + '/suppliers';
+      console.log('API URL:', url);
+
+      fetch(url)
+        .then(response => {
+          console.log('API 응답 상태:', response.status, response.ok);
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('받은 데이터:', data);
+          console.log('supplierSelect 요소 상태:', supplierSelect);
+          console.log('supplierSelect innerHTML 변경 전:', supplierSelect.innerHTML);
+
+          supplierSelect.innerHTML = '<option value="">공급업체를 선택하세요</option>';
+          console.log('supplierSelect innerHTML 변경 후:', supplierSelect.innerHTML);
+
+          if (data.suppliers && Array.isArray(data.suppliers) && data.suppliers.length > 0) {
+            console.log('공급업체 개수:', data.suppliers.length);
+            data.suppliers.forEach(function(supplier) {
+              if (supplier && supplier.trim() !== '') {
+                console.log('공급업체 추가 중:', supplier);
+                var option = document.createElement('option');
+                option.value = supplier;
+                option.textContent = supplier;
+                if (selectedSupplier && supplier === selectedSupplier) {
+                  option.selected = true;
+                  supplierHidden.value = supplier;
+                }
+                supplierSelect.appendChild(option);
+                console.log('추가 완료, 현재 option 개수:', supplierSelect.options.length);
+              }
+            });
+            console.log('공급업체 로딩 완료, 최종 option 개수:', supplierSelect.options.length);
+            console.log('최종 innerHTML:', supplierSelect.innerHTML);
+
+            // 강제로 select를 다시 렌더링
+            var event = new Event('change');
+            supplierSelect.dispatchEvent(event);
+
+            // 짧은 지연 후 화면 갱신
+            setTimeout(function() {
+              supplierSelect.blur();
+              supplierSelect.focus();
+            }, 50);
+          } else {
+            console.log('공급업체 없음');
+          }
+        })
+        .catch(error => {
+          console.error('공급업체 로딩 에러:', error);
+        });
     }
+
+    // 새 공급업체 추가 버튼
+    document.getElementById('add-new-supplier-btn').addEventListener('click', function() {
+      if (!currentItemId) {
+        alert('먼저 품목을 선택해주세요.');
+        return;
+      }
+      document.getElementById('new-supplier-input').style.display = 'block';
+      document.getElementById('new_supplier_text').focus();
+    });
+
+    // 새 공급업체 저장
+    document.getElementById('save-new-supplier').addEventListener('click', function() {
+      var newSupplier = document.getElementById('new_supplier_text').value.trim();
+      if (!newSupplier) {
+        alert('공급업체 이름을 입력해주세요.');
+        return;
+      }
+      if (!currentItemId) {
+        alert('먼저 품목을 선택해주세요.');
+        return;
+      }
+
+      // 서버에 새 공급업체 추가
+      fetch('/inventory/items/' + currentItemId + '/add_supplier', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({ supplier: newSupplier })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // 드롭다운에 새 공급업체 추가
+          var option = document.createElement('option');
+          option.value = newSupplier;
+          option.textContent = newSupplier;
+          option.selected = true;
+          supplierSelect.appendChild(option);
+          supplierHidden.value = newSupplier;
+
+          // 입력 필드 초기화 및 숨기기
+          document.getElementById('new_supplier_text').value = '';
+          document.getElementById('new-supplier-input').style.display = 'none';
+        } else {
+          alert('공급업체 추가 실패: ' + (data.error || '알 수 없는 오류'));
+        }
+      })
+      .catch(error => {
+        console.error('Error adding supplier:', error);
+        alert('공급업체 추가 중 오류가 발생했습니다.');
+      });
+    });
+
+    // 새 공급업체 취소
+    document.getElementById('cancel-new-supplier').addEventListener('click', function() {
+      document.getElementById('new_supplier_text').value = '';
+      document.getElementById('new-supplier-input').style.display = 'none';
+    });
 
     // 개당 단가 필드 포맷팅
     var unitPriceInput = document.getElementById('receipt_unit_price_input');
@@ -236,6 +395,125 @@
       unitPriceInput.closest('form').addEventListener('submit', function() {
         unitPriceInput.value = unitPriceInput.value.replace(/,/g, '');
       });
+    }
+
+    // 바코드 기능
+    var barcodeInput = document.getElementById('barcode_input');
+    var barcodeScanBtn = document.getElementById('barcode_scan_btn');
+    var barcodeScanner = document.getElementById('barcode_scanner');
+    var barcodeScanStop = document.getElementById('barcode_scan_stop');
+    var isScanning = false;
+
+    // 바코드로 품목 검색 함수
+    function searchItemByBarcode(barcode) {
+      if (!barcode || barcode.trim() === '') {
+        return;
+      }
+
+      fetch('/inventory/items/find_by_barcode?barcode=' + encodeURIComponent(barcode))
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // 품목 선택
+            itemSelect.value = data.item.id;
+            itemSelect.dispatchEvent(new Event('change'));
+
+            // 공급업체 로드
+            if (data.item.suppliers && data.item.suppliers.length > 0) {
+              loadSuppliers(data.item.id);
+            }
+
+            alert('품목이 선택되었습니다: ' + data.item.name);
+          } else {
+            alert(data.error || '바코드를 찾을 수 없습니다.');
+          }
+        })
+        .catch(error => {
+          console.error('바코드 검색 에러:', error);
+          alert('바코드 검색 중 오류가 발생했습니다.');
+        });
+    }
+
+    // 바코드 수동 입력 처리
+    if (barcodeInput) {
+      barcodeInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          searchItemByBarcode(this.value);
+        }
+      });
+
+      barcodeInput.addEventListener('blur', function() {
+        if (this.value.trim() !== '') {
+          searchItemByBarcode(this.value);
+        }
+      });
+    }
+
+    // 바코드 스캔 시작
+    if (barcodeScanBtn) {
+      barcodeScanBtn.addEventListener('click', function() {
+        if (isScanning) {
+          return;
+        }
+
+        barcodeScanner.style.display = 'block';
+        isScanning = true;
+
+        Quagga.init({
+          inputStream: {
+            name: "Live",
+            type: "LiveStream",
+            target: document.querySelector('#barcode_camera'),
+            constraints: {
+              width: 640,
+              height: 480,
+              facingMode: "environment"
+            }
+          },
+          decoder: {
+            readers: [
+              "ean_reader",
+              "ean_8_reader",
+              "code_128_reader",
+              "code_39_reader",
+              "upc_reader",
+              "upc_e_reader"
+            ]
+          }
+        }, function(err) {
+          if (err) {
+            console.error('QuaggaJS 초기화 에러:', err);
+            alert('카메라를 시작할 수 없습니다: ' + err);
+            stopBarcodeScanning();
+            return;
+          }
+          Quagga.start();
+        });
+
+        Quagga.onDetected(function(result) {
+          var code = result.codeResult.code;
+          console.log('바코드 감지:', code);
+          barcodeInput.value = code;
+          searchItemByBarcode(code);
+          stopBarcodeScanning();
+        });
+      });
+    }
+
+    // 바코드 스캔 중지
+    if (barcodeScanStop) {
+      barcodeScanStop.addEventListener('click', function() {
+        stopBarcodeScanning();
+      });
+    }
+
+    function stopBarcodeScanning() {
+      if (isScanning) {
+        Quagga.stop();
+        barcodeScanner.style.display = 'none';
+        isScanning = false;
+      }
     }
   });
 </script>

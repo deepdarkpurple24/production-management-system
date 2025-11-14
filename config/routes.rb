@@ -21,7 +21,15 @@ Rails.application.routes.draw do
   # 각 모듈별 라우트
   namespace :inventory do
     resources :receipts
-    resources :items
+    resources :items do
+      collection do
+        get :find_by_barcode
+      end
+      member do
+        get :suppliers
+        post :add_supplier
+      end
+    end
     # resources :opened_items
     # resources :shipments
     # resources :stocks

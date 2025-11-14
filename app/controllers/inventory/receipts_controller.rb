@@ -9,7 +9,7 @@ class Inventory::ReceiptsController < ApplicationController
   end
 
   def new
-    @receipt = Receipt.new
+    @receipt = Receipt.new(receipt_date: Date.today)
     @items = Item.all.order(:name)
   end
 

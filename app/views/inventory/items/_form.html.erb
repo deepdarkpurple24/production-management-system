@@ -26,6 +26,27 @@
       <small class="text-muted">품목코드는 시스템에서 자동으로 부여됩니다</small>
     </div>
 
+    <!-- 바코드 -->
+    <div class="col-md-6">
+      <label for="item_barcode" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        바코드
+      </label>
+      <div class="input-group">
+        <%= f.text_field :barcode, class: "form-control", placeholder: "예: 8801234567890", id: "item_barcode_input" %>
+        <button type="button" class="btn btn-outline-primary" id="item_barcode_scan_btn">
+          <i class="bi bi-camera"></i> 스캔
+        </button>
+      </div>
+      <small class="text-muted">입고 시 바코드 스캔으로 품목 자동 입력</small>
+      <!-- 카메라 프리뷰 영역 -->
+      <div id="item_barcode_scanner" style="display: none; margin-top: 10px;">
+        <div id="item_barcode_camera" style="width: 100%; max-width: 640px;"></div>
+        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="item_barcode_scan_stop">
+          <i class="bi bi-x-circle"></i> 스캔 중지
+        </button>
+      </div>
+    </div>
+
     <!-- 품목명 -->
     <div class="col-md-6">
       <label for="item_name" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
@@ -42,8 +63,21 @@
       <%= f.text_field :category, class: "form-control", placeholder: "예: 원자재, 부자재, 완제품 등" %>
     </div>
 
+    <!-- 중량 -->
+    <div class="col-md-3">
+      <label for="item_weight" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        중량
+      </label>
+      <%= f.number_field :weight,
+                         class: "form-control",
+                         step: "0.01",
+                         placeholder: "0",
+                         min: "0" %>
+      <small class="text-muted">품목 중량</small>
+    </div>
+
     <!-- 단위 -->
-    <div class="col-md-6">
+    <div class="col-md-3">
       <label for="item_unit" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
         단위
       </label>
@@ -54,7 +88,7 @@
     </div>
 
     <!-- 최소재고량 -->
-    <div class="col-md-6">
+    <div class="col-md-3">
       <label for="item_minimum_stock" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
         최소재고량
       </label>
@@ -63,11 +97,11 @@
                          step: "1",
                          placeholder: "0",
                          min: "0" %>
-      <small class="text-muted">이 수량 이하로 떨어지면 경고가 표시됩니다</small>
+      <small class="text-muted">경고 수량</small>
     </div>
 
     <!-- 적정재고량 -->
-    <div class="col-md-6">
+    <div class="col-md-3">
       <label for="item_optimal_stock" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
         적정재고량
       </label>
@@ -76,7 +110,7 @@
                          step: "1",
                          placeholder: "0",
                          min: "0" %>
-      <small class="text-muted">권장 재고 유지량</small>
+      <small class="text-muted">권장 재고</small>
     </div>
 
     <!-- 보관위치 -->
@@ -102,6 +136,28 @@
       <small class="text-muted">제조일 + 이 일수 = 유통기한 (입고 처리 시 자동 계산)</small>
     </div>
 
+    <!-- 공급업체 -->
+    <div class="col-12">
+      <label class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        공급업체
+      </label>
+      <div id="suppliers-container">
+        <% suppliers = (item.suppliers.is_a?(Array) ? item.suppliers : []).presence || [""] %>
+        <% suppliers.each_with_index do |supplier, index| %>
+          <div class="input-group mb-2 supplier-input-group">
+            <input type="text" name="item[suppliers][]" value="<%= supplier %>" class="form-control" placeholder="예: 주식회사 ABC">
+            <button type="button" class="btn btn-outline-danger remove-supplier" <%= 'style=display:none;' if index == 0 && suppliers.size == 1 %>>
+              <i class="bi bi-dash-circle"></i>
+            </button>
+          </div>
+        <% end %>
+      </div>
+      <button type="button" class="btn btn-sm btn-outline-primary" id="add-supplier">
+        <i class="bi bi-plus-circle me-1"></i>공급업체 추가
+      </button>
+      <small class="text-muted d-block mt-2">여러 공급업체를 등록할 수 있습니다</small>
+    </div>
+
     <!-- 비고 -->
     <div class="col-12">
       <label for="item_notes" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
@@ -116,17 +172,126 @@
 
   <!-- 버튼 그룹 -->
   <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
-    <%= link_to "취소", inventory_items_path, class: "btn-apple btn-apple-outline" %>
     <%= f.submit "#{item.new_record? ? '등록' : '수정'}하기", class: "btn-apple btn-apple-primary" %>
+    <%= link_to "취소", inventory_items_path, class: "btn-apple btn-apple-outline" %>
   </div>
 <% end %>
 
-<!-- Tooltip 초기화 -->
+<!-- Tooltip 초기화 및 공급업체 추가/제거 기능 -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Tooltip 초기화
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
       return new bootstrap.Tooltip(tooltipTriggerEl)
     })
+
+    // 공급업체 추가 버튼
+    document.getElementById('add-supplier').addEventListener('click', function() {
+      var container = document.getElementById('suppliers-container');
+      var newInput = document.createElement('div');
+      newInput.className = 'input-group mb-2 supplier-input-group';
+      newInput.innerHTML = `
+        <input type="text" name="item[suppliers][]" class="form-control" placeholder="예: 주식회사 ABC">
+        <button type="button" class="btn btn-outline-danger remove-supplier">
+          <i class="bi bi-dash-circle"></i>
+        </button>
+      `;
+      container.appendChild(newInput);
+      updateRemoveButtons();
+    });
+
+    // 공급업체 제거 버튼 (이벤트 위임)
+    document.getElementById('suppliers-container').addEventListener('click', function(e) {
+      if (e.target.closest('.remove-supplier')) {
+        e.target.closest('.supplier-input-group').remove();
+        updateRemoveButtons();
+      }
+    });
+
+    // 제거 버튼 표시 업데이트 함수
+    function updateRemoveButtons() {
+      var groups = document.querySelectorAll('.supplier-input-group');
+      groups.forEach(function(group, index) {
+        var removeBtn = group.querySelector('.remove-supplier');
+        if (groups.length === 1) {
+          removeBtn.style.display = 'none';
+        } else {
+          removeBtn.style.display = 'block';
+        }
+      });
+    }
+
+    // 바코드 스캔 기능
+    var itemBarcodeInput = document.getElementById('item_barcode_input');
+    var itemBarcodeScanBtn = document.getElementById('item_barcode_scan_btn');
+    var itemBarcodeScanner = document.getElementById('item_barcode_scanner');
+    var itemBarcodeScanStop = document.getElementById('item_barcode_scan_stop');
+    var isItemBarcodeScanning = false;
+
+    // 바코드 스캔 시작
+    if (itemBarcodeScanBtn) {
+      itemBarcodeScanBtn.addEventListener('click', function() {
+        if (isItemBarcodeScanning) {
+          return;
+        }
+
+        itemBarcodeScanner.style.display = 'block';
+        isItemBarcodeScanning = true;
+
+        Quagga.init({
+          inputStream: {
+            name: "Live",
+            type: "LiveStream",
+            target: document.querySelector('#item_barcode_camera'),
+            constraints: {
+              width: 640,
+              height: 480,
+              facingMode: "environment"
+            }
+          },
+          decoder: {
+            readers: [
+              "ean_reader",
+              "ean_8_reader",
+              "code_128_reader",
+              "code_39_reader",
+              "upc_reader",
+              "upc_e_reader"
+            ]
+          }
+        }, function(err) {
+          if (err) {
+            console.error('QuaggaJS 초기화 에러:', err);
+            alert('카메라를 시작할 수 없습니다: ' + err);
+            stopItemBarcodeScanning();
+            return;
+          }
+          Quagga.start();
+        });
+
+        Quagga.onDetected(function(result) {
+          var code = result.codeResult.code;
+          console.log('바코드 감지:', code);
+          itemBarcodeInput.value = code;
+          stopItemBarcodeScanning();
+        });
+      });
+    }
+
+    // 바코드 스캔 중지
+    if (itemBarcodeScanStop) {
+      itemBarcodeScanStop.addEventListener('click', function() {
+        stopItemBarcodeScanning();
+      });
+    }
+
+    function stopItemBarcodeScanning() {
+      if (isItemBarcodeScanning) {
+        Quagga.stop();
+        itemBarcodeScanner.style.display = 'none';
+        isItemBarcodeScanning = false;
+      }
+    }
   });
 </script>

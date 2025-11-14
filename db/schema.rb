@@ -10,8 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_14_062400) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_14_080544) do
   create_table "items", force: :cascade do |t|
+    t.string "barcode"
     t.string "category"
     t.datetime "created_at", null: false
     t.string "item_code", null: false
@@ -21,8 +22,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_14_062400) do
     t.decimal "optimal_stock", precision: 10, scale: 2
     t.integer "shelf_life_days"
     t.string "storage_location"
+    t.text "suppliers"
     t.string "unit"
     t.datetime "updated_at", null: false
+    t.decimal "weight"
     t.index ["item_code"], name: "index_items_on_item_code", unique: true
   end
 

@@ -5,6 +5,9 @@ class Item < ApplicationRecord
   # 단위 상수
   UNITS = ['Kg', 'g', 'L', 'mL', 'EA'].freeze
 
+  # 공급업체 배열 직렬화
+  serialize :suppliers, coder: JSON, type: Array
+
   # 유효성 검증
   validates :name, presence: true
   validates :item_code, presence: true, uniqueness: true

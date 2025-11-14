@@ -38,7 +38,9 @@
       <%= f.date_field :receipt_date,
                        class: "form-control",
                        value: receipt.receipt_date || Date.today,
-                       required: true %>
+                       required: true,
+                       id: "receipt_date_input" %>
+      <small class="text-muted" id="receipt_date_day"></small>
     </div>
 
     <!-- 수량 -->
@@ -88,8 +90,8 @@
            data-bs-toggle="tooltip"
            title="제조일을 입력하면 품목에 설정된 유통기한 일수에 따라 자동으로 유통기한이 계산됩니다"></i>
       </label>
-      <%= f.date_field :manufacturing_date, class: "form-control" %>
-      <small class="text-muted">제조일 입력 시 유통기한 자동 계산</small>
+      <%= f.date_field :manufacturing_date, class: "form-control", id: "manufacturing_date_input" %>
+      <small class="text-muted" id="manufacturing_date_day">제조일 입력 시 유통기한 자동 계산</small>
     </div>
 
     <!-- 유통기한 -->
@@ -97,8 +99,8 @@
       <label for="receipt_expiration_date" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
         유통기한
       </label>
-      <%= f.date_field :expiration_date, class: "form-control" %>
-      <small class="text-muted">직접 입력 또는 제조일을 통한 자동 계산</small>
+      <%= f.date_field :expiration_date, class: "form-control", id: "expiration_date_input" %>
+      <small class="text-muted" id="expiration_date_day">직접 입력 또는 제조일을 통한 자동 계산</small>
     </div>
 
     <!-- 개당 단가 -->
@@ -144,7 +146,7 @@
   </div>
 <% end %>
 
-<!-- Tooltip 초기화 및 개당 단가 포맷팅 -->
+<!-- Tooltip 초기화, 개당 단가 포맷팅, 요일 표시 -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     // Tooltip 초기화
@@ -152,6 +154,66 @@
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
       return new bootstrap.Tooltip(tooltipTriggerEl)
     })
+
+    // 요일 표시 함수
+    function showDayOfWeek(dateInput, dayElement, prefix) {
+      var date = new Date(dateInput.value);
+      if (dateInput.value && !isNaN(date)) {
+        var days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+        var dayOfWeek = days[date.getDay()];
+        dayElement.textContent = prefix ? prefix + ' (' + dayOfWeek + ')' : '(' + dayOfWeek + ')';
+      } else {
+        dayElement.textContent = prefix || '';
+      }
+    }
+
+    // 입고일 요일 표시
+    var receiptDateInput = document.getElementById('receipt_date_input');
+    var receiptDateDay = document.getElementById('receipt_date_day');
+    if (receiptDateInput && receiptDateDay) {
+      // 초기 로드 시 요일 표시
+      showDayOfWeek(receiptDateInput, receiptDateDay, '');
+      // 날짜 변경 시 요일 업데이트
+      receiptDateInput.addEventListener('change', function() {
+        showDayOfWeek(receiptDateInput, receiptDateDay, '');
+      });
+    }
+
+    // 제조일 요일 표시
+    var manufacturingDateInput = document.getElementById('manufacturing_date_input');
+    var manufacturingDateDay = document.getElementById('manufacturing_date_day');
+    if (manufacturingDateInput && manufacturingDateDay) {
+      // 초기 로드 시 요일 표시
+      if (manufacturingDateInput.value) {
+        showDayOfWeek(manufacturingDateInput, manufacturingDateDay, '제조일 입력 시 유통기한 자동 계산');
+      }
+      // 날짜 변경 시 요일 업데이트
+      manufacturingDateInput.addEventListener('change', function() {
+        if (manufacturingDateInput.value) {
+          showDayOfWeek(manufacturingDateInput, manufacturingDateDay, '제조일 입력 시 유통기한 자동 계산');
+        } else {
+          manufacturingDateDay.textContent = '제조일 입력 시 유통기한 자동 계산';
+        }
+      });
+    }
+
+    // 유통기한 요일 표시
+    var expirationDateInput = document.getElementById('expiration_date_input');
+    var expirationDateDay = document.getElementById('expiration_date_day');
+    if (expirationDateInput && expirationDateDay) {
+      // 초기 로드 시 요일 표시
+      if (expirationDateInput.value) {
+        showDayOfWeek(expirationDateInput, expirationDateDay, '직접 입력 또는 제조일을 통한 자동 계산');
+      }
+      // 날짜 변경 시 요일 업데이트
+      expirationDateInput.addEventListener('change', function() {
+        if (expirationDateInput.value) {
+          showDayOfWeek(expirationDateInput, expirationDateDay, '직접 입력 또는 제조일을 통한 자동 계산');
+        } else {
+          expirationDateDay.textContent = '직접 입력 또는 제조일을 통한 자동 계산';
+        }
+      });
+    }
 
     // 개당 단가 필드 포맷팅
     var unitPriceInput = document.getElementById('receipt_unit_price_input');

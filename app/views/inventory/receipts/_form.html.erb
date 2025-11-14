@@ -80,19 +80,6 @@
       <small class="text-muted">중량 단위</small>
     </div>
 
-    <!-- 단가 -->
-    <div class="col-md-6">
-      <label for="receipt_unit_price" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
-        단가
-      </label>
-      <%= f.number_field :unit_price,
-                         class: "form-control",
-                         step: "1",
-                         placeholder: "0",
-                         min: "0" %>
-      <small class="text-muted">개당 단가 (선택사항)</small>
-    </div>
-
     <!-- 제조일 -->
     <div class="col-md-6">
       <label for="receipt_manufacturing_date" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
@@ -112,6 +99,19 @@
       </label>
       <%= f.date_field :expiration_date, class: "form-control" %>
       <small class="text-muted">직접 입력 또는 제조일을 통한 자동 계산</small>
+    </div>
+
+    <!-- 단가 -->
+    <div class="col-md-6">
+      <label for="receipt_unit_price" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        단가
+      </label>
+      <%= f.number_field :unit_price,
+                         class: "form-control",
+                         step: "1",
+                         placeholder: "0",
+                         min: "0" %>
+      <small class="text-muted">개당 단가 (선택사항)</small>
     </div>
 
     <!-- 공급업체 -->

@@ -1,2 +1,22 @@
-<h1>Inventory::Items#edit</h1>
-<p>Find me in app/views/inventory/items/edit.html.erb</p>
+<div class="container mt-4">
+  <!-- 헤더 섹션 -->
+  <div class="mb-4">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><%= link_to "재고관리", inventory_path %></li>
+        <li class="breadcrumb-item"><%= link_to "품목관리", inventory_items_path %></li>
+        <li class="breadcrumb-item"><%= link_to @item.name, inventory_item_path(@item) %></li>
+        <li class="breadcrumb-item active" aria-current="page">수정</li>
+      </ol>
+    </nav>
+    <h2 class="mb-1" style="font-weight: 600; letter-spacing: -0.02em;">품목 수정</h2>
+    <p class="text-muted small mb-0">Edit Item - <%= @item.item_code %></p>
+  </div>
+
+  <!-- 수정 폼 -->
+  <div class="card-apple">
+    <div class="card-body p-4">
+      <%= render 'form', item: @item %>
+    </div>
+  </div>
+</div>

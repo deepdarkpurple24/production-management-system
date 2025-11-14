@@ -1,2 +1,119 @@
-<h1>Inventory::Items#show</h1>
-<p>Find me in app/views/inventory/items/show.html.erb</p>
+<div class="container mt-4">
+  <!-- 헤더 섹션 -->
+  <div class="mb-4">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><%= link_to "재고관리", inventory_path %></li>
+        <li class="breadcrumb-item"><%= link_to "품목관리", inventory_items_path %></li>
+        <li class="breadcrumb-item active" aria-current="page"><%= @item.name %></li>
+      </ol>
+    </nav>
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h2 class="mb-1" style="font-weight: 600; letter-spacing: -0.02em;"><%= @item.name %></h2>
+        <p class="text-muted small mb-0"><code style="background-color: #f5f5f7; padding: 0.25rem 0.5rem; border-radius: 4px;"><%= @item.item_code %></code></p>
+      </div>
+      <div class="d-flex gap-2">
+        <%= link_to edit_inventory_item_path(@item), class: "btn-apple btn-apple-outline" do %>
+          <i class="bi bi-pencil me-2"></i>수정
+        <% end %>
+        <%= button_to inventory_item_path(@item), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn-apple btn-apple-outline text-danger border-danger" do %>
+          <i class="bi bi-trash me-2"></i>삭제
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 상세 정보 -->
+  <div class="row g-4">
+    <!-- 기본 정보 -->
+    <div class="col-md-6">
+      <div class="card-apple h-100">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">기본 정보</h5>
+          <dl class="row mb-0">
+            <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">품목코드</dt>
+            <dd class="col-sm-8 py-2"><code style="background-color: #f5f5f7; padding: 0.25rem 0.5rem; border-radius: 4px;"><%= @item.item_code %></code></dd>
+
+            <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">품목명</dt>
+            <dd class="col-sm-8 py-2" style="font-weight: 500;"><%= @item.name %></dd>
+
+            <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">카테고리</dt>
+            <dd class="col-sm-8 py-2"><%= @item.category.present? ? @item.category : "-" %></dd>
+
+            <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">단위</dt>
+            <dd class="col-sm-8 py-2"><%= @item.unit.present? ? @item.unit : "-" %></dd>
+
+            <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">보관위치</dt>
+            <dd class="col-sm-8 py-2"><%= @item.storage_location.present? ? @item.storage_location : "-" %></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <!-- 재고 정보 -->
+    <div class="col-md-6">
+      <div class="card-apple h-100">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">재고 정보</h5>
+          <dl class="row mb-0">
+            <dt class="col-sm-5 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">최소재고량</dt>
+            <dd class="col-sm-7 py-2">
+              <%= @item.minimum_stock.present? ? "#{@item.minimum_stock} #{@item.unit}" : "-" %>
+            </dd>
+
+            <dt class="col-sm-5 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">적정재고량</dt>
+            <dd class="col-sm-7 py-2">
+              <%= @item.optimal_stock.present? ? "#{@item.optimal_stock} #{@item.unit}" : "-" %>
+            </dd>
+
+            <dt class="col-sm-5 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">제조일로부터</dt>
+            <dd class="col-sm-7 py-2">
+              <% if @item.shelf_life_days.present? %>
+                <span class="badge bg-info text-dark"><%= @item.shelf_life_days %>일</span>
+                <small class="text-muted d-block mt-1">제조일 + <%= @item.shelf_life_days %>일 = 유통기한</small>
+              <% else %>
+                -
+              <% end %>
+            </dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <!-- 비고 -->
+    <% if @item.notes.present? %>
+      <div class="col-12">
+        <div class="card-apple">
+          <div class="card-body p-4">
+            <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">비고</h5>
+            <p class="mb-0" style="white-space: pre-line;"><%= @item.notes %></p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- 메타 정보 -->
+    <div class="col-12">
+      <div class="card-apple">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">시스템 정보</h5>
+          <dl class="row mb-0">
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">등록일시</dt>
+            <dd class="col-sm-4 py-2"><%= @item.created_at.strftime("%Y년 %m월 %d일 %H:%M") %></dd>
+
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">수정일시</dt>
+            <dd class="col-sm-4 py-2"><%= @item.updated_at.strftime("%Y년 %m월 %d일 %H:%M") %></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 버튼 -->
+  <div class="mt-4 pt-3 border-top d-flex justify-content-between">
+    <%= link_to inventory_items_path, class: "btn-apple btn-apple-outline" do %>
+      <i class="bi bi-arrow-left me-2"></i>목록으로
+    <% end %>
+  </div>
+</div>

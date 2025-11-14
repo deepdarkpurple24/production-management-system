@@ -1,111 +1,116 @@
-<div class="container mt-5">
-  <!-- 헤더 섹션 -->
-  <div class="text-center mb-5">
-    <h1 class="display-4 fw-bold text-primary">생산관리 통합 시스템</h1>
-    <p class="lead text-muted">Production Management System</p>
-    <hr class="my-4">
-  </div>
-
-  <!-- 모듈 카드 그리드 -->
-  <div class="row g-4">
-    <!-- 생산관리 모듈 -->
-    <div class="col-md-6 col-lg-3">
-      <div class="card h-100 shadow-sm border-0 hover-card">
-        <div class="card-body text-center p-4">
-          <div class="mb-3">
-            <i class="bi bi-clipboard-data fs-1 text-primary"></i>
-          </div>
-          <h5 class="card-title fw-bold">생산관리</h5>
-          <p class="card-text text-muted small">Production Management</p>
-          <ul class="list-unstyled text-start small mt-3">
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>생산계획</li>
-            <li><i class="bi bi-check-circle-fill text-success me-2"></i>반죽일지</li>
-          </ul>
-        </div>
-        <div class="card-footer bg-transparent border-0 p-3">
-          <%= link_to "바로가기", production_path, class: "btn btn-outline-primary w-100" %>
-        </div>
-      </div>
-    </div>
-
-    <!-- 재고관리 모듈 -->
-    <div class="col-md-6 col-lg-3">
-      <div class="card h-100 shadow-sm border-0 hover-card">
-        <div class="card-body text-center p-4">
-          <div class="mb-3">
-            <i class="bi bi-box-seam fs-1 text-success"></i>
-          </div>
-          <h5 class="card-title fw-bold">재고관리</h5>
-          <p class="card-text text-muted small">Inventory Management</p>
-          <ul class="list-unstyled text-start small mt-3">
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>입고/출고</li>
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>재고현황</li>
-            <li><i class="bi bi-check-circle-fill text-success me-2"></i>품목관리</li>
-          </ul>
-        </div>
-        <div class="card-footer bg-transparent border-0 p-3">
-          <%= link_to "바로가기", inventory_path, class: "btn btn-outline-success w-100" %>
-        </div>
-      </div>
-    </div>
-
-    <!-- 레시피관리 모듈 -->
-    <div class="col-md-6 col-lg-3">
-      <div class="card h-100 shadow-sm border-0 hover-card">
-        <div class="card-body text-center p-4">
-          <div class="mb-3">
-            <i class="bi bi-book fs-1 text-warning"></i>
-          </div>
-          <h5 class="card-title fw-bold">레시피관리</h5>
-          <p class="card-text text-muted small">Recipe Management</p>
-          <ul class="list-unstyled text-start small mt-3">
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>레시피관리</li>
-            <li><i class="bi bi-check-circle-fill text-success me-2"></i>완제품관리</li>
-          </ul>
-        </div>
-        <div class="card-footer bg-transparent border-0 p-3">
-          <%= link_to "바로가기", recipe_path, class: "btn btn-outline-warning w-100" %>
-        </div>
-      </div>
-    </div>
-
-    <!-- 기기관리 모듈 -->
-    <div class="col-md-6 col-lg-3">
-      <div class="card h-100 shadow-sm border-0 hover-card">
-        <div class="card-body text-center p-4">
-          <div class="mb-3">
-            <i class="bi bi-gear-fill fs-1 text-danger"></i>
-          </div>
-          <h5 class="card-title fw-bold">기기관리</h5>
-          <p class="card-text text-muted small">Equipment Management</p>
-          <ul class="list-unstyled text-start small mt-3">
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>장비목록</li>
-            <li><i class="bi bi-check-circle-fill text-success me-2"></i>유지보수기록</li>
-          </ul>
-        </div>
-        <div class="card-footer bg-transparent border-0 p-3">
-          <%= link_to "바로가기", equipment_path, class: "btn btn-outline-danger w-100" %>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 하단 정보 -->
-  <div class="text-center mt-5">
-    <p class="text-muted small">
-      <i class="bi bi-info-circle me-1"></i>
-      각 모듈을 선택하여 세부 기능에 접근할 수 있습니다.
-    </p>
+<!-- Hero Section -->
+<div class="hero-section">
+  <div class="container">
+    <h1>생산관리 통합 시스템</h1>
+    <p class="lead">제조업의 모든 프로세스를 하나로</p>
+    <div class="divider"></div>
   </div>
 </div>
 
-<!-- 커스텀 스타일 -->
-<style>
-  .hover-card {
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  .hover-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-  }
-</style>
+<!-- Module Cards -->
+<div class="container pb-5">
+  <div class="row g-4">
+
+    <!-- Production Management -->
+    <div class="col-lg-3 col-md-6">
+      <%= link_to production_path, class: "text-decoration-none" do %>
+        <div class="card-apple h-100">
+          <div class="card-body text-center">
+            <div class="card-icon icon-blue">
+              <i class="bi bi-clipboard-data"></i>
+            </div>
+            <h5 class="card-title">생산관리</h5>
+            <p class="card-subtitle">Production</p>
+            <ul class="feature-list">
+              <li><i class="bi bi-check-circle-fill"></i>생산계획 수립</li>
+              <li><i class="bi bi-check-circle-fill"></i>반죽일지 작성</li>
+              <li><i class="bi bi-check-circle-fill"></i>생산 실적 관리</li>
+            </ul>
+          </div>
+          <div class="p-3">
+            <div class="btn-apple btn-apple-primary w-100">시작하기</div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Inventory Management -->
+    <div class="col-lg-3 col-md-6">
+      <%= link_to inventory_path, class: "text-decoration-none" do %>
+        <div class="card-apple h-100">
+          <div class="card-body text-center">
+            <div class="card-icon icon-green">
+              <i class="bi bi-box-seam"></i>
+            </div>
+            <h5 class="card-title">재고관리</h5>
+            <p class="card-subtitle">Inventory</p>
+            <ul class="feature-list">
+              <li><i class="bi bi-check-circle-fill"></i>입고 / 출고 처리</li>
+              <li><i class="bi bi-check-circle-fill"></i>개봉품 관리</li>
+              <li><i class="bi bi-check-circle-fill"></i>실시간 재고 현황</li>
+              <li><i class="bi bi-check-circle-fill"></i>품목 마스터 관리</li>
+            </ul>
+          </div>
+          <div class="p-3">
+            <div class="btn-apple btn-apple-primary w-100">시작하기</div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Recipe Management -->
+    <div class="col-lg-3 col-md-6">
+      <%= link_to recipe_path, class: "text-decoration-none" do %>
+        <div class="card-apple h-100">
+          <div class="card-body text-center">
+            <div class="card-icon icon-orange">
+              <i class="bi bi-book"></i>
+            </div>
+            <h5 class="card-title">레시피관리</h5>
+            <p class="card-subtitle">Recipe</p>
+            <ul class="feature-list">
+              <li><i class="bi bi-check-circle-fill"></i>레시피 등록</li>
+              <li><i class="bi bi-check-circle-fill"></i>배합비 관리</li>
+              <li><i class="bi bi-check-circle-fill"></i>완제품 생성</li>
+            </ul>
+          </div>
+          <div class="p-3">
+            <div class="btn-apple btn-apple-primary w-100">시작하기</div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Equipment Management -->
+    <div class="col-lg-3 col-md-6">
+      <%= link_to equipment_path, class: "text-decoration-none" do %>
+        <div class="card-apple h-100">
+          <div class="card-body text-center">
+            <div class="card-icon icon-red">
+              <i class="bi bi-gear-fill"></i>
+            </div>
+            <h5 class="card-title">기기관리</h5>
+            <p class="card-subtitle">Equipment</p>
+            <ul class="feature-list">
+              <li><i class="bi bi-check-circle-fill"></i>장비 목록 관리</li>
+              <li><i class="bi bi-check-circle-fill"></i>부품 정보 추적</li>
+              <li><i class="bi bi-check-circle-fill"></i>유지보수 기록</li>
+            </ul>
+          </div>
+          <div class="p-3">
+            <div class="btn-apple btn-apple-primary w-100">시작하기</div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+  </div>
+
+  <!-- Info Section -->
+  <div class="text-center mt-5 pt-4">
+    <p style="color: #86868b; font-size: 0.875rem;">
+      <i class="bi bi-info-circle me-2"></i>
+      각 모듈을 선택하여 세부 기능을 사용하실 수 있습니다
+    </p>
+  </div>
+</div>

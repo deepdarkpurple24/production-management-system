@@ -24,12 +24,12 @@
   </head>
 
   <body>
-    <!-- 네비게이션 바 -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div class="container-fluid">
+    <!-- Apple-style Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-apple sticky-top">
+      <div class="container">
         <%= link_to "생산관리 시스템", root_path, class: "navbar-brand" %>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-          <span class="navbar-toggler-icon"></span>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <i class="bi bi-list fs-4"></i>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms-auto">
@@ -40,39 +40,39 @@
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                 생산관리
               </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#">생산계획</a></li>
-                <li><a class="dropdown-item" href="#">반죽일지</a></li>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#"><i class="bi bi-calendar-check me-2"></i>생산계획</a></li>
+                <li><a class="dropdown-item" href="#"><i class="bi bi-journal-text me-2"></i>반죽일지</a></li>
               </ul>
             </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                 재고관리
               </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#">입고</a></li>
-                <li><a class="dropdown-item" href="#">개봉품관리</a></li>
-                <li><a class="dropdown-item" href="#">출고</a></li>
-                <li><a class="dropdown-item" href="#">재고현황</a></li>
-                <li><a class="dropdown-item" href="#">품목관리</a></li>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#"><i class="bi bi-box-arrow-in-down me-2"></i>입고</a></li>
+                <li><a class="dropdown-item" href="#"><i class="bi bi-box-seam me-2"></i>개봉품관리</a></li>
+                <li><a class="dropdown-item" href="#"><i class="bi bi-box-arrow-up me-2"></i>출고</a></li>
+                <li><a class="dropdown-item" href="#"><i class="bi bi-clipboard-data me-2"></i>재고현황</a></li>
+                <li><a class="dropdown-item" href="#"><i class="bi bi-tags me-2"></i>품목관리</a></li>
               </ul>
             </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                 레시피관리
               </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#">레시피관리</a></li>
-                <li><a class="dropdown-item" href="#">완제품관리</a></li>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#"><i class="bi bi-book me-2"></i>레시피관리</a></li>
+                <li><a class="dropdown-item" href="#"><i class="bi bi-box-seam me-2"></i>완제품관리</a></li>
               </ul>
             </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                 기기관리
               </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#">장비목록</a></li>
-                <li><a class="dropdown-item" href="#">유지보수기록</a></li>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>장비목록</a></li>
+                <li><a class="dropdown-item" href="#"><i class="bi bi-wrench me-2"></i>유지보수기록</a></li>
               </ul>
             </li>
           </ul>
@@ -80,15 +80,15 @@
       </div>
     </nav>
 
-    <!-- 메인 컨텐츠 -->
+    <!-- Main Content -->
     <main>
       <%= yield %>
     </main>
 
-    <!-- 푸터 -->
-    <footer class="bg-light text-center text-muted py-3 mt-5">
+    <!-- Apple-style Footer -->
+    <footer class="footer-apple text-center">
       <div class="container">
-        <p class="mb-0">&copy; 2025 생산관리 통합 시스템. All rights reserved.</p>
+        <p>&copy; 2025 생산관리 통합 시스템. All rights reserved.</p>
       </div>
     </footer>
   </body>

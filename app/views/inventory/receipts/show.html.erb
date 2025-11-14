@@ -69,7 +69,7 @@
               <% end %>
             </dd>
 
-            <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">단가</dt>
+            <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">개당 단가</dt>
             <dd class="col-sm-8 py-2"><%= @receipt.unit_price.present? ? "#{number_to_currency(@receipt.unit_price, unit: '₩', precision: 0)}" : "-" %></dd>
 
             <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">총액</dt>

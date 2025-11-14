@@ -101,16 +101,19 @@
       <small class="text-muted">직접 입력 또는 제조일을 통한 자동 계산</small>
     </div>
 
-    <!-- 단가 -->
+    <!-- 개당 단가 -->
     <div class="col-md-6">
       <label for="receipt_unit_price" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
-        단가
+        개당 단가
       </label>
-      <%= f.number_field :unit_price,
+      <div class="input-group">
+        <%= f.text_field :unit_price,
                          class: "form-control",
-                         step: "1",
                          placeholder: "0",
-                         min: "0" %>
+                         id: "receipt_unit_price_input",
+                         data: { original_value: receipt.unit_price } %>
+        <span class="input-group-text">(원)</span>
+      </div>
       <small class="text-muted">개당 단가 (선택사항)</small>
     </div>
 
@@ -141,12 +144,36 @@
   </div>
 <% end %>
 
-<!-- Tooltip 초기화 -->
+<!-- Tooltip 초기화 및 개당 단가 포맷팅 -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Tooltip 초기화
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
       return new bootstrap.Tooltip(tooltipTriggerEl)
     })
+
+    // 개당 단가 필드 포맷팅
+    var unitPriceInput = document.getElementById('receipt_unit_price_input');
+    if (unitPriceInput) {
+      // 초기값이 있으면 콤마 포맷 적용
+      if (unitPriceInput.dataset.originalValue && unitPriceInput.dataset.originalValue !== '') {
+        var initialValue = parseInt(unitPriceInput.dataset.originalValue);
+        unitPriceInput.value = initialValue.toLocaleString('ko-KR');
+      }
+
+      // 입력 시 콤마 자동 추가
+      unitPriceInput.addEventListener('input', function(e) {
+        var value = e.target.value.replace(/,/g, ''); // 기존 콤마 제거
+        if (value && !isNaN(value)) {
+          e.target.value = parseInt(value).toLocaleString('ko-KR');
+        }
+      });
+
+      // 폼 제출 시 콤마 제거
+      unitPriceInput.closest('form').addEventListener('submit', function() {
+        unitPriceInput.value = unitPriceInput.value.replace(/,/g, '');
+      });
+    }
   });
 </script>

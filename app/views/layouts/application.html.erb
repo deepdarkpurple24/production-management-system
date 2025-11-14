@@ -50,7 +50,7 @@
                 재고관리
               </a>
               <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="#"><i class="bi bi-box-arrow-in-down me-2"></i>입고</a></li>
+                <li><%= link_to inventory_receipts_path, class: "dropdown-item" do %><i class="bi bi-box-arrow-in-down me-2"></i>입고<% end %></li>
                 <li><a class="dropdown-item" href="#"><i class="bi bi-box-seam me-2"></i>개봉품관리</a></li>
                 <li><a class="dropdown-item" href="#"><i class="bi bi-box-arrow-up me-2"></i>출고</a></li>
                 <li><a class="dropdown-item" href="#"><i class="bi bi-clipboard-data me-2"></i>재고현황</a></li>

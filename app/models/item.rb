@@ -1,4 +1,7 @@
 class Item < ApplicationRecord
+  # 연관관계
+  has_many :receipts, dependent: :restrict_with_error
+
   # 단위 상수
   UNITS = ['Kg', 'g', 'L', 'mL', 'EA'].freeze
 

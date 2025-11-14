@@ -1,0 +1,23 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  item_code: MyString
+  name: MyString
+  category: MyString
+  unit: MyString
+  minimum_stock: 9.99
+  optimal_stock: 9.99
+  storage_location: MyString
+  shelf_life_days: 1
+  notes: MyText
+
+two:
+  item_code: MyString
+  name: MyString
+  category: MyString
+  unit: MyString
+  minimum_stock: 9.99
+  optimal_stock: 9.99
+  storage_location: MyString
+  shelf_life_days: 1
+  notes: MyText

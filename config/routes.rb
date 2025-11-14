@@ -18,18 +18,18 @@ Rails.application.routes.draw do
   get "recipe", to: "recipe#index", as: "recipe"
   get "equipment", to: "equipment#index", as: "equipment"
 
-  # 각 모듈별 라우트 (추후 구현)
+  # 각 모듈별 라우트
+  namespace :inventory do
+    resources :items
+    # resources :receipts
+    # resources :opened_items
+    # resources :shipments
+    # resources :stocks
+  end
+
   # namespace :production do
   #   resources :plans
   #   resources :logs
-  # end
-
-  # namespace :inventory do
-  #   resources :receipts
-  #   resources :opened_items
-  #   resources :shipments
-  #   resources :stocks
-  #   resources :items
   # end
 
   # namespace :recipe do

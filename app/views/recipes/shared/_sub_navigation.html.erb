@@ -1,0 +1,47 @@
+<!-- 레시피관리 서브 네비게이션 -->
+<div class="bg-white border-bottom" style="box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+  <div class="container">
+    <ul class="nav nav-pills nav-fill py-2" style="gap: 0.5rem;">
+      <li class="nav-item">
+        <%= link_to recipes_path,
+            class: "nav-link #{current_page?(controller: 'recipes') ? 'active' : ''}",
+            style: "border-radius: 8px; font-weight: 500; font-size: 0.9rem;" do %>
+          <i class="bi bi-book me-1"></i>레시피관리
+        <% end %>
+      </li>
+      <li class="nav-item">
+        <%= link_to finished_products_path,
+            class: "nav-link #{current_page?(controller: 'finished_products') ? 'active' : ''}",
+            style: "border-radius: 8px; font-weight: 500; font-size: 0.9rem;" do %>
+          <i class="bi bi-box-seam me-1"></i>완제품관리
+        <% end %>
+      </li>
+      <li class="nav-item">
+        <%= link_to ingredients_path,
+            class: "nav-link #{current_page?(controller: 'ingredients') ? 'active' : ''}",
+            style: "border-radius: 8px; font-weight: 500; font-size: 0.9rem;" do %>
+          <i class="bi bi-egg me-1"></i>재료관리
+        <% end %>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<style>
+  .nav-pills .nav-link {
+    color: #1d1d1f;
+    transition: all 0.2s ease;
+  }
+  .nav-pills .nav-link:hover:not(.active):not(.disabled) {
+    background-color: #f5f5f7;
+    color: #0071e3;
+  }
+  .nav-pills .nav-link.active {
+    background-color: #0071e3;
+    color: white;
+  }
+  .nav-pills .nav-link.disabled {
+    color: #86868b;
+    cursor: not-allowed;
+  }
+</style>

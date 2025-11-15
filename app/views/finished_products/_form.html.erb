@@ -1,0 +1,248 @@
+<%= form_with(model: finished_product, local: true) do |f| %>
+  <% if finished_product.errors.any? %>
+    <div class="alert alert-danger">
+      <h5><%= pluralize(finished_product.errors.count, "error") %> 발생</h5>
+      <ul>
+        <% finished_product.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <label for="finished_product_name" class="form-label">완제품명 <span class="text-danger">*</span></label>
+      <%= f.text_field :name, class: "form-control", required: true, placeholder: "예: 식빵 1개" %>
+    </div>
+    <div class="col-md-6">
+      <label for="finished_product_weight" class="form-label">총 중량</label>
+      <div class="input-group">
+        <%= f.number_field :weight, step: 0.01, class: "form-control", placeholder: "자동계산", id: "total-weight-input", readonly: true %>
+        <span class="input-group-text">g</span>
+      </div>
+      <small class="text-muted">하단 레시피 중량 합계로 자동 계산됩니다</small>
+    </div>
+    <%= f.hidden_field :weight_unit, value: 'g' %>
+  </div>
+
+  <!-- 레시피 목록 -->
+  <div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <label class="form-label mb-0">레시피 목록</label>
+      <button type="button" class="btn btn-sm btn-outline-primary" id="add-recipe-btn">
+        <i class="bi bi-plus-circle me-1"></i>레시피 추가
+      </button>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-bordered" id="recipes-table">
+        <thead style="background-color: #f5f5f7;">
+          <tr>
+            <th style="width: 40px; text-align: center;">
+              <i class="bi bi-grip-vertical text-muted"></i>
+            </th>
+            <th>레시피명</th>
+            <th style="width: 120px;">중량(g)</th>
+            <th>비고</th>
+            <th style="width: 60px;"></th>
+          </tr>
+        </thead>
+        <tbody id="recipes-tbody">
+          <%= f.fields_for :finished_product_recipes do |recipe_fields| %>
+            <tr class="recipe-row">
+              <td style="cursor: move;" class="text-center">
+                <i class="bi bi-grip-vertical text-muted drag-handle"></i>
+              </td>
+              <td>
+                <%= recipe_fields.collection_select :recipe_id, @recipes, :id, :name,
+                    { include_blank: "레시피 선택" },
+                    { class: "form-select form-select-sm", required: true } %>
+                <%= recipe_fields.hidden_field :position %>
+              </td>
+              <td>
+                <%= recipe_fields.number_field :quantity, step: 0.01, class: "form-control form-control-sm text-end weight-input", placeholder: "0", required: true %>
+              </td>
+              <td>
+                <%= recipe_fields.text_field :notes, class: "form-control form-control-sm" %>
+              </td>
+              <td class="text-center">
+                <%= recipe_fields.hidden_field :_destroy %>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-recipe-btn">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+        <tfoot style="background-color: #fafafa;">
+          <tr>
+            <td colspan="2" class="text-end"><strong>합계</strong></td>
+            <td class="text-end"><strong id="recipe-total-weight">0</strong> g</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- 설명 -->
+  <div class="mb-4">
+    <label for="finished_product_description" class="form-label">설명</label>
+    <%= f.text_area :description, class: "form-control", rows: 3, placeholder: "완제품에 대한 설명을 입력하세요" %>
+  </div>
+
+  <!-- 비고 -->
+  <div class="mb-4">
+    <label for="finished_product_notes" class="form-label">비고</label>
+    <%= f.text_area :notes, class: "form-control", rows: 2, placeholder: "추가 메모사항" %>
+  </div>
+
+  <div class="d-flex gap-2 justify-content-end mt-4">
+    <%= f.submit "#{finished_product.new_record? ? '등록' : '수정'}하기", class: "btn-apple btn-apple-primary" %>
+    <%= link_to "취소", finished_products_path, class: "btn-apple btn-apple-outline" %>
+  </div>
+<% end %>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+document.addEventListener('turbo:load', function() {
+  const tbody = document.getElementById('recipes-tbody');
+  if (!tbody) return;
+
+  if (tbody.dataset.initialized === 'true') return;
+  tbody.setAttribute('data-initialized', 'true');
+
+  let recipeIndex = <%= finished_product.finished_product_recipes.length %>;
+
+  // 레시피 추가
+  const addRecipeBtn = document.getElementById('add-recipe-btn');
+  if (addRecipeBtn) {
+    addRecipeBtn.addEventListener('click', function() {
+      const tbody = document.getElementById('recipes-tbody');
+      const recipeOptions = '<%= @recipes.map { |recipe| "<option value=#{recipe.id}>#{recipe.name}</option>" }.join.html_safe %>';
+
+      const newRow = `
+        <tr class="recipe-row">
+          <td style="cursor: move;" class="text-center">
+            <i class="bi bi-grip-vertical text-muted drag-handle"></i>
+          </td>
+          <td>
+            <select class="form-select form-select-sm" name="finished_product[finished_product_recipes_attributes][${recipeIndex}][recipe_id]" required>
+              <option value="">레시피 선택</option>
+              ${recipeOptions}
+            </select>
+            <input type="hidden" name="finished_product[finished_product_recipes_attributes][${recipeIndex}][position]" value="${recipeIndex}">
+          </td>
+          <td>
+            <input type="number" step="0.01" class="form-control form-control-sm text-end weight-input" name="finished_product[finished_product_recipes_attributes][${recipeIndex}][quantity]" placeholder="0" required>
+          </td>
+          <td>
+            <input type="text" class="form-control form-control-sm" name="finished_product[finished_product_recipes_attributes][${recipeIndex}][notes]">
+          </td>
+          <td class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-danger remove-recipe-btn">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+
+      tbody.insertAdjacentHTML('beforeend', newRow);
+      recipeIndex++;
+      initializeSortable();
+    });
+  }
+
+  // 레시피 삭제
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-recipe-btn')) {
+      const row = e.target.closest('tr');
+      const destroyField = row.querySelector('input[name*="_destroy"]');
+      if (destroyField) {
+        destroyField.value = '1';
+        row.style.display = 'none';
+      } else {
+        row.remove();
+      }
+      calculateTotalWeight();
+      initializeSortable();
+    }
+  });
+
+  // 중량 입력 시 합계 계산
+  document.addEventListener('input', function(e) {
+    if (e.target.classList.contains('weight-input')) {
+      calculateTotalWeight();
+    }
+  });
+
+  // 총 중량 계산 함수
+  function calculateTotalWeight() {
+    const tbody = document.getElementById('recipes-tbody');
+    if (!tbody) return;
+
+    let totalWeight = 0;
+    const weightInputs = tbody.querySelectorAll('.weight-input');
+
+    weightInputs.forEach(input => {
+      const row = input.closest('tr');
+      if (row && row.style.display !== 'none') {
+        const weight = parseFloat(input.value) || 0;
+        totalWeight += weight;
+      }
+    });
+
+    // 하단 합계 표시
+    const totalWeightElement = document.getElementById('recipe-total-weight');
+    if (totalWeightElement) {
+      totalWeightElement.textContent = totalWeight.toFixed(2);
+    }
+
+    // 상단 총 중량 필드에 반영
+    const totalWeightInput = document.getElementById('total-weight-input');
+    if (totalWeightInput) {
+      totalWeightInput.value = totalWeight.toFixed(2);
+    }
+  }
+
+  // SortableJS 초기화
+  let sortableInstance = null;
+
+  function initializeSortable() {
+    const tbody = document.getElementById('recipes-tbody');
+    if (!tbody) return;
+
+    if (typeof Sortable === 'undefined') return;
+
+    if (sortableInstance) {
+      sortableInstance.destroy();
+      sortableInstance = null;
+    }
+
+    sortableInstance = Sortable.create(tbody, {
+      handle: '.drag-handle',
+      animation: 150,
+      onEnd: function() {
+        updatePositions();
+      }
+    });
+  }
+
+  function updatePositions() {
+    const tbody = document.getElementById('recipes-tbody');
+    if (!tbody) return;
+
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach((row, index) => {
+      const positionInput = row.querySelector('input[name*="[position]"]');
+      if (positionInput) {
+        positionInput.value = index;
+      }
+    });
+  }
+
+  initializeSortable();
+  calculateTotalWeight();
+});
+</script>

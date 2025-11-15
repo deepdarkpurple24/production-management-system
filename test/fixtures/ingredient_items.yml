@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  ingredient: one
+  item: one
+  quantity: 9.99
+  notes: MyText
+  position: 1
+  row_type: MyString
+
+two:
+  ingredient: two
+  item: two
+  quantity: 9.99
+  notes: MyText
+  position: 1
+  row_type: MyString

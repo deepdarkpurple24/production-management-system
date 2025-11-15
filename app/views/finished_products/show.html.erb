@@ -1,0 +1,141 @@
+<%= render 'recipes/shared/sub_navigation' %>
+
+<div class="container mt-4">
+  <!-- 헤더 섹션 -->
+  <div class="mb-4">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><%= link_to "완제품 관리", finished_products_path %></li>
+        <li class="breadcrumb-item active" aria-current="page"><%= @finished_product.name %></li>
+      </ol>
+    </nav>
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h2 class="mb-1" style="font-weight: 600; letter-spacing: -0.02em;"><%= @finished_product.name %></h2>
+        <p class="text-muted small mb-0">Finished Product Details</p>
+      </div>
+      <div class="d-flex gap-2">
+        <%= link_to edit_finished_product_path(@finished_product), class: "btn-apple btn-apple-outline" do %>
+          <i class="bi bi-pencil me-2"></i>수정
+        <% end %>
+        <%= button_to finished_product_path(@finished_product), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn-apple btn-apple-outline text-danger border-danger" do %>
+          <i class="bi bi-trash me-2"></i>삭제
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 완제품 정보 -->
+  <div class="row g-4">
+    <!-- 기본 정보 -->
+    <div class="col-md-12">
+      <div class="card-apple">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">기본 정보</h5>
+          <dl class="row mb-0">
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">완제품명</dt>
+            <dd class="col-sm-10 py-2" style="font-weight: 500;"><%= @finished_product.name %></dd>
+
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">중량</dt>
+            <dd class="col-sm-10 py-2">
+              <% if @finished_product.weight.present? %>
+                <strong style="font-size: 1.1rem; color: #0071e3;"><%= number_with_delimiter(@finished_product.weight) %></strong> <%= @finished_product.weight_unit %>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </dd>
+
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">설명</dt>
+            <dd class="col-sm-10 py-2">
+              <% if @finished_product.description.present? %>
+                <%= simple_format(@finished_product.description) %>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </dd>
+
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">비고</dt>
+            <dd class="col-sm-10 py-2">
+              <% if @finished_product.notes.present? %>
+                <%= simple_format(@finished_product.notes) %>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <!-- 레시피 목록 -->
+    <% if @finished_product.finished_product_recipes.any? %>
+      <div class="col-12">
+        <div class="card-apple">
+          <div class="card-body p-4">
+            <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">포함된 레시피</h5>
+            <div class="table-responsive">
+              <table class="table table-bordered">
+                <thead style="background-color: #f5f5f7;">
+                  <tr>
+                    <th style="width: 60px; text-align: center;">순서</th>
+                    <th>레시피명</th>
+                    <th style="width: 120px; text-align: right;">중량(g)</th>
+                    <th>비고</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @finished_product.finished_product_recipes.each_with_index do |fp_recipe, index| %>
+                    <tr>
+                      <td class="text-center"><%= index + 1 %></td>
+                      <td>
+                        <i class="bi bi-book me-2"></i>
+                        <%= link_to fp_recipe.recipe.name, recipe_path(fp_recipe.recipe), class: "text-decoration-none" %>
+                      </td>
+                      <td class="text-end">
+                        <% if fp_recipe.quantity.present? %>
+                          <%= number_with_delimiter(fp_recipe.quantity) %> g
+                        <% else %>
+                          <span class="text-muted">-</span>
+                        <% end %>
+                      </td>
+                      <td>
+                        <% if fp_recipe.notes.present? %>
+                          <%= fp_recipe.notes %>
+                        <% else %>
+                          <span class="text-muted">-</span>
+                        <% end %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- 시스템 정보 -->
+    <div class="col-12">
+      <div class="card-apple">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">시스템 정보</h5>
+          <dl class="row mb-0">
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">등록일시</dt>
+            <dd class="col-sm-4 py-2"><%= @finished_product.created_at.strftime("%Y년 %m월 %d일 %H:%M") %></dd>
+
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">수정일시</dt>
+            <dd class="col-sm-4 py-2"><%= @finished_product.updated_at.strftime("%Y년 %m월 %d일 %H:%M") %></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 버튼 -->
+  <div class="mt-4 pt-3 border-top d-flex justify-content-between">
+    <%= link_to finished_products_path, class: "btn-apple btn-apple-outline" do %>
+      <i class="bi bi-arrow-left me-2"></i>목록으로
+    <% end %>
+  </div>
+</div>

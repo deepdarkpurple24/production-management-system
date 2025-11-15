@@ -54,7 +54,11 @@ class Inventory::ItemsController < ApplicationController
       suppliers_array = []
     end
 
-    render json: { suppliers: suppliers_array }
+    render json: {
+      suppliers: suppliers_array,
+      weight: @item.weight,
+      weight_unit: @item.weight_unit
+    }
   rescue ActiveRecord::RecordNotFound
     render json: { suppliers: [], error: 'Item not found' }, status: :not_found
   end
@@ -106,6 +110,8 @@ class Inventory::ItemsController < ApplicationController
         item: {
           id: @item.id,
           name: @item.name,
+          weight: @item.weight,
+          weight_unit: @item.weight_unit,
           suppliers: @item.suppliers || []
         }
       }
@@ -121,6 +127,6 @@ class Inventory::ItemsController < ApplicationController
   end
 
   def item_params
-    params.require(:item).permit(:name, :category, :unit, :weight, :minimum_stock, :optimal_stock, :storage_location, :barcode, :shelf_life_days, :notes, suppliers: [])
+    params.require(:item).permit(:name, :category, :weight, :weight_unit, :minimum_stock, :optimal_stock, :storage_location, :barcode, :shelf_life_days, :notes, suppliers: [])
   end
 end

@@ -1,0 +1,468 @@
+<%= form_with(model: ingredient, local: true) do |f| %>
+  <% if ingredient.errors.any? %>
+    <div class="alert alert-danger">
+      <h5><%= pluralize(ingredient.errors.count, "error") %> 발생</h5>
+      <ul>
+        <% ingredient.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <label for="ingredient_name" class="form-label">품목명 <span class="text-danger">*</span></label>
+      <%= f.text_field :name, class: "form-control", required: true %>
+    </div>
+
+    <div class="col-12">
+      <label for="ingredient_description" class="form-label">설명</label>
+      <%= f.text_area :description, class: "form-control", rows: 3 %>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <label class="form-label mb-0">품목 목록</label>
+      <div class="btn-group btn-group-sm">
+        <button type="button" class="btn btn-sm btn-outline-primary" id="add-item-btn">
+          <i class="bi bi-plus-circle me-1"></i>품목 추가
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="add-subtotal-btn">
+          <i class="bi bi-calculator me-1"></i>소계 추가
+        </button>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-bordered" id="ingredients-table">
+        <thead style="background-color: #f5f5f7;">
+          <tr>
+            <th style="width: 40px; text-align: center;">
+              <i class="bi bi-grip-vertical text-muted"></i>
+            </th>
+            <th>품목명</th>
+            <th style="width: 120px;">수량</th>
+            <th>비고</th>
+            <th style="width: 60px;"></th>
+          </tr>
+        </thead>
+        <tbody id="ingredients-tbody">
+          <%= f.fields_for :ingredient_items do |ingredient_fields| %>
+            <tr class="item-row">
+              <td style="cursor: move;" class="text-center">
+                <i class="bi bi-grip-vertical text-muted drag-handle"></i>
+              </td>
+              <td>
+                <%= ingredient_fields.collection_select :item_id, @items, :id, :name,
+                    { include_blank: "품목 선택" },
+                    { class: "form-select form-select-sm", required: true } %>
+                <%= ingredient_fields.hidden_field :row_type, value: "item" %>
+                <%= ingredient_fields.hidden_field :position %>
+              </td>
+              <td>
+                <%= ingredient_fields.number_field :quantity, step: 0.01, class: "form-control form-control-sm text-end quantity-input", required: true %>
+              </td>
+              <td>
+                <%= ingredient_fields.text_field :notes, class: "form-control form-control-sm" %>
+              </td>
+              <td class="text-center">
+                <%= ingredient_fields.hidden_field :_destroy %>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-item-btn">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+        <tfoot style="background-color: #fafafa;">
+          <tr>
+            <td></td>
+            <td class="text-end"><strong>최종 합계</strong></td>
+            <td class="text-end"><strong id="total-quantity">0</strong></td>
+            <td>
+              <%= f.text_field :notes, class: "form-control form-control-sm", placeholder: "재료 전체 비고" %>
+            </td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2 justify-content-end mt-4">
+    <%= f.submit "#{ingredient.new_record? ? '등록' : '수정'}하기", class: "btn-apple btn-apple-primary" %>
+    <%= link_to "취소", ingredients_path, class: "btn-apple btn-apple-outline" %>
+  </div>
+<% end %>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+document.addEventListener('turbo:load', function() {
+  // 필요한 요소가 없으면 실행하지 않음
+  const tbody = document.getElementById('ingredients-tbody');
+  if (!tbody) {
+    return;
+  }
+
+  // 이미 초기화되었는지 확인
+  if (tbody.dataset.initialized === 'true') {
+    return;
+  }
+  tbody.setAttribute('data-initialized', 'true');
+
+  let ingredientIndex = <%= ingredient.ingredient_items.length %>;
+
+  // 품목 추가
+  const addIngredientBtn = document.getElementById('add-item-btn');
+  if (addIngredientBtn) {
+    addIngredientBtn.addEventListener('click', function() {
+    const tbody = document.getElementById('ingredients-tbody');
+    const itemOptions = '<%= @items.map { |item| "<option value=#{item.id}>#{item.name}</option>" }.join.html_safe %>';
+
+    const newRow = `
+      <tr class="item-row">
+        <td style="cursor: move;" class="text-center">
+          <i class="bi bi-grip-vertical text-muted drag-handle"></i>
+        </td>
+        <td>
+          <select class="form-select form-select-sm" name="ingredient[ingredient_items_attributes][${ingredientIndex}][item_id]" required>
+            <option value="">품목 선택</option>
+            ${itemOptions}
+          </select>
+          <input type="hidden" name="ingredient[ingredient_items_attributes][${ingredientIndex}][row_type]" value="item">
+          <input type="hidden" name="ingredient[ingredient_items_attributes][${ingredientIndex}][position]" value="${ingredientIndex}">
+        </td>
+        <td>
+          <input type="number" step="0.01" class="form-control form-control-sm text-end quantity-input" name="ingredient[ingredient_items_attributes][${ingredientIndex}][quantity]" required>
+        </td>
+        <td>
+          <input type="text" class="form-control form-control-sm" name="ingredient[ingredient_items_attributes][${ingredientIndex}][notes]">
+        </td>
+        <td class="text-center">
+          <button type="button" class="btn btn-sm btn-outline-danger remove-item-btn">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+
+    tbody.insertAdjacentHTML('beforeend', newRow);
+    ingredientIndex++;
+    calculatePercentages();
+    initializeSortable();
+    });
+  }
+
+  // 소계 추가
+  const addSubtotalBtn = document.getElementById('add-subtotal-btn');
+  if (addSubtotalBtn) {
+    addSubtotalBtn.addEventListener('click', function() {
+    // 이미 소계가 있는지 확인
+    if (document.querySelector('.subtotal-row')) {
+      alert('소계는 한 번만 추가할 수 있습니다.');
+      return;
+    }
+
+    const tbody = document.getElementById('ingredients-tbody');
+    const subtotalRow = `
+      <tr class="subtotal-row table-secondary">
+        <td class="text-center"><i class="bi bi-grip-vertical text-muted" style="visibility: hidden;"></i></td>
+        <td class="text-end"><strong>소계</strong></td>
+        <td class="text-end"><strong class="subtotal-quantity">0</strong></td>
+        <td></td>
+        <td class="text-center">
+          <button type="button" class="btn btn-sm btn-outline-danger remove-subtotal-btn">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+
+    tbody.insertAdjacentHTML('beforeend', subtotalRow);
+    // 소계에 대한 hidden field 추가
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.name = `ingredient[ingredient_items_attributes][${ingredientIndex}][row_type]`;
+    hiddenInput.value = 'subtotal';
+    tbody.querySelector('.subtotal-row').appendChild(hiddenInput);
+
+    const positionInput = document.createElement('input');
+    positionInput.type = 'hidden';
+    positionInput.name = `ingredient[ingredient_items_attributes][${ingredientIndex}][position]`;
+    positionInput.value = ingredientIndex;
+    tbody.querySelector('.subtotal-row').appendChild(positionInput);
+
+    ingredientIndex++;
+    calculatePercentages();
+    initializeSortable();
+    });
+  }
+
+  // 재료 삭제
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-item-btn')) {
+      const row = e.target.closest('tr');
+      const destroyField = row.querySelector('input[name*="_destroy"]');
+      if (destroyField) {
+        destroyField.value = '1';
+        row.style.display = 'none';
+      } else {
+        row.remove();
+      }
+      calculatePercentages();
+      initializeSortable();
+    }
+
+    // 소계 행 삭제
+    if (e.target.closest('.remove-subtotal-btn')) {
+      const row = e.target.closest('tr');
+      const destroyField = row.querySelector('input[name*="_destroy"]');
+      if (destroyField) {
+        destroyField.value = '1';
+        row.style.display = 'none';
+      } else {
+        row.remove();
+      }
+      calculatePercentages();
+      initializeSortable();
+    }
+  });
+
+  // 중량 입력 시 계산
+  document.addEventListener('input', function(e) {
+    if (e.target.classList.contains('quantity-input')) {
+      calculatePercentages();
+    }
+  });
+
+  // 주재료 체크 시 계산
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('is-main-checkbox')) {
+      calculatePercentages();
+    }
+  });
+
+  function calculatePercentages() {
+    const tbody = document.getElementById('ingredients-tbody');
+    if (!tbody) return;
+
+    const allRows = Array.from(tbody.querySelectorAll('tr'));
+    const subtotalRow = tbody.querySelector('.subtotal-row');
+    const ingredientRows = tbody.querySelectorAll('.item-row');
+
+    let mainQuantity = 0;
+    let totalQuantity = 0;
+    let subtotalQuantity = 0;
+    let subtotalBakeryPct = 0;
+    let subtotalPct = 0;
+    let totalBakeryPct = 0;
+    let totalPct = 0;
+
+    // 소계 전/후 구분
+    let beforeSubtotal = true;
+
+    allRows.forEach(row => {
+      if (row.style.display === 'none') return;
+
+      if (row.classList.contains('subtotal-row')) {
+        beforeSubtotal = false;
+        return;
+      }
+
+      if (row.classList.contains('item-row')) {
+        const isMain = row.querySelector('.is-main-checkbox')?.checked || false;
+        const weight = parseFloat(row.querySelector('.quantity-input')?.value) || 0;
+
+        if (isMain) mainQuantity += weight;
+        totalQuantity += weight;
+
+        if (beforeSubtotal) {
+          subtotalQuantity += weight;
+        }
+      }
+    });
+
+    // 각 재료의 베이커리%와 백분율 계산
+    beforeSubtotal = true;
+    allRows.forEach(row => {
+      if (row.style.display === 'none') return;
+
+      if (row.classList.contains('subtotal-row')) {
+        beforeSubtotal = false;
+        return;
+      }
+
+      if (row.classList.contains('item-row')) {
+        const weight = parseFloat(row.querySelector('.quantity-input')?.value) || 0;
+        const bakeryPct = row.querySelector('.bakery-percentage');
+        const pct = row.querySelector('.percentage');
+
+        let bakeryPctValue = 0;
+        let pctValue = 0;
+
+        if (mainQuantity > 0) {
+          bakeryPctValue = (weight / mainQuantity) * 100;
+          bakeryPct.value = bakeryPctValue.toFixed(2) + '%';
+        } else {
+          bakeryPct.value = '-';
+        }
+
+        if (totalQuantity > 0) {
+          pctValue = (weight / totalQuantity) * 100;
+          pct.value = pctValue.toFixed(2) + '%';
+        } else {
+          pct.value = '-';
+        }
+
+        // 소계 전 재료의 퍼센트 합산
+        if (beforeSubtotal) {
+          subtotalBakeryPct += bakeryPctValue;
+          subtotalPct += pctValue;
+        }
+
+        // 전체 재료의 퍼센트 합산
+        totalBakeryPct += bakeryPctValue;
+        totalPct += pctValue;
+      }
+    });
+
+    // 소계 표시
+    if (subtotalRow) {
+      subtotalRow.querySelector('.subtotal-weight').textContent = subtotalQuantity.toFixed(2);
+
+      const bakeryPctElement = subtotalRow.querySelector('.subtotal-bakery-pct');
+      const pctElement = subtotalRow.querySelector('.subtotal-pct');
+
+      if (bakeryPctElement) {
+        if (mainQuantity > 0) {
+          bakeryPctElement.textContent = subtotalBakeryPct.toFixed(2) + '%';
+        } else {
+          bakeryPctElement.textContent = '-';
+        }
+      }
+
+      if (pctElement) {
+        if (totalQuantity > 0) {
+          pctElement.textContent = subtotalPct.toFixed(2) + '%';
+        } else {
+          pctElement.textContent = '-';
+        }
+      }
+    }
+
+    // 총 중량 및 퍼센트 합계 표시
+    const totalQuantityElement = document.getElementById('total-weight');
+    if (totalQuantityElement) {
+      totalQuantityElement.textContent = totalQuantity.toFixed(2);
+    }
+
+    const totalBakeryPctElement = document.getElementById('total-bakery-pct');
+    const totalPctElement = document.getElementById('total-pct');
+
+    if (totalBakeryPctElement) {
+      if (mainQuantity > 0) {
+        totalBakeryPctElement.textContent = totalBakeryPct.toFixed(2) + '%';
+      } else {
+        totalBakeryPctElement.textContent = '-';
+      }
+    }
+
+    if (totalPctElement) {
+      if (totalQuantity > 0) {
+        totalPctElement.textContent = totalPct.toFixed(2) + '%';
+      } else {
+        totalPctElement.textContent = '-';
+      }
+    }
+  }
+
+  // SortableJS 초기화
+  let sortableInstance = null;
+
+  function initializeSortable() {
+    const tbody = document.getElementById('ingredients-tbody');
+    if (!tbody) return;
+
+    // Sortable 라이브러리가 로드되지 않았으면 실행하지 않음
+    if (typeof Sortable === 'undefined') return;
+
+    // 기존 인스턴스 제거
+    if (sortableInstance) {
+      sortableInstance.destroy();
+      sortableInstance = null;
+    }
+    const subtotalRow = tbody.querySelector('.subtotal-row');
+
+    if (subtotalRow) {
+      // 소계가 있는 경우: 소계를 기준으로 그룹 나누기
+      const allRows = Array.from(tbody.querySelectorAll('tr'));
+      const subtotalIndex = allRows.indexOf(subtotalRow);
+
+      // 소계 행이 이동되지 않도록 filter 설정
+      sortableInstance = Sortable.create(tbody, {
+        handle: '.drag-handle',
+        animation: 150,
+        filter: '.subtotal-row',
+        onMove: function(evt) {
+          // 소계 행을 넘어서는 이동 방지
+          const draggedIndex = Array.from(tbody.children).indexOf(evt.dragged);
+          const relatedIndex = Array.from(tbody.children).indexOf(evt.related);
+          const currentSubtotalIndex = Array.from(tbody.children).indexOf(subtotalRow);
+
+          // 소계 행으로 이동 시도하면 막음
+          if (evt.related.classList.contains('subtotal-row')) {
+            return false;
+          }
+
+          // 소계 전 재료가 소계 후로 이동하려고 하면 막음
+          if (draggedIndex < currentSubtotalIndex && relatedIndex > currentSubtotalIndex) {
+            return false;
+          }
+
+          // 소계 후 재료가 소계 전으로 이동하려고 하면 막음
+          if (draggedIndex > currentSubtotalIndex && relatedIndex < currentSubtotalIndex) {
+            return false;
+          }
+
+          return true;
+        },
+        onEnd: function() {
+          updatePositions();
+          calculatePercentages();
+        }
+      });
+    } else {
+      // 소계가 없는 경우: 자유롭게 드래그
+      sortableInstance = Sortable.create(tbody, {
+        handle: '.drag-handle',
+        animation: 150,
+        onEnd: function() {
+          updatePositions();
+          calculatePercentages();
+        }
+      });
+    }
+  }
+
+  // position 값 업데이트
+  function updatePositions() {
+    const tbody = document.getElementById('ingredients-tbody');
+    if (!tbody) return;
+
+    const rows = tbody.querySelectorAll('tr');
+
+    rows.forEach((row, index) => {
+      const positionInput = row.querySelector('input[name*="[position]"]');
+      if (positionInput) {
+        positionInput.value = index;
+      }
+    });
+  }
+
+  // 초기 계산 및 Sortable 초기화
+  calculatePercentages();
+  initializeSortable();
+});
+</script>

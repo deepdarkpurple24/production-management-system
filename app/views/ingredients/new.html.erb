@@ -1,0 +1,22 @@
+<%= render 'recipes/shared/sub_navigation' %>
+
+<div class="container mt-4">
+  <!-- 헤더 섹션 -->
+  <div class="mb-4">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><%= link_to "재료관리", ingredients_path %></li>
+        <li class="breadcrumb-item active" aria-current="page">새 재료 등록</li>
+      </ol>
+    </nav>
+    <h2 class="mb-1" style="font-weight: 600; letter-spacing: -0.02em;">새 재료 등록</h2>
+    <p class="text-muted small mb-0">New Ingredient</p>
+  </div>
+
+  <!-- 재료 등록 폼 -->
+  <div class="card-apple">
+    <div class="card-body p-4">
+      <%= render 'ingredients/form', ingredient: @ingredient %>
+    </div>
+  </div>
+</div>

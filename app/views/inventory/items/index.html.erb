@@ -1,3 +1,5 @@
+<%= render 'inventory/shared/sub_navigation' %>
+
 <div class="container mt-4">
   <!-- 헤더 섹션 -->
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -21,7 +23,7 @@
                 <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">품목코드</th>
                 <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">품목명</th>
                 <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">카테고리</th>
-                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">단위</th>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">개당 중량</th>
                 <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">최소재고</th>
                 <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">적정재고</th>
                 <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">보관위치</th>
@@ -36,7 +38,13 @@
                   </td>
                   <td class="py-3 px-4" style="font-weight: 500;"><%= item.name %></td>
                   <td class="py-3 px-4"><%= item.category %></td>
-                  <td class="py-3 px-4"><%= item.unit %></td>
+                  <td class="py-3 px-4">
+                    <% if item.weight.present? %>
+                      <%= item.weight %> <%= item.weight_unit %>
+                    <% else %>
+                      -
+                    <% end %>
+                  </td>
                   <td class="py-3 px-4"><%= item.minimum_stock %></td>
                   <td class="py-3 px-4"><%= item.optimal_stock %></td>
                   <td class="py-3 px-4"><%= item.storage_location %></td>

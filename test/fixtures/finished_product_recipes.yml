@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  finished_product: one
+  recipe: one
+  quantity: 9.99
+  position: 1
+  notes: MyText
+
+two:
+  finished_product: two
+  recipe: two
+  quantity: 9.99
+  position: 1
+  notes: MyText

@@ -12,15 +12,36 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   root "home#index"
 
+  # 설정 페이지
+  get "settings", to: "settings#index", as: "settings"
+  get "settings/system", to: "settings#system", as: "settings_system"
+  post "settings/purposes", to: "settings#create_purpose", as: "create_shipment_purpose"
+  delete "settings/purposes/:id", to: "settings#destroy_purpose", as: "destroy_shipment_purpose"
+  patch "settings/purposes/update_positions", to: "settings#update_purpose_positions", as: "update_purpose_positions"
+  post "settings/requesters", to: "settings#create_requester", as: "create_shipment_requester"
+  delete "settings/requesters/:id", to: "settings#destroy_requester", as: "destroy_shipment_requester"
+  patch "settings/requesters/update_positions", to: "settings#update_requester_positions", as: "update_requester_positions"
+  post "settings/equipment_types", to: "settings#create_equipment_type", as: "create_equipment_type"
+  delete "settings/equipment_types/:id", to: "settings#destroy_equipment_type", as: "destroy_equipment_type"
+  patch "settings/equipment_types/update_positions", to: "settings#update_equipment_type_positions", as: "update_equipment_type_positions"
+  post "settings/equipment_modes", to: "settings#create_equipment_mode", as: "create_equipment_mode"
+  delete "settings/equipment_modes/:id", to: "settings#destroy_equipment_mode", as: "destroy_equipment_mode"
+  patch "settings/equipment_modes/update_positions", to: "settings#update_equipment_mode_positions", as: "update_equipment_mode_positions"
+  get "settings/equipment_modes/:equipment_type_id", to: "settings#get_equipment_modes", as: "get_equipment_modes"
+  post "settings/recipe_processes", to: "settings#create_recipe_process", as: "create_recipe_process"
+  delete "settings/recipe_processes/:id", to: "settings#destroy_recipe_process", as: "destroy_recipe_process"
+  patch "settings/recipe_processes/update_positions", to: "settings#update_recipe_process_positions", as: "update_recipe_process_positions"
+
   # 각 모듈 메인 페이지
   get "production", to: "production#index", as: "production"
   get "inventory", to: "inventory#index", as: "inventory"
-  get "recipe", to: "recipe#index", as: "recipe"
-  get "equipment", to: "equipment#index", as: "equipment"
+  get "recipe", to: "recipe#index", as: "recipe_module"
+  get "equipment", to: "equipment#index", as: "equipment_module"
 
   # 각 모듈별 라우트
   namespace :inventory do
     resources :receipts
+    resources :shipments
     resources :items do
       collection do
         get :find_by_barcode
@@ -30,9 +51,8 @@ Rails.application.routes.draw do
         post :add_supplier
       end
     end
+    resources :stocks, only: [:index]
     # resources :opened_items
-    # resources :shipments
-    # resources :stocks
   end
 
   # namespace :production do
@@ -40,10 +60,22 @@ Rails.application.routes.draw do
   #   resources :logs
   # end
 
-  # namespace :recipe do
-  #   resources :recipes
-  #   resources :products
-  # end
+  # 레시피 관리
+  resources :recipes do
+    member do
+      patch :update_ingredient_positions
+    end
+    resources :recipe_versions, only: [:index]
+  end
+
+  # 재료 관리
+  resources :ingredients
+
+  # 장비 관리
+  resources :equipments
+
+  # 완제품 관리
+  resources :finished_products
 
   # namespace :equipment do
   #   resources :machines

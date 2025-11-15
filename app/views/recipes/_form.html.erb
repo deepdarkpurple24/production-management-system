@@ -1,0 +1,813 @@
+<%= form_with(model: recipe, local: true) do |f| %>
+  <% if recipe.errors.any? %>
+    <div class="alert alert-danger">
+      <h5><%= pluralize(recipe.errors.count, "error") %> 발생</h5>
+      <ul>
+        <% recipe.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <label for="recipe_name" class="form-label">레시피명 <span class="text-danger">*</span></label>
+      <%= f.text_field :name, class: "form-control", required: true %>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <label class="form-label mb-0">재료 목록</label>
+      <div class="btn-group btn-group-sm">
+        <button type="button" class="btn btn-sm btn-outline-primary" id="add-ingredient-btn">
+          <i class="bi bi-plus-circle me-1"></i>재료 추가
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="add-subtotal-btn">
+          <i class="bi bi-calculator me-1"></i>소계 추가
+        </button>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-bordered" id="ingredients-table">
+        <thead style="background-color: #f5f5f7;">
+          <tr>
+            <th style="width: 40px; text-align: center;">
+              <i class="bi bi-grip-vertical text-muted"></i>
+            </th>
+            <th style="width: 60px; text-align: center;">주재료</th>
+            <th>재료명</th>
+            <th style="width: 120px;">중량(g)</th>
+            <th style="width: 100px;">베이커리%</th>
+            <th style="width: 100px;">백분율</th>
+            <th>비고</th>
+            <th style="width: 60px;"></th>
+          </tr>
+        </thead>
+        <tbody id="ingredients-tbody">
+          <%= f.fields_for :recipe_ingredients do |ingredient_fields| %>
+            <tr class="ingredient-row">
+              <td style="cursor: move;" class="text-center">
+                <i class="bi bi-grip-vertical text-muted drag-handle"></i>
+              </td>
+              <td class="text-center">
+                <%= ingredient_fields.check_box :is_main, class: "form-check-input is-main-checkbox" %>
+              </td>
+              <td>
+                <%= ingredient_fields.collection_select :item_id, @items, :id, :name, 
+                    { include_blank: "재료 선택" }, 
+                    { class: "form-select form-select-sm", required: true } %>
+                <%= ingredient_fields.hidden_field :row_type, value: "ingredient" %>
+                <%= ingredient_fields.hidden_field :position %>
+              </td>
+              <td>
+                <%= ingredient_fields.number_field :weight, step: 0.01, class: "form-control form-control-sm text-end weight-input", required: true %>
+              </td>
+              <td>
+                <input type="text" class="form-control form-control-sm text-end bakery-percentage" readonly>
+              </td>
+              <td>
+                <input type="text" class="form-control form-control-sm text-end percentage" readonly>
+              </td>
+              <td>
+                <%= ingredient_fields.text_field :notes, class: "form-control form-control-sm" %>
+              </td>
+              <td class="text-center">
+                <%= ingredient_fields.hidden_field :_destroy %>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-ingredient-btn">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+        <tfoot style="background-color: #fafafa;">
+          <tr>
+            <td></td>
+            <td></td>
+            <td class="text-end"><strong>최종 합계</strong></td>
+            <td class="text-end"><strong id="total-weight">0</strong> g</td>
+            <td class="text-end"><strong id="total-bakery-pct">-</strong></td>
+            <td class="text-end"><strong id="total-pct">-</strong></td>
+            <td>
+              <%= f.text_field :notes, class: "form-control form-control-sm" %>
+            </td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- 사용 장비 목록 -->
+  <div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <label class="form-label mb-0">사용 장비 목록</label>
+      <div class="btn-group btn-group-sm">
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="add-process-btn">
+          <i class="bi bi-folder-plus me-1"></i>공정 추가
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="add-equipment-btn">
+          <i class="bi bi-plus-circle me-1"></i>장비 추가
+        </button>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-bordered" id="equipments-table">
+        <thead style="background-color: #f5f5f7;">
+          <tr>
+            <th style="width: 40px; text-align: center;">
+              <i class="bi bi-grip-vertical text-muted"></i>
+            </th>
+            <th>장비명</th>
+            <th style="width: 150px;">최대 작업 중량</th>
+            <th style="width: 100px;">단위</th>
+            <th style="width: 60px;"></th>
+          </tr>
+        </thead>
+        <tbody id="equipments-tbody">
+          <%= f.fields_for :recipe_equipments do |equipment_fields| %>
+            <% if equipment_fields.object.row_type == 'process' %>
+              <tr class="process-row table-secondary" data-sortable-disabled="true">
+                <td class="text-center"><i class="bi bi-grip-vertical text-muted" style="visibility: hidden;"></i></td>
+                <td colspan="3">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-folder-fill me-2 text-primary"></i>
+                    <strong>공정:</strong>
+                    <%= equipment_fields.collection_select :process_id, @recipe_processes, :id, :name,
+                        { include_blank: "공정 선택" },
+                        { class: "form-select form-select-sm ms-2 process-select",
+                          required: true,
+                          style: "max-width: 300px; pointer-events: auto;" } %>
+                    <%= equipment_fields.hidden_field :row_type, value: 'process' %>
+                    <%= equipment_fields.hidden_field :position %>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <%= equipment_fields.hidden_field :_destroy %>
+                  <button type="button" class="btn btn-sm btn-outline-danger remove-process-btn">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            <% else %>
+              <tr class="equipment-row">
+                <td style="cursor: move;" class="text-center">
+                  <i class="bi bi-grip-vertical text-muted drag-handle-equipment"></i>
+                </td>
+                <td>
+                  <%= equipment_fields.collection_select :equipment_id, @equipments, :id, :name,
+                      { include_blank: "장비 선택" },
+                      { class: "form-select form-select-sm equipment-select",
+                        required: true,
+                        data: {
+                          equipments: @equipments.map { |e| { id: e.id, capacity: e.capacity, capacity_unit: e.capacity_unit } }.to_json
+                        } } %>
+                  <%= equipment_fields.hidden_field :row_type, value: 'equipment' %>
+                  <%= equipment_fields.hidden_field :position %>
+                </td>
+                <td>
+                  <%= equipment_fields.number_field :work_capacity, step: 0.01, class: "form-control form-control-sm text-end work-capacity-input" %>
+                </td>
+                <td>
+                  <%= equipment_fields.select :work_capacity_unit,
+                      options_for_select(['Kg', 'g', 'L', 'mL', '개'], equipment_fields.object.work_capacity_unit),
+                      { include_blank: "선택" },
+                      class: "form-select form-select-sm" %>
+                </td>
+                <td class="text-center">
+                  <%= equipment_fields.hidden_field :_destroy %>
+                  <button type="button" class="btn btn-sm btn-outline-danger remove-equipment-btn">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            <% end %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 설명 -->
+  <div class="mb-4">
+    <label for="recipe_description" class="form-label">설명</label>
+    <%= f.text_area :description, class: "form-control", rows: 3 %>
+  </div>
+
+  <div class="d-flex gap-2 justify-content-end mt-4">
+    <%= f.submit "#{recipe.new_record? ? '등록' : '수정'}하기", class: "btn-apple btn-apple-primary" %>
+    <%= link_to "취소", recipes_path, class: "btn-apple btn-apple-outline" %>
+  </div>
+<% end %>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+document.addEventListener('turbo:load', function() {
+  // 필요한 요소가 없으면 실행하지 않음
+  const tbody = document.getElementById('ingredients-tbody');
+  if (!tbody) {
+    return;
+  }
+
+  // 이미 초기화되었는지 확인
+  if (tbody.dataset.initialized === 'true') {
+    return;
+  }
+  tbody.setAttribute('data-initialized', 'true');
+
+  let ingredientIndex = <%= recipe.recipe_ingredients.length %>;
+
+  // 재료 추가
+  const addIngredientBtn = document.getElementById('add-ingredient-btn');
+  if (addIngredientBtn) {
+    addIngredientBtn.addEventListener('click', function() {
+    const tbody = document.getElementById('ingredients-tbody');
+    const itemOptions = '<%= @items.map { |item| "<option value=#{item.id}>#{item.name}</option>" }.join.html_safe %>';
+
+    const newRow = `
+      <tr class="ingredient-row">
+        <td style="cursor: move;" class="text-center">
+          <i class="bi bi-grip-vertical text-muted drag-handle"></i>
+        </td>
+        <td class="text-center">
+          <input type="checkbox" class="form-check-input is-main-checkbox" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][is_main]" value="1">
+        </td>
+        <td>
+          <select class="form-select form-select-sm" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][item_id]" required>
+            <option value="">재료 선택</option>
+            ${itemOptions}
+          </select>
+          <input type="hidden" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][row_type]" value="ingredient">
+          <input type="hidden" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][position]" value="${ingredientIndex}">
+        </td>
+        <td>
+          <input type="number" step="0.01" class="form-control form-control-sm text-end weight-input" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][weight]" required>
+        </td>
+        <td>
+          <input type="text" class="form-control form-control-sm text-end bakery-percentage" readonly>
+        </td>
+        <td>
+          <input type="text" class="form-control form-control-sm text-end percentage" readonly>
+        </td>
+        <td>
+          <input type="text" class="form-control form-control-sm" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][notes]">
+        </td>
+        <td class="text-center">
+          <button type="button" class="btn btn-sm btn-outline-danger remove-ingredient-btn">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+
+    tbody.insertAdjacentHTML('beforeend', newRow);
+    ingredientIndex++;
+    calculatePercentages();
+    initializeSortable();
+    });
+  }
+
+  // 소계 추가
+  const addSubtotalBtn = document.getElementById('add-subtotal-btn');
+  if (addSubtotalBtn) {
+    addSubtotalBtn.addEventListener('click', function() {
+    // 이미 소계가 있는지 확인
+    if (document.querySelector('.subtotal-row')) {
+      alert('소계는 한 번만 추가할 수 있습니다.');
+      return;
+    }
+
+    const tbody = document.getElementById('ingredients-tbody');
+    const subtotalRow = `
+      <tr class="subtotal-row table-secondary">
+        <td class="text-center"><i class="bi bi-grip-vertical text-muted" style="visibility: hidden;"></i></td>
+        <td></td>
+        <td class="text-end"><strong>소계</strong></td>
+        <td class="text-end"><strong class="subtotal-weight">0</strong> g</td>
+        <td class="text-end"><strong class="subtotal-bakery-pct">-</strong></td>
+        <td class="text-end"><strong class="subtotal-pct">-</strong></td>
+        <td></td>
+        <td class="text-center">
+          <button type="button" class="btn btn-sm btn-outline-danger remove-subtotal-btn">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+
+    tbody.insertAdjacentHTML('beforeend', subtotalRow);
+    // 소계에 대한 hidden field 추가
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.name = `recipe[recipe_ingredients_attributes][${ingredientIndex}][row_type]`;
+    hiddenInput.value = 'subtotal';
+    tbody.querySelector('.subtotal-row').appendChild(hiddenInput);
+
+    const positionInput = document.createElement('input');
+    positionInput.type = 'hidden';
+    positionInput.name = `recipe[recipe_ingredients_attributes][${ingredientIndex}][position]`;
+    positionInput.value = ingredientIndex;
+    tbody.querySelector('.subtotal-row').appendChild(positionInput);
+
+    ingredientIndex++;
+    calculatePercentages();
+    initializeSortable();
+    });
+  }
+
+  // 재료 삭제
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-ingredient-btn')) {
+      const row = e.target.closest('tr');
+      const destroyField = row.querySelector('input[name*="_destroy"]');
+      if (destroyField) {
+        destroyField.value = '1';
+        row.style.display = 'none';
+      } else {
+        row.remove();
+      }
+      calculatePercentages();
+      initializeSortable();
+    }
+
+    // 소계 행 삭제
+    if (e.target.closest('.remove-subtotal-btn')) {
+      const row = e.target.closest('tr');
+      const destroyField = row.querySelector('input[name*="_destroy"]');
+      if (destroyField) {
+        destroyField.value = '1';
+        row.style.display = 'none';
+      } else {
+        row.remove();
+      }
+      calculatePercentages();
+      initializeSortable();
+    }
+  });
+
+  // 중량 입력 시 계산
+  document.addEventListener('input', function(e) {
+    if (e.target.classList.contains('weight-input')) {
+      calculatePercentages();
+    }
+  });
+
+  // 주재료 체크 시 계산
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('is-main-checkbox')) {
+      calculatePercentages();
+    }
+  });
+
+  function calculatePercentages() {
+    const tbody = document.getElementById('ingredients-tbody');
+    if (!tbody) return;
+
+    const allRows = Array.from(tbody.querySelectorAll('tr'));
+    const subtotalRow = tbody.querySelector('.subtotal-row');
+    const ingredientRows = tbody.querySelectorAll('.ingredient-row');
+
+    let mainWeight = 0;
+    let totalWeight = 0;
+    let subtotalWeight = 0;
+    let subtotalBakeryPct = 0;
+    let subtotalPct = 0;
+    let totalBakeryPct = 0;
+    let totalPct = 0;
+
+    // 소계 전/후 구분
+    let beforeSubtotal = true;
+
+    allRows.forEach(row => {
+      if (row.style.display === 'none') return;
+
+      if (row.classList.contains('subtotal-row')) {
+        beforeSubtotal = false;
+        return;
+      }
+
+      if (row.classList.contains('ingredient-row')) {
+        const isMain = row.querySelector('.is-main-checkbox')?.checked || false;
+        const weight = parseFloat(row.querySelector('.weight-input')?.value) || 0;
+
+        if (isMain) mainWeight += weight;
+        totalWeight += weight;
+
+        if (beforeSubtotal) {
+          subtotalWeight += weight;
+        }
+      }
+    });
+
+    // 각 재료의 베이커리%와 백분율 계산
+    beforeSubtotal = true;
+    allRows.forEach(row => {
+      if (row.style.display === 'none') return;
+
+      if (row.classList.contains('subtotal-row')) {
+        beforeSubtotal = false;
+        return;
+      }
+
+      if (row.classList.contains('ingredient-row')) {
+        const weight = parseFloat(row.querySelector('.weight-input')?.value) || 0;
+        const bakeryPct = row.querySelector('.bakery-percentage');
+        const pct = row.querySelector('.percentage');
+
+        let bakeryPctValue = 0;
+        let pctValue = 0;
+
+        if (mainWeight > 0) {
+          bakeryPctValue = (weight / mainWeight) * 100;
+          bakeryPct.value = bakeryPctValue.toFixed(2) + '%';
+        } else {
+          bakeryPct.value = '-';
+        }
+
+        if (totalWeight > 0) {
+          pctValue = (weight / totalWeight) * 100;
+          pct.value = pctValue.toFixed(2) + '%';
+        } else {
+          pct.value = '-';
+        }
+
+        // 소계 전 재료의 퍼센트 합산
+        if (beforeSubtotal) {
+          subtotalBakeryPct += bakeryPctValue;
+          subtotalPct += pctValue;
+        }
+
+        // 전체 재료의 퍼센트 합산
+        totalBakeryPct += bakeryPctValue;
+        totalPct += pctValue;
+      }
+    });
+
+    // 소계 표시
+    if (subtotalRow) {
+      subtotalRow.querySelector('.subtotal-weight').textContent = subtotalWeight.toFixed(2);
+
+      const bakeryPctElement = subtotalRow.querySelector('.subtotal-bakery-pct');
+      const pctElement = subtotalRow.querySelector('.subtotal-pct');
+
+      if (bakeryPctElement) {
+        if (mainWeight > 0) {
+          bakeryPctElement.textContent = subtotalBakeryPct.toFixed(2) + '%';
+        } else {
+          bakeryPctElement.textContent = '-';
+        }
+      }
+
+      if (pctElement) {
+        if (totalWeight > 0) {
+          pctElement.textContent = subtotalPct.toFixed(2) + '%';
+        } else {
+          pctElement.textContent = '-';
+        }
+      }
+    }
+
+    // 총 중량 및 퍼센트 합계 표시
+    const totalWeightElement = document.getElementById('total-weight');
+    if (totalWeightElement) {
+      totalWeightElement.textContent = totalWeight.toFixed(2);
+    }
+
+    const totalBakeryPctElement = document.getElementById('total-bakery-pct');
+    const totalPctElement = document.getElementById('total-pct');
+
+    if (totalBakeryPctElement) {
+      if (mainWeight > 0) {
+        totalBakeryPctElement.textContent = totalBakeryPct.toFixed(2) + '%';
+      } else {
+        totalBakeryPctElement.textContent = '-';
+      }
+    }
+
+    if (totalPctElement) {
+      if (totalWeight > 0) {
+        totalPctElement.textContent = totalPct.toFixed(2) + '%';
+      } else {
+        totalPctElement.textContent = '-';
+      }
+    }
+  }
+
+  // SortableJS 초기화
+  let sortableInstance = null;
+
+  function initializeSortable() {
+    const tbody = document.getElementById('ingredients-tbody');
+    if (!tbody) return;
+
+    // Sortable 라이브러리가 로드되지 않았으면 실행하지 않음
+    if (typeof Sortable === 'undefined') return;
+
+    // 기존 인스턴스 제거
+    if (sortableInstance) {
+      sortableInstance.destroy();
+      sortableInstance = null;
+    }
+    const subtotalRow = tbody.querySelector('.subtotal-row');
+
+    if (subtotalRow) {
+      // 소계가 있는 경우: 소계를 기준으로 그룹 나누기
+      const allRows = Array.from(tbody.querySelectorAll('tr'));
+      const subtotalIndex = allRows.indexOf(subtotalRow);
+
+      // 소계 행이 이동되지 않도록 filter 설정
+      sortableInstance = Sortable.create(tbody, {
+        handle: '.drag-handle',
+        animation: 150,
+        filter: '.subtotal-row',
+        onMove: function(evt) {
+          // 소계 행을 넘어서는 이동 방지
+          const draggedIndex = Array.from(tbody.children).indexOf(evt.dragged);
+          const relatedIndex = Array.from(tbody.children).indexOf(evt.related);
+          const currentSubtotalIndex = Array.from(tbody.children).indexOf(subtotalRow);
+
+          // 소계 행으로 이동 시도하면 막음
+          if (evt.related.classList.contains('subtotal-row')) {
+            return false;
+          }
+
+          // 소계 전 재료가 소계 후로 이동하려고 하면 막음
+          if (draggedIndex < currentSubtotalIndex && relatedIndex > currentSubtotalIndex) {
+            return false;
+          }
+
+          // 소계 후 재료가 소계 전으로 이동하려고 하면 막음
+          if (draggedIndex > currentSubtotalIndex && relatedIndex < currentSubtotalIndex) {
+            return false;
+          }
+
+          return true;
+        },
+        onEnd: function() {
+          updatePositions();
+          calculatePercentages();
+        }
+      });
+    } else {
+      // 소계가 없는 경우: 자유롭게 드래그
+      sortableInstance = Sortable.create(tbody, {
+        handle: '.drag-handle',
+        animation: 150,
+        onEnd: function() {
+          updatePositions();
+          calculatePercentages();
+        }
+      });
+    }
+  }
+
+  // position 값 업데이트
+  function updatePositions() {
+    const tbody = document.getElementById('ingredients-tbody');
+    if (!tbody) return;
+
+    const rows = tbody.querySelectorAll('tr');
+
+    rows.forEach((row, index) => {
+      const positionInput = row.querySelector('input[name*="[position]"]');
+      if (positionInput) {
+        positionInput.value = index;
+      }
+    });
+  }
+
+  // 초기 계산 및 Sortable 초기화
+  calculatePercentages();
+  initializeSortable();
+
+  // ===== 장비 관리 =====
+  let equipmentIndex = <%= recipe.recipe_equipments.length %>;
+
+  // 공정 데이터를 JSON으로 가져오기
+  const processesData = <%= @recipe_processes.map { |p| { id: p.id, name: p.name } }.to_json.html_safe %>;
+
+  // 공정 추가
+  const addProcessBtn = document.getElementById('add-process-btn');
+  if (addProcessBtn) {
+    addProcessBtn.addEventListener('click', function() {
+      const equipmentsTbody = document.getElementById('equipments-tbody');
+      const processOptions = processesData.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+
+      const newRow = `
+        <tr class="process-row table-secondary" data-sortable-disabled="true">
+          <td class="text-center"><i class="bi bi-grip-vertical text-muted" style="visibility: hidden;"></i></td>
+          <td colspan="3">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-folder-fill me-2 text-primary"></i>
+              <strong>공정:</strong>
+              <select class="form-select form-select-sm ms-2 process-select"
+                      name="recipe[recipe_equipments_attributes][${equipmentIndex}][process_id]"
+                      required
+                      style="max-width: 300px; pointer-events: auto;">
+                <option value="">공정 선택</option>
+                ${processOptions}
+              </select>
+              <input type="hidden" name="recipe[recipe_equipments_attributes][${equipmentIndex}][row_type]" value="process">
+              <input type="hidden" name="recipe[recipe_equipments_attributes][${equipmentIndex}][position]" value="${equipmentIndex}">
+            </div>
+          </td>
+          <td class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-danger remove-process-btn">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+
+      equipmentsTbody.insertAdjacentHTML('beforeend', newRow);
+      equipmentIndex++;
+      initializeEquipmentSortable();
+    });
+  }
+
+  // 장비 추가
+  const addEquipmentBtn = document.getElementById('add-equipment-btn');
+  if (addEquipmentBtn) {
+    addEquipmentBtn.addEventListener('click', function() {
+      const equipmentsTbody = document.getElementById('equipments-tbody');
+      const equipmentOptions = '<%= @equipments.map { |e| "<option value=#{e.id}>#{e.name}</option>" }.join.html_safe %>';
+      const equipmentsData = <%= @equipments.map { |e| { id: e.id, capacity: e.capacity, capacity_unit: e.capacity_unit } }.to_json.html_safe %>;
+
+      const newRow = `
+        <tr class="equipment-row">
+          <td style="cursor: move;" class="text-center">
+            <i class="bi bi-grip-vertical text-muted drag-handle-equipment"></i>
+          </td>
+          <td>
+            <select class="form-select form-select-sm equipment-select"
+                    name="recipe[recipe_equipments_attributes][${equipmentIndex}][equipment_id]"
+                    required
+                    data-equipments='${JSON.stringify(equipmentsData)}'>
+              <option value="">장비 선택</option>
+              ${equipmentOptions}
+            </select>
+            <input type="hidden" name="recipe[recipe_equipments_attributes][${equipmentIndex}][row_type]" value="equipment">
+            <input type="hidden" name="recipe[recipe_equipments_attributes][${equipmentIndex}][position]" value="${equipmentIndex}">
+          </td>
+          <td>
+            <input type="number" step="0.01" class="form-control form-control-sm text-end work-capacity-input"
+                   name="recipe[recipe_equipments_attributes][${equipmentIndex}][work_capacity]">
+          </td>
+          <td>
+            <select class="form-select form-select-sm" name="recipe[recipe_equipments_attributes][${equipmentIndex}][work_capacity_unit]">
+              <option value="">선택</option>
+              <option value="Kg">Kg</option>
+              <option value="g">g</option>
+              <option value="L">L</option>
+              <option value="mL">mL</option>
+              <option value="개">개</option>
+            </select>
+          </td>
+          <td class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-danger remove-equipment-btn">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+
+      equipmentsTbody.insertAdjacentHTML('beforeend', newRow);
+      equipmentIndex++;
+      initializeEquipmentSortable();
+    });
+  }
+
+  // 장비/공정 삭제
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-equipment-btn')) {
+      const row = e.target.closest('tr');
+      const destroyField = row.querySelector('input[name*="_destroy"]');
+      if (destroyField) {
+        destroyField.value = '1';
+        row.style.display = 'none';
+      } else {
+        row.remove();
+      }
+      initializeEquipmentSortable();
+    }
+
+    if (e.target.closest('.remove-process-btn')) {
+      const row = e.target.closest('tr');
+      const destroyField = row.querySelector('input[name*="_destroy"]');
+      if (destroyField) {
+        destroyField.value = '1';
+        row.style.display = 'none';
+      } else {
+        row.remove();
+      }
+      initializeEquipmentSortable();
+    }
+  });
+
+  // 장비 선택 시 자동으로 capacity 값 로딩
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('equipment-select')) {
+      const selectedId = e.target.value;
+      const row = e.target.closest('tr');
+      const capacityInput = row.querySelector('.work-capacity-input');
+      const unitSelect = row.querySelector('select[name*="work_capacity_unit"]');
+
+      if (selectedId) {
+        const equipmentsData = JSON.parse(e.target.dataset.equipments || '[]');
+        const selectedEquipment = equipmentsData.find(eq => eq.id == selectedId);
+
+        if (selectedEquipment) {
+          if (selectedEquipment.capacity) {
+            capacityInput.value = selectedEquipment.capacity;
+          }
+          if (selectedEquipment.capacity_unit) {
+            unitSelect.value = selectedEquipment.capacity_unit;
+          }
+        }
+      }
+    }
+  });
+
+  // 장비 테이블 드래그 앤 드롭
+  let equipmentSortableInstance = null;
+
+  function initializeEquipmentSortable() {
+    const equipmentsTbody = document.getElementById('equipments-tbody');
+    if (!equipmentsTbody) return;
+
+    if (typeof Sortable === 'undefined') return;
+
+    if (equipmentSortableInstance) {
+      equipmentSortableInstance.destroy();
+      equipmentSortableInstance = null;
+    }
+
+    const processRows = equipmentsTbody.querySelectorAll('.process-row');
+
+    if (processRows.length > 0) {
+      // 공정이 있는 경우: 공정 행은 이동 불가, 장비만 공정 내에서 이동
+      equipmentSortableInstance = Sortable.create(equipmentsTbody, {
+        handle: '.drag-handle-equipment',
+        animation: 150,
+        filter: '.process-row, .process-select, .remove-process-btn',
+        preventOnFilter: false,
+        onMove: function(evt) {
+          // 공정 행으로 이동 시도하면 막음
+          if (evt.related.classList.contains('process-row')) {
+            return false;
+          }
+
+          const draggedIndex = Array.from(equipmentsTbody.children).indexOf(evt.dragged);
+          const relatedIndex = Array.from(equipmentsTbody.children).indexOf(evt.related);
+
+          // 공정을 넘어서는 이동 방지
+          const allRows = Array.from(equipmentsTbody.querySelectorAll('tr'));
+
+          // 드래그하는 행과 대상 행 사이의 공정 행 찾기
+          const startIdx = Math.min(draggedIndex, relatedIndex);
+          const endIdx = Math.max(draggedIndex, relatedIndex);
+
+          for (let i = startIdx; i <= endIdx; i++) {
+            if (allRows[i] && allRows[i].classList.contains('process-row') && i !== draggedIndex && i !== relatedIndex) {
+              return false;
+            }
+          }
+
+          return true;
+        },
+        onEnd: function() {
+          updateEquipmentPositions();
+        }
+      });
+    } else {
+      // 공정이 없는 경우: 자유롭게 드래그
+      equipmentSortableInstance = Sortable.create(equipmentsTbody, {
+        handle: '.drag-handle-equipment',
+        animation: 150,
+        onEnd: function() {
+          updateEquipmentPositions();
+        }
+      });
+    }
+  }
+
+  function updateEquipmentPositions() {
+    const equipmentsTbody = document.getElementById('equipments-tbody');
+    if (!equipmentsTbody) return;
+
+    const rows = equipmentsTbody.querySelectorAll('tr');
+    rows.forEach((row, index) => {
+      const positionInput = row.querySelector('input[name*="[position]"]');
+      if (positionInput) {
+        positionInput.value = index;
+      }
+    });
+  }
+
+  initializeEquipmentSortable();
+});
+</script>

@@ -1,3 +1,5 @@
+<%= render 'inventory/shared/sub_navigation' %>
+
 <div class="container mt-4">
   <!-- 헤더 섹션 -->
   <div class="mb-4">
@@ -35,14 +37,29 @@
             <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">품목코드</dt>
             <dd class="col-sm-8 py-2"><code style="background-color: #f5f5f7; padding: 0.25rem 0.5rem; border-radius: 4px;"><%= @item.item_code %></code></dd>
 
+            <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">바코드</dt>
+            <dd class="col-sm-8 py-2">
+              <% if @item.barcode.present? %>
+                <code style="background-color: #f5f5f7; padding: 0.25rem 0.5rem; border-radius: 4px;"><%= @item.barcode %></code>
+              <% else %>
+                -
+              <% end %>
+            </dd>
+
             <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">품목명</dt>
             <dd class="col-sm-8 py-2" style="font-weight: 500;"><%= @item.name %></dd>
 
             <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">카테고리</dt>
             <dd class="col-sm-8 py-2"><%= @item.category.present? ? @item.category : "-" %></dd>
 
-            <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">단위</dt>
-            <dd class="col-sm-8 py-2"><%= @item.unit.present? ? @item.unit : "-" %></dd>
+            <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">개당 중량</dt>
+            <dd class="col-sm-8 py-2">
+              <% if @item.weight.present? %>
+                <%= @item.weight %> <%= @item.weight_unit.present? ? @item.weight_unit : "" %>
+              <% else %>
+                -
+              <% end %>
+            </dd>
 
             <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">보관위치</dt>
             <dd class="col-sm-8 py-2"><%= @item.storage_location.present? ? @item.storage_location : "-" %></dd>
@@ -59,12 +76,12 @@
           <dl class="row mb-0">
             <dt class="col-sm-5 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">최소재고량</dt>
             <dd class="col-sm-7 py-2">
-              <%= @item.minimum_stock.present? ? "#{@item.minimum_stock} #{@item.unit}" : "-" %>
+              <%= @item.minimum_stock.present? ? @item.minimum_stock : "-" %>
             </dd>
 
             <dt class="col-sm-5 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">적정재고량</dt>
             <dd class="col-sm-7 py-2">
-              <%= @item.optimal_stock.present? ? "#{@item.optimal_stock} #{@item.unit}" : "-" %>
+              <%= @item.optimal_stock.present? ? @item.optimal_stock : "-" %>
             </dd>
 
             <dt class="col-sm-5 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">제조일로부터</dt>
@@ -80,6 +97,24 @@
         </div>
       </div>
     </div>
+
+    <!-- 공급업체 정보 -->
+    <% if @item.suppliers.present? && @item.suppliers.is_a?(Array) && @item.suppliers.any? %>
+      <div class="col-12">
+        <div class="card-apple">
+          <div class="card-body p-4">
+            <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">공급업체 정보</h5>
+            <div class="d-flex flex-wrap gap-2">
+              <% @item.suppliers.each do |supplier| %>
+                <% if supplier.present? %>
+                  <span class="badge bg-primary" style="font-size: 0.875rem; padding: 0.5rem 1rem;"><%= supplier %></span>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
 
     <!-- 비고 -->
     <% if @item.notes.present? %>

@@ -1,0 +1,107 @@
+<%= form_with(model: @equipment, url: @equipment.new_record? ? equipments_path : equipment_path(@equipment), local: true, class: "needs-validation") do |f| %>
+  <% if @equipment.errors.any? %>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <h5 class="alert-heading">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <%= pluralize(@equipment.errors.count, "error") %> 발생
+      </h5>
+      <ul class="mb-0">
+        <% @equipment.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <% end %>
+
+  <div class="row g-3">
+    <div class="col-md-6">
+      <label for="equipment_name" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        장비명 <span class="text-danger">*</span>
+      </label>
+      <%= f.text_field :name, class: "form-control", placeholder: "예: 컨벡션 오븐", required: true %>
+    </div>
+
+    <div class="col-md-6">
+      <label for="equipment_equipment_type_id" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        장비구분
+      </label>
+      <%= f.collection_select :equipment_type_id,
+                              EquipmentType.all.order(:position),
+                              :id,
+                              :name,
+                              { include_blank: "선택" },
+                              class: "form-select" %>
+    </div>
+
+    <div class="col-md-6">
+      <label for="equipment_manufacturer" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        제조사
+      </label>
+      <%= f.text_field :manufacturer, class: "form-control", placeholder: "예: 삼성전자" %>
+    </div>
+
+    <div class="col-md-6">
+      <label for="equipment_model_number" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        모델번호
+      </label>
+      <%= f.text_field :model_number, class: "form-control", placeholder: "예: ABC-1234" %>
+    </div>
+
+    <div class="col-md-6">
+      <label for="equipment_purchase_date" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        구입일자
+      </label>
+      <%= f.date_field :purchase_date, class: "form-control" %>
+    </div>
+
+    <div class="col-md-6">
+      <label for="equipment_status" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        상태
+      </label>
+      <%= f.select :status,
+                   options_for_select(['정상', '점검중', '고장', '폐기'], @equipment.status),
+                   { include_blank: "선택" },
+                   class: "form-select" %>
+    </div>
+
+    <div class="col-md-12">
+      <label for="equipment_location" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        위치
+      </label>
+      <%= f.text_field :location, class: "form-control", placeholder: "예: 제빵실 1층" %>
+    </div>
+
+    <div class="col-md-6">
+      <label for="equipment_capacity" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        1회 작업 최대 용량
+      </label>
+      <%= f.number_field :capacity, class: "form-control", step: "0.01", placeholder: "0", min: "0" %>
+    </div>
+
+    <div class="col-md-6">
+      <label for="equipment_capacity_unit" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        용량 단위
+      </label>
+      <%= f.select :capacity_unit,
+                   options_for_select(['Kg', 'g', 'L', 'mL', '개'], @equipment.capacity_unit),
+                   { include_blank: "선택" },
+                   class: "form-select" %>
+    </div>
+
+    <div class="col-12">
+      <label for="equipment_notes" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        비고
+      </label>
+      <%= f.text_area :notes,
+                      class: "form-control",
+                      rows: 4,
+                      placeholder: "추가 설명이나 특이사항을 입력하세요" %>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
+    <%= f.submit "#{@equipment.new_record? ? '등록' : '수정'}하기", class: "btn-apple btn-apple-primary" %>
+    <%= link_to "취소", equipments_path, class: "btn-apple btn-apple-outline" %>
+  </div>
+<% end %>

@@ -63,32 +63,33 @@
       <%= f.text_field :category, class: "form-control", placeholder: "예: 원자재, 부자재, 완제품 등" %>
     </div>
 
-    <!-- 중량 -->
-    <div class="col-md-3">
+    <!-- 개당 중량 -->
+    <div class="col-md-6">
       <label for="item_weight" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
-        중량
+        개당 중량
       </label>
       <%= f.number_field :weight,
                          class: "form-control",
                          step: "0.01",
                          placeholder: "0",
                          min: "0" %>
-      <small class="text-muted">품목 중량</small>
+      <small class="text-muted">품목의 개당 중량</small>
     </div>
 
-    <!-- 단위 -->
-    <div class="col-md-3">
-      <label for="item_unit" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
-        단위
+    <!-- 중량 단위 -->
+    <div class="col-md-6">
+      <label for="item_weight_unit" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        중량 단위
       </label>
-      <%= f.select :unit,
-                   options_for_select(Item::UNITS, item.unit),
-                   { include_blank: "선택하세요" },
+      <%= f.select :weight_unit,
+                   options_for_select(['Kg', 'g', 'L', 'mL'], item.weight_unit),
+                   { include_blank: "선택" },
                    class: "form-select" %>
+      <small class="text-muted">중량의 단위</small>
     </div>
 
     <!-- 최소재고량 -->
-    <div class="col-md-3">
+    <div class="col-md-6">
       <label for="item_minimum_stock" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
         최소재고량
       </label>
@@ -101,7 +102,7 @@
     </div>
 
     <!-- 적정재고량 -->
-    <div class="col-md-3">
+    <div class="col-md-6">
       <label for="item_optimal_stock" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
         적정재고량
       </label>

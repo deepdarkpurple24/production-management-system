@@ -1,3 +1,5 @@
+<%= render 'inventory/shared/sub_navigation' %>
+
 <div class="container mt-4">
   <!-- 헤더 섹션 -->
   <div class="mb-4">
@@ -58,7 +60,7 @@
             <dd class="col-sm-8 py-2"><%= @receipt.receipt_date.strftime("%Y년 %m월 %d일") %></dd>
 
             <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">수량</dt>
-            <dd class="col-sm-8 py-2" style="font-weight: 500;"><%= @receipt.quantity %> <%= @receipt.item.unit %></dd>
+            <dd class="col-sm-8 py-2" style="font-weight: 500;"><%= @receipt.quantity %></dd>
 
             <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">개당 중량</dt>
             <dd class="col-sm-8 py-2">

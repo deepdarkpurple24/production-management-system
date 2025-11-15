@@ -1,0 +1,73 @@
+<%= render 'inventory/shared/sub_navigation' %>
+
+<div class="container mt-4">
+  <!-- 헤더 섹션 -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1" style="font-weight: 600; letter-spacing: -0.02em;">출고관리</h2>
+      <p class="text-muted small mb-0">Shipment Management</p>
+    </div>
+    <%= link_to new_inventory_shipment_path, class: "btn-apple btn-apple-primary" do %>
+      <i class="bi bi-plus-lg me-2"></i>새 출고 등록
+    <% end %>
+  </div>
+
+  <!-- 출고 목록 테이블 -->
+  <div class="card-apple">
+    <div class="card-body p-0">
+      <% if @shipments.any? %>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead style="background-color: #f5f5f7; border-bottom: 1px solid #d2d2d7;">
+              <tr>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">출고일시</th>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">품목</th>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">수량</th>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">목적</th>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">요청자</th>
+                <th class="py-3 px-4 text-center" style="font-weight: 500; font-size: 0.875rem;">관리</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @shipments.each do |shipment| %>
+                <tr style="border-bottom: 1px solid #e8e8ed;">
+                  <td class="py-3 px-4">
+                    <%= shipment.shipment_date.strftime("%Y-%m-%d %H:%M") %>
+                  </td>
+                  <td class="py-3 px-4" style="font-weight: 500;">
+                    <%= shipment.item.name %>
+                    <small class="text-muted d-block"><%= shipment.item.item_code %></small>
+                  </td>
+                  <td class="py-3 px-4"><%= shipment.quantity %></td>
+                  <td class="py-3 px-4"><%= shipment.purpose.present? ? shipment.purpose : "-" %></td>
+                  <td class="py-3 px-4"><%= shipment.requester.present? ? shipment.requester : "-" %></td>
+                  <td class="py-3 px-4 text-center">
+                    <div class="btn-group btn-group-sm" role="group">
+                      <%= link_to inventory_shipment_path(shipment), class: "btn btn-sm btn-outline-secondary", title: "상세" do %>
+                        <i class="bi bi-eye"></i>
+                      <% end %>
+                      <%= link_to edit_inventory_shipment_path(shipment), class: "btn btn-sm btn-outline-primary", title: "수정" do %>
+                        <i class="bi bi-pencil"></i>
+                      <% end %>
+                      <%= button_to inventory_shipment_path(shipment), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn btn-sm btn-outline-danger", title: "삭제" do %>
+                        <i class="bi bi-trash"></i>
+                      <% end %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="text-center py-5">
+          <i class="bi bi-inbox" style="font-size: 3rem; color: #d2d2d7;"></i>
+          <p class="mt-3 text-muted">등록된 출고 내역이 없습니다.</p>
+          <%= link_to new_inventory_shipment_path, class: "btn-apple btn-apple-outline mt-2" do %>
+            <i class="bi bi-plus-lg me-2"></i>첫 출고 등록하기
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

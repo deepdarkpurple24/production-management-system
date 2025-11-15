@@ -1,0 +1,23 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  recipe: one
+  version_number: 1
+  name: MyString
+  description: MyText
+  notes: MyText
+  total_weight: 9.99
+  changed_by: MyString
+  changed_at: 2025-11-16 00:34:54
+  change_summary: MyText
+
+two:
+  recipe: two
+  version_number: 1
+  name: MyString
+  description: MyText
+  notes: MyText
+  total_weight: 9.99
+  changed_by: MyString
+  changed_at: 2025-11-16 00:34:54
+  change_summary: MyText

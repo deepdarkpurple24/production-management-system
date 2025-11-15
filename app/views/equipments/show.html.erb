@@ -1,0 +1,142 @@
+<%= render 'equipment/shared/sub_navigation' %>
+
+<div class="container mt-4">
+  <!-- 헤더 섹션 -->
+  <div class="mb-4">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><%= link_to "장비목록", equipments_path %></li>
+        <li class="breadcrumb-item active" aria-current="page"><%= @equipment.name %></li>
+      </ol>
+    </nav>
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h2 class="mb-1" style="font-weight: 600; letter-spacing: -0.02em;"><%= @equipment.name %></h2>
+        <p class="text-muted small mb-0">Equipment Details</p>
+      </div>
+      <div class="d-flex gap-2">
+        <%= link_to edit_equipment_path(@equipment), class: "btn-apple btn-apple-outline" do %>
+          <i class="bi bi-pencil me-2"></i>수정
+        <% end %>
+        <%= button_to equipment_path(@equipment), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn-apple btn-apple-outline text-danger border-danger" do %>
+          <i class="bi bi-trash me-2"></i>삭제
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 장비 정보 -->
+  <div class="row g-4">
+    <!-- 기본 정보 -->
+    <div class="col-md-12">
+      <div class="card-apple">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">기본 정보</h5>
+          <dl class="row mb-0">
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">장비명</dt>
+            <dd class="col-sm-10 py-2" style="font-weight: 500;"><%= @equipment.name %></dd>
+
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">장비구분</dt>
+            <dd class="col-sm-10 py-2">
+              <% if @equipment.equipment_type.present? %>
+                <%= @equipment.equipment_type.name %>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </dd>
+
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">제조사</dt>
+            <dd class="col-sm-10 py-2">
+              <% if @equipment.manufacturer.present? %>
+                <%= @equipment.manufacturer %>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </dd>
+
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">모델번호</dt>
+            <dd class="col-sm-10 py-2">
+              <% if @equipment.model_number.present? %>
+                <%= @equipment.model_number %>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </dd>
+
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">구입일자</dt>
+            <dd class="col-sm-10 py-2">
+              <% if @equipment.purchase_date.present? %>
+                <%= @equipment.purchase_date.strftime("%Y년 %m월 %d일") %>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </dd>
+
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">상태</dt>
+            <dd class="col-sm-10 py-2">
+              <% if @equipment.status.present? %>
+                <span class="badge bg-<%= @equipment.status == '정상' ? 'success' : @equipment.status == '점검중' ? 'warning' : @equipment.status == '고장' ? 'danger' : 'secondary' %>">
+                  <%= @equipment.status %>
+                </span>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </dd>
+
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">위치</dt>
+            <dd class="col-sm-10 py-2">
+              <% if @equipment.location.present? %>
+                <%= @equipment.location %>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </dd>
+
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">1회 작업 최대 용량</dt>
+            <dd class="col-sm-10 py-2">
+              <% if @equipment.capacity.present? %>
+                <strong style="font-size: 1.1rem; color: #0071e3;">
+                  <%= number_with_delimiter(@equipment.capacity) %><%= @equipment.capacity_unit %>
+                </strong>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </dd>
+
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">비고</dt>
+            <dd class="col-sm-10 py-2">
+              <% if @equipment.notes.present? %>
+                <%= simple_format(@equipment.notes) %>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <!-- 시스템 정보 -->
+    <div class="col-12">
+      <div class="card-apple">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">시스템 정보</h5>
+          <dl class="row mb-0">
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">등록일시</dt>
+            <dd class="col-sm-4 py-2"><%= @equipment.created_at.strftime("%Y년 %m월 %d일 %H:%M") %></dd>
+
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">수정일시</dt>
+            <dd class="col-sm-4 py-2"><%= @equipment.updated_at.strftime("%Y년 %m월 %d일 %H:%M") %></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 버튼 -->
+  <div class="mt-4 pt-3 border-top d-flex justify-content-between">
+    <%= link_to equipments_path, class: "btn-apple btn-apple-outline" do %>
+      <i class="bi bi-arrow-left me-2"></i>목록으로
+    <% end %>
+  </div>
+</div>

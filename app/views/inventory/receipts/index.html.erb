@@ -1,3 +1,5 @@
+<%= render 'inventory/shared/sub_navigation' %>
+
 <div class="container mt-4">
   <!-- 헤더 섹션 -->
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -35,7 +37,7 @@
                     <%= receipt.item.name %>
                     <small class="text-muted d-block"><%= receipt.item.item_code %></small>
                   </td>
-                  <td class="py-3 px-4"><%= receipt.quantity %> <%= receipt.item.unit %></td>
+                  <td class="py-3 px-4"><%= receipt.quantity %></td>
                   <td class="py-3 px-4">
                     <%= receipt.manufacturing_date ? receipt.manufacturing_date.strftime("%Y-%m-%d") : "-" %>
                   </td>

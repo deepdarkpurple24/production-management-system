@@ -1,6 +1,13 @@
 <!-- Hero Section -->
 <div class="hero-section">
-  <div class="container">
+  <div class="container position-relative">
+    <!-- 설정 버튼 -->
+    <div class="position-absolute top-0 end-0 mt-3">
+      <%= link_to settings_path, class: "btn-apple btn-apple-outline" do %>
+        <i class="bi bi-gear me-2"></i>설정
+      <% end %>
+    </div>
+
     <h1>생산관리 통합 시스템</h1>
     <p class="lead">제조업의 모든 프로세스를 하나로</p>
     <div class="divider"></div>
@@ -41,7 +48,7 @@
 
     <!-- Recipe Management -->
     <div class="col-lg-3 col-md-6">
-      <%= link_to recipe_path, class: "text-decoration-none" do %>
+      <%= link_to recipes_path, class: "text-decoration-none" do %>
         <div class="card-apple h-100">
           <div class="card-body text-center py-5">
             <div class="card-icon icon-orange">
@@ -55,7 +62,7 @@
 
     <!-- Equipment Management -->
     <div class="col-lg-3 col-md-6">
-      <%= link_to equipment_path, class: "text-decoration-none" do %>
+      <%= link_to equipment_module_path, class: "text-decoration-none" do %>
         <div class="card-apple h-100">
           <div class="card-body text-center py-5">
             <div class="card-icon icon-red">

@@ -1,0 +1,110 @@
+<%= render 'inventory/shared/sub_navigation' %>
+
+<div class="container mt-4">
+  <!-- 헤더 섹션 -->
+  <div class="mb-4">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><%= link_to "재고관리", inventory_path %></li>
+        <li class="breadcrumb-item"><%= link_to "출고관리", inventory_shipments_path %></li>
+        <li class="breadcrumb-item active" aria-current="page">출고 #<%= @shipment.id %></li>
+      </ol>
+    </nav>
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h2 class="mb-1" style="font-weight: 600; letter-spacing: -0.02em;">출고 상세정보</h2>
+        <p class="text-muted small mb-0"><%= @shipment.item.name %> - <%= @shipment.shipment_date.strftime("%Y년 %m월 %d일 %H:%M") %></p>
+      </div>
+      <div class="d-flex gap-2">
+        <%= link_to edit_inventory_shipment_path(@shipment), class: "btn-apple btn-apple-outline" do %>
+          <i class="bi bi-pencil me-2"></i>수정
+        <% end %>
+        <%= button_to inventory_shipment_path(@shipment), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn-apple btn-apple-outline text-danger border-danger" do %>
+          <i class="bi bi-trash me-2"></i>삭제
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 상세 정보 -->
+  <div class="row g-4">
+    <!-- 품목 정보 -->
+    <div class="col-md-6">
+      <div class="card-apple h-100">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">품목 정보</h5>
+          <dl class="row mb-0">
+            <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">품목코드</dt>
+            <dd class="col-sm-8 py-2"><code style="background-color: #f5f5f7; padding: 0.25rem 0.5rem; border-radius: 4px;"><%= @shipment.item.item_code %></code></dd>
+
+            <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">품목명</dt>
+            <dd class="col-sm-8 py-2" style="font-weight: 500;"><%= @shipment.item.name %></dd>
+
+            <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">카테고리</dt>
+            <dd class="col-sm-8 py-2"><%= @shipment.item.category.present? ? @shipment.item.category : "-" %></dd>
+
+            <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">단위</dt>
+            <dd class="col-sm-8 py-2"><%= @shipment.item.unit.present? ? @shipment.item.unit : "-" %></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <!-- 출고 정보 -->
+    <div class="col-md-6">
+      <div class="card-apple h-100">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">출고 정보</h5>
+          <dl class="row mb-0">
+            <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">출고일시</dt>
+            <dd class="col-sm-8 py-2"><%= @shipment.shipment_date.strftime("%Y년 %m월 %d일 %H:%M") %></dd>
+
+            <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">수량</dt>
+            <dd class="col-sm-8 py-2" style="font-weight: 500;"><%= @shipment.quantity %></dd>
+
+            <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">출고 목적</dt>
+            <dd class="col-sm-8 py-2"><%= @shipment.purpose.present? ? @shipment.purpose : "-" %></dd>
+
+            <dt class="col-sm-4 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">출고 요청자</dt>
+            <dd class="col-sm-8 py-2"><%= @shipment.requester.present? ? @shipment.requester : "-" %></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <!-- 비고 -->
+    <% if @shipment.notes.present? %>
+      <div class="col-12">
+        <div class="card-apple">
+          <div class="card-body p-4">
+            <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">비고</h5>
+            <p class="mb-0" style="white-space: pre-line;"><%= @shipment.notes %></p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- 시스템 정보 -->
+    <div class="col-12">
+      <div class="card-apple">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">시스템 정보</h5>
+          <dl class="row mb-0">
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">등록일시</dt>
+            <dd class="col-sm-4 py-2"><%= @shipment.created_at.strftime("%Y년 %m월 %d일 %H:%M") %></dd>
+
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">수정일시</dt>
+            <dd class="col-sm-4 py-2"><%= @shipment.updated_at.strftime("%Y년 %m월 %d일 %H:%M") %></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 버튼 -->
+  <div class="mt-4 pt-3 border-top d-flex justify-content-between">
+    <%= link_to inventory_shipments_path, class: "btn-apple btn-apple-outline" do %>
+      <i class="bi bi-arrow-left me-2"></i>목록으로
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,128 @@
+<%= render 'inventory/shared/sub_navigation' %>
+
+<div class="container mt-4">
+  <!-- 헤더 섹션 -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1" style="font-weight: 600; letter-spacing: -0.02em;">재고현황</h2>
+      <p class="text-muted small mb-0">Stock Status</p>
+    </div>
+    <div class="d-flex gap-2">
+      <%= link_to inventory_items_path, class: "btn-apple btn-apple-outline" do %>
+        <i class="bi bi-box-seam me-2"></i>품목관리
+      <% end %>
+    </div>
+  </div>
+
+  <!-- 재고 현황 테이블 -->
+  <div class="card-apple">
+    <div class="card-body p-0">
+      <% if @items.any? %>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead style="background-color: #f5f5f7; border-bottom: 1px solid #d2d2d7;">
+              <tr>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">품목코드</th>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">품목명</th>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">카테고리</th>
+                <th class="py-3 px-4 text-end" style="font-weight: 500; font-size: 0.875rem;">총 입고</th>
+                <th class="py-3 px-4 text-end" style="font-weight: 500; font-size: 0.875rem;">총 출고</th>
+                <th class="py-3 px-4 text-end" style="font-weight: 500; font-size: 0.875rem;">현재 재고</th>
+                <th class="py-3 px-4 text-end" style="font-weight: 500; font-size: 0.875rem;">최소재고</th>
+                <th class="py-3 px-4 text-end" style="font-weight: 500; font-size: 0.875rem;">적정재고</th>
+                <th class="py-3 px-4 text-center" style="font-weight: 500; font-size: 0.875rem;">상태</th>
+                <th class="py-3 px-4 text-center" style="font-weight: 500; font-size: 0.875rem;">관리</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @items.each do |item| %>
+                <tr style="border-bottom: 1px solid #e8e8ed;">
+                  <td class="py-3 px-4">
+                    <code style="background-color: #f5f5f7; padding: 0.25rem 0.5rem; border-radius: 4px;">
+                      <%= item.item_code %>
+                    </code>
+                  </td>
+                  <td class="py-3 px-4" style="font-weight: 500;">
+                    <%= item.name %>
+                  </td>
+                  <td class="py-3 px-4">
+                    <%= item.category.present? ? item.category : "-" %>
+                  </td>
+                  <td class="py-3 px-4 text-end">
+                    <span class="text-success"><%= item.total_receipts %></span>
+                  </td>
+                  <td class="py-3 px-4 text-end">
+                    <span class="text-danger"><%= item.total_shipments %></span>
+                  </td>
+                  <td class="py-3 px-4 text-end">
+                    <strong style="font-size: 1.1rem;"><%= item.current_stock %></strong>
+                    <% if item.unit.present? %>
+                      <small class="text-muted"><%= item.unit %></small>
+                    <% end %>
+                    <% if item.current_stock_weight.present? %>
+                      <br>
+                      <small class="text-muted">(<%= number_with_delimiter(item.current_stock_weight) %> <%= item.weight_unit %>)</small>
+                    <% end %>
+                  </td>
+                  <td class="py-3 px-4 text-end">
+                    <%= item.minimum_stock.present? ? item.minimum_stock : "-" %>
+                  </td>
+                  <td class="py-3 px-4 text-end">
+                    <%= item.optimal_stock.present? ? item.optimal_stock : "-" %>
+                  </td>
+                  <td class="py-3 px-4 text-center">
+                    <span class="badge bg-<%= item.stock_status_color %>">
+                      <%= item.stock_status_text %>
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 text-center">
+                    <div class="btn-group btn-group-sm" role="group">
+                      <%= link_to inventory_item_path(item), class: "btn btn-sm btn-outline-secondary", title: "상세" do %>
+                        <i class="bi bi-eye"></i>
+                      <% end %>
+                      <%= link_to new_inventory_receipt_path(item_id: item.id), class: "btn btn-sm btn-outline-success", title: "입고" do %>
+                        <i class="bi bi-box-arrow-in-down"></i>
+                      <% end %>
+                      <%= link_to new_inventory_shipment_path(item_id: item.id), class: "btn btn-sm btn-outline-primary", title: "출고" do %>
+                        <i class="bi bi-box-arrow-up"></i>
+                      <% end %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="text-center py-5">
+          <i class="bi bi-inbox" style="font-size: 3rem; color: #d2d2d7;"></i>
+          <p class="mt-3 text-muted">등록된 품목이 없습니다.</p>
+          <%= link_to inventory_items_path, class: "btn-apple btn-apple-outline mt-2" do %>
+            <i class="bi bi-plus-lg me-2"></i>품목 관리하기
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- 재고 상태 범례 -->
+  <% if @items.any? %>
+    <div class="mt-4 p-3 border rounded" style="background-color: #fafafa;">
+      <h6 class="mb-3" style="font-weight: 600; font-size: 0.875rem;">재고 상태 범례</h6>
+      <div class="d-flex gap-4">
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-danger">부족</span>
+          <small class="text-muted">최소재고량 미만</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-warning">주의</span>
+          <small class="text-muted">최소재고량 이상 / 적정재고량 미만</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-success">충분</span>
+          <small class="text-muted">적정재고량 이상</small>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

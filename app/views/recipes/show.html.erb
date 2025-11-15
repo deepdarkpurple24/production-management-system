@@ -1,0 +1,202 @@
+<%= render 'recipes/shared/sub_navigation' %>
+
+<div class="container mt-4">
+  <!-- 헤더 섹션 -->
+  <div class="mb-4">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><%= link_to "레시피 관리", recipes_path %></li>
+        <li class="breadcrumb-item active" aria-current="page"><%= @recipe.name %></li>
+      </ol>
+    </nav>
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h2 class="mb-1" style="font-weight: 600; letter-spacing: -0.02em;"><%= @recipe.name %></h2>
+        <p class="text-muted small mb-0">Recipe Details</p>
+      </div>
+      <div class="d-flex gap-2">
+        <%= link_to edit_recipe_path(@recipe), class: "btn-apple btn-apple-outline" do %>
+          <i class="bi bi-pencil me-2"></i>수정
+        <% end %>
+        <%= button_to recipe_path(@recipe), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn-apple btn-apple-outline text-danger border-danger" do %>
+          <i class="bi bi-trash me-2"></i>삭제
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 레시피 정보 -->
+  <div class="row g-4">
+    <!-- 기본 정보 -->
+    <div class="col-md-12">
+      <div class="card-apple">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">기본 정보</h5>
+          <dl class="row mb-0">
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">레시피명</dt>
+            <dd class="col-sm-10 py-2" style="font-weight: 500;"><%= @recipe.name %></dd>
+
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">총 중량</dt>
+            <dd class="col-sm-10 py-2">
+              <strong style="font-size: 1.1rem; color: #0071e3;"><%= number_with_delimiter(@recipe.total_weight) %></strong> g
+            </dd>
+
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">설명</dt>
+            <dd class="col-sm-10 py-2">
+              <% if @recipe.description.present? %>
+                <%= simple_format(@recipe.description) %>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <!-- 사용 장비 목록 -->
+    <% if @recipe.recipe_equipments.where(row_type: ['equipment', 'process']).any? %>
+      <div class="col-12">
+        <div class="card-apple">
+          <div class="card-body p-4">
+            <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">사용 장비 목록</h5>
+            <div class="table-responsive">
+              <table class="table table-bordered">
+                <thead style="background-color: #f5f5f7;">
+                  <tr>
+                    <th style="width: 60px; text-align: center;">순서</th>
+                    <th>장비명</th>
+                    <th style="width: 200px; text-align: right;">최대 작업 중량</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% sequence_num = 0 %>
+                  <% @recipe.recipe_equipments.each do |recipe_equipment| %>
+                    <% if recipe_equipment.row_type == 'process' %>
+                      <tr class="table-secondary">
+                        <td colspan="3">
+                          <i class="bi bi-folder-fill me-2 text-primary"></i>
+                          <strong>공정: <%= recipe_equipment.recipe_process&.name || '공정명 없음' %></strong>
+                        </td>
+                      </tr>
+                    <% elsif recipe_equipment.row_type == 'equipment' %>
+                      <% sequence_num += 1 %>
+                      <tr>
+                        <td class="text-center"><%= sequence_num %></td>
+                        <td><i class="bi bi-gear me-2"></i><%= recipe_equipment.equipment.name %></td>
+                        <td class="text-end">
+                          <% if recipe_equipment.work_capacity.present? %>
+                            <%= number_with_delimiter(recipe_equipment.work_capacity) %> <%= recipe_equipment.work_capacity_unit %>
+                          <% else %>
+                            <span class="text-muted">-</span>
+                          <% end %>
+                        </td>
+                      </tr>
+                    <% end %>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- 재료 목록 -->
+    <div class="col-12">
+      <div class="card-apple">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">재료 목록</h5>
+          <div class="table-responsive">
+            <table class="table table-bordered">
+              <thead style="background-color: #f5f5f7;">
+                <tr>
+                  <th style="width: 60px; text-align: center;">주재료</th>
+                  <th>재료명</th>
+                  <th style="width: 120px; text-align: right;">중량(g)</th>
+                  <th style="width: 100px; text-align: right;">베이커리%</th>
+                  <th style="width: 100px; text-align: right;">백분율</th>
+                  <th>비고</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @recipe.recipe_ingredients.each do |ingredient| %>
+                  <% if ingredient.row_type == 'subtotal' %>
+                    <tr class="table-secondary">
+                      <td colspan="2"><strong>소계</strong></td>
+                      <td class="text-end"><strong><%= number_with_delimiter(@recipe.subtotal_weight) %></strong> g</td>
+                      <td colspan="3"></td>
+                    </tr>
+                  <% else %>
+                    <tr>
+                      <td class="text-center">
+                        <% if ingredient.is_main %>
+                          <i class="bi bi-check-circle-fill text-primary"></i>
+                        <% else %>
+                          -
+                        <% end %>
+                      </td>
+                      <td><%= ingredient.item.name %></td>
+                      <td class="text-end"><%= number_with_delimiter(ingredient.weight) %></td>
+                      <td class="text-end">
+                        <% if ingredient.bakery_percentage.present? %>
+                          <%= ingredient.bakery_percentage %>%
+                        <% else %>
+                          <span class="text-muted">-</span>
+                        <% end %>
+                      </td>
+                      <td class="text-end">
+                        <% if ingredient.percentage.present? %>
+                          <%= ingredient.percentage %>%
+                        <% else %>
+                          <span class="text-muted">-</span>
+                        <% end %>
+                      </td>
+                      <td>
+                        <% if ingredient.notes.present? %>
+                          <%= ingredient.notes %>
+                        <% else %>
+                          <span class="text-muted">-</span>
+                        <% end %>
+                      </td>
+                    </tr>
+                  <% end %>
+                <% end %>
+              </tbody>
+              <tfoot style="background-color: #fafafa;">
+                <tr>
+                  <td colspan="2" class="text-end"><strong>최종 합계</strong></td>
+                  <td class="text-end"><strong><%= number_with_delimiter(@recipe.total_weight) %></strong> g</td>
+                  <td colspan="3"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 시스템 정보 -->
+    <div class="col-12">
+      <div class="card-apple">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">시스템 정보</h5>
+          <dl class="row mb-0">
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">등록일시</dt>
+            <dd class="col-sm-4 py-2"><%= @recipe.created_at.strftime("%Y년 %m월 %d일 %H:%M") %></dd>
+
+            <dt class="col-sm-2 py-2" style="font-weight: 500; font-size: 0.875rem; color: #86868b;">수정일시</dt>
+            <dd class="col-sm-4 py-2"><%= @recipe.updated_at.strftime("%Y년 %m월 %d일 %H:%M") %></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 버튼 -->
+  <div class="mt-4 pt-3 border-top d-flex justify-content-between">
+    <%= link_to recipes_path, class: "btn-apple btn-apple-outline" do %>
+      <i class="bi bi-arrow-left me-2"></i>목록으로
+    <% end %>
+  </div>
+</div>

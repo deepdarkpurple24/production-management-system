@@ -1,0 +1,284 @@
+<%# encoding: UTF-8 %>
+<%= form_with(model: [:inventory, shipment], local: true, class: "needs-validation") do |f| %>
+  <% if shipment.errors.any? %>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <h5 class="alert-heading">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <%= pluralize(shipment.errors.count, "error") %> 발생
+      </h5>
+      <ul class="mb-0">
+        <% shipment.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <% end %>
+
+  <div class="row g-3">
+    <!-- 바코드 입력/스캔 -->
+    <div class="col-12">
+      <label for="barcode_input" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        바코드
+      </label>
+      <div class="input-group">
+        <input type="text" id="barcode_input" class="form-control" placeholder="바코드 번호를 입력하거나 스캔하세요">
+        <button type="button" class="btn btn-outline-primary" id="barcode_scan_btn">
+          <i class="bi bi-camera"></i> 바코드 스캔
+        </button>
+      </div>
+      <small class="text-muted">바코드를 입력하거나 스캔하면 품목이 자동으로 선택됩니다</small>
+      <!-- 카메라 프리뷰 영역 -->
+      <div id="barcode_scanner" style="display: none; margin-top: 10px;">
+        <div id="barcode_camera" style="width: 100%; max-width: 640px;"></div>
+        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="barcode_scan_stop">
+          <i class="bi bi-x-circle"></i> 스캔 중지
+        </button>
+      </div>
+    </div>
+
+    <!-- 품목 선택 -->
+    <div class="col-md-6">
+      <label for="shipment_item_id" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        품목 <span class="text-danger">*</span>
+      </label>
+      <div class="input-group">
+        <%= f.collection_select :item_id,
+                                @items,
+                                :id,
+                                :name,
+                                { include_blank: "품목을 선택하세요", selected: shipment.item_id },
+                                { class: "form-select", required: true, id: "shipment_item_id" } %>
+        <%= link_to new_inventory_item_path, class: "btn btn-outline-primary", target: "_blank" do %>
+          <i class="bi bi-plus-circle"></i> 새 품목
+        <% end %>
+      </div>
+      <small class="text-muted">출고할 품목을 선택하세요</small>
+    </div>
+
+    <!-- 출고일시 -->
+    <div class="col-md-6">
+      <label for="shipment_date_input" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        출고일시 <span class="text-danger">*</span>
+      </label>
+      <% current_seoul_time = Time.zone.now.strftime('%Y-%m-%d %H:%M') %>
+      <%= f.text_field :shipment_date,
+                       value: (shipment.shipment_date&.strftime('%Y-%m-%d %H:%M') || current_seoul_time),
+                       required: true,
+                       id: "shipment_date_input",
+                       class: "form-control flatpickr-datetime",
+                       placeholder: "날짜와 시간을 선택하세요",
+                       readonly: true %>
+    </div>
+
+    <!-- 수량 -->
+    <div class="col-md-6">
+      <label for="shipment_quantity" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        수량 <span class="text-danger">*</span>
+      </label>
+      <%= f.number_field :quantity,
+                         class: "form-control",
+                         step: "1",
+                         placeholder: "0",
+                         min: "1",
+                         required: true %>
+      <small class="text-muted">출고 수량을 입력하세요</small>
+    </div>
+
+    <!-- 출고 목적 -->
+    <div class="col-md-6">
+      <label for="shipment_purpose" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        출고 목적
+      </label>
+      <div class="input-group">
+        <%= f.text_field :purpose,
+                         class: "form-control",
+                         list: "purpose_list",
+                         placeholder: "선택하거나 직접 입력하세요",
+                         id: "shipment_purpose" %>
+        <datalist id="purpose_list">
+          <% @shipment_purposes.each do |purpose| %>
+            <option value="<%= purpose.name %>">
+          <% end %>
+        </datalist>
+        <%= link_to settings_system_path, class: "btn btn-outline-secondary", target: "_blank", title: "설정에서 관리" do %>
+          <i class="bi bi-gear"></i>
+        <% end %>
+      </div>
+      <small class="text-muted">목록에서 선택하거나 새로운 목적을 직접 입력하세요</small>
+    </div>
+
+    <!-- 출고 요청자 -->
+    <div class="col-md-12">
+      <label for="shipment_requester" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        출고 요청자
+      </label>
+      <div class="input-group">
+        <%= f.text_field :requester,
+                         class: "form-control",
+                         list: "requester_list",
+                         placeholder: "선택하거나 직접 입력하세요",
+                         id: "shipment_requester" %>
+        <datalist id="requester_list">
+          <% @shipment_requesters.each do |requester| %>
+            <option value="<%= requester.name %>">
+          <% end %>
+        </datalist>
+        <%= link_to settings_system_path, class: "btn btn-outline-secondary", target: "_blank", title: "설정에서 관리" do %>
+          <i class="bi bi-gear"></i>
+        <% end %>
+      </div>
+      <small class="text-muted">목록에서 선택하거나 새로운 요청자를 직접 입력하세요</small>
+    </div>
+
+    <!-- 비고 -->
+    <div class="col-12">
+      <label for="shipment_notes" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
+        비고
+      </label>
+      <%= f.text_area :notes,
+                      class: "form-control",
+                      rows: 4,
+                      placeholder: "추가 설명이나 특이사항을 입력하세요" %>
+    </div>
+  </div>
+
+  <!-- 버튼 그룹 -->
+  <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
+    <%= f.submit "#{shipment.new_record? ? '등록' : '수정'}하기", class: "btn-apple btn-apple-primary" %>
+    <%= link_to "취소", inventory_shipments_path, class: "btn-apple btn-apple-outline" %>
+  </div>
+<% end %>
+
+<!-- Flatpickr 초기화 및 바코드 기능 -->
+<script>
+  document.addEventListener('turbo:load', function() {
+    // Flatpickr 초기화 (날짜 + 시간)
+    var shipmentDateInput = document.getElementById('shipment_date_input');
+    var currentValue = shipmentDateInput ? shipmentDateInput.value : null;
+
+    flatpickr('.flatpickr-datetime', {
+      locale: 'ko',
+      enableTime: true,
+      dateFormat: 'Y-m-d H:i',
+      time_24hr: true,
+      allowInput: false,
+      disableMobile: true,
+      defaultDate: currentValue
+    });
+
+    // 바코드 기능
+    var itemSelect = document.getElementById('shipment_item_id');
+    var barcodeInput = document.getElementById('barcode_input');
+    var barcodeScanBtn = document.getElementById('barcode_scan_btn');
+    var barcodeScanner = document.getElementById('barcode_scanner');
+    var barcodeScanStop = document.getElementById('barcode_scan_stop');
+    var isScanning = false;
+
+    // 바코드로 품목 검색 함수
+    function searchItemByBarcode(barcode) {
+      if (!barcode || barcode.trim() === '') {
+        return;
+      }
+
+      fetch('/inventory/items/find_by_barcode?barcode=' + encodeURIComponent(barcode))
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // 품목 선택
+            itemSelect.value = data.item.id;
+            itemSelect.dispatchEvent(new Event('change'));
+            alert('품목이 선택되었습니다: ' + data.item.name);
+          } else {
+            alert(data.error || '바코드를 찾을 수 없습니다.');
+          }
+        })
+        .catch(error => {
+          console.error('바코드 검색 에러:', error);
+          alert('바코드 검색 중 오류가 발생했습니다.');
+        });
+    }
+
+    // 바코드 수동 입력 처리
+    if (barcodeInput) {
+      barcodeInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          searchItemByBarcode(this.value);
+        }
+      });
+
+      barcodeInput.addEventListener('blur', function() {
+        if (this.value.trim() !== '') {
+          searchItemByBarcode(this.value);
+        }
+      });
+    }
+
+    // 바코드 스캔 시작
+    if (barcodeScanBtn) {
+      barcodeScanBtn.addEventListener('click', function() {
+        if (isScanning) {
+          return;
+        }
+
+        barcodeScanner.style.display = 'block';
+        isScanning = true;
+
+        Quagga.init({
+          inputStream: {
+            name: "Live",
+            type: "LiveStream",
+            target: document.querySelector('#barcode_camera'),
+            constraints: {
+              width: 640,
+              height: 480,
+              facingMode: "environment"
+            }
+          },
+          decoder: {
+            readers: [
+              "ean_reader",
+              "ean_8_reader",
+              "code_128_reader",
+              "code_39_reader",
+              "upc_reader",
+              "upc_e_reader"
+            ]
+          }
+        }, function(err) {
+          if (err) {
+            console.error('QuaggaJS 초기화 에러:', err);
+            alert('카메라를 시작할 수 없습니다: ' + err);
+            stopBarcodeScanning();
+            return;
+          }
+          Quagga.start();
+        });
+
+        Quagga.onDetected(function(result) {
+          var code = result.codeResult.code;
+          console.log('바코드 감지:', code);
+          barcodeInput.value = code;
+          searchItemByBarcode(code);
+          stopBarcodeScanning();
+        });
+      });
+    }
+
+    // 바코드 스캔 중지
+    if (barcodeScanStop) {
+      barcodeScanStop.addEventListener('click', function() {
+        stopBarcodeScanning();
+      });
+    }
+
+    function stopBarcodeScanning() {
+      if (isScanning) {
+        Quagga.stop();
+        barcodeScanner.style.display = 'none';
+        isScanning = false;
+      }
+    }
+  });
+</script>

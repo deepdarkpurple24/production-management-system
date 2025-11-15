@@ -61,8 +61,8 @@
               <ul class="dropdown-menu dropdown-menu-end">
                 <li><%= link_to inventory_receipts_path, class: "dropdown-item" do %><i class="bi bi-box-arrow-in-down me-2"></i>입고<% end %></li>
                 <li><a class="dropdown-item" href="#"><i class="bi bi-box-seam me-2"></i>개봉품관리</a></li>
-                <li><a class="dropdown-item" href="#"><i class="bi bi-box-arrow-up me-2"></i>출고</a></li>
-                <li><a class="dropdown-item" href="#"><i class="bi bi-clipboard-data me-2"></i>재고현황</a></li>
+                <li><%= link_to inventory_shipments_path, class: "dropdown-item" do %><i class="bi bi-box-arrow-up me-2"></i>출고<% end %></li>
+                <li><%= link_to inventory_stocks_path, class: "dropdown-item" do %><i class="bi bi-clipboard-data me-2"></i>재고현황<% end %></li>
                 <li><%= link_to inventory_items_path, class: "dropdown-item" do %><i class="bi bi-tags me-2"></i>품목관리<% end %></li>
               </ul>
             </li>
@@ -71,8 +71,9 @@
                 레시피관리
               </a>
               <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="#"><i class="bi bi-book me-2"></i>레시피관리</a></li>
-                <li><a class="dropdown-item" href="#"><i class="bi bi-box-seam me-2"></i>완제품관리</a></li>
+                <li><%= link_to recipes_path, class: "dropdown-item" do %><i class="bi bi-book me-2"></i>레시피관리<% end %></li>
+                <li><%= link_to finished_products_path, class: "dropdown-item" do %><i class="bi bi-box-seam me-2"></i>완제품관리<% end %></li>
+                <li><%= link_to ingredients_path, class: "dropdown-item" do %><i class="bi bi-egg me-2"></i>재료관리<% end %></li>
               </ul>
             </li>
             <li class="nav-item dropdown">
@@ -80,7 +81,7 @@
                 기기관리
               </a>
               <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>장비목록</a></li>
+                <li><%= link_to equipments_path, class: "dropdown-item" do %><i class="bi bi-gear me-2"></i>장비목록<% end %></li>
                 <li><a class="dropdown-item" href="#"><i class="bi bi-wrench me-2"></i>유지보수기록</a></li>
               </ul>
             </li>

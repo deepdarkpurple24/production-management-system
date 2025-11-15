@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  recipe: one
+  item: one
+  weight: 9.99
+  is_main: false
+  position: 1
+  row_type: MyString
+  notes: MyText
+
+two:
+  recipe: two
+  item: two
+  weight: 9.99
+  is_main: false
+  position: 1
+  row_type: MyString
+  notes: MyText

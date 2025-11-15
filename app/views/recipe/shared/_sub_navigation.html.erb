@@ -1,0 +1,54 @@
+<!-- 레시피관리 서브 네비게이션 -->
+<div class="bg-white border-bottom" style="box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+  <div class="container">
+    <ul class="nav nav-pills nav-fill py-2" style="gap: 0.5rem;">
+      <li class="nav-item">
+        <a href="#"
+           class="nav-link disabled"
+           style="border-radius: 8px; font-weight: 500; font-size: 0.9rem;">
+          <i class="bi bi-book me-1"></i>레시피관리
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#"
+           class="nav-link disabled"
+           style="border-radius: 8px; font-weight: 500; font-size: 0.9rem;">
+          <i class="bi bi-box-seam me-1"></i>완제품관리
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#"
+           class="nav-link disabled"
+           style="border-radius: 8px; font-weight: 500; font-size: 0.9rem;">
+          <i class="bi bi-calculator me-1"></i>원가계산
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#"
+           class="nav-link disabled"
+           style="border-radius: 8px; font-weight: 500; font-size: 0.9rem;">
+          <i class="bi bi-clipboard-data me-1"></i>배합표
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<style>
+  .nav-pills .nav-link {
+    color: #1d1d1f;
+    transition: all 0.2s ease;
+  }
+  .nav-pills .nav-link:hover:not(.active):not(.disabled) {
+    background-color: #f5f5f7;
+    color: #0071e3;
+  }
+  .nav-pills .nav-link.active {
+    background-color: #0071e3;
+    color: white;
+  }
+  .nav-pills .nav-link.disabled {
+    color: #86868b;
+    cursor: not-allowed;
+  }
+</style>

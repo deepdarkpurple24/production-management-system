@@ -1,0 +1,73 @@
+<%
+  form_url = production_plan.new_record? ? production_plans_path : production_plan_path(production_plan)
+  form_method = production_plan.new_record? ? :post : :patch
+%>
+<%= form_with(model: production_plan, url: form_url, method: form_method, local: true) do |form| %>
+  <% if production_plan.errors.any? %>
+    <div class="alert alert-danger mb-4" role="alert">
+      <h5 class="alert-heading mb-3">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <%= pluralize(production_plan.errors.count, "error") %> prohibited this production plan from being saved:
+      </h5>
+      <ul class="mb-0">
+        <% production_plan.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-4">
+    <%= form.label :finished_product_id, "완제품", class: "form-label", style: "font-weight: 500;" %>
+    <%= form.select :finished_product_id,
+                    options_from_collection_for_select(@finished_products, :id, :name, production_plan.finished_product_id),
+                    { prompt: "완제품을 선택하세요" },
+                    class: "form-select",
+                    required: true %>
+    <small class="form-text text-muted">생산할 완제품을 선택하세요.</small>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <%= form.label :production_date, "생산 예정일", class: "form-label", style: "font-weight: 500;" %>
+      <%= form.date_field :production_date,
+                          class: "form-control",
+                          required: true %>
+      <small class="form-text text-muted">생산 예정 날짜를 입력하세요.</small>
+    </div>
+
+    <div class="col-md-6">
+      <%= form.label :quantity, "수량", class: "form-label", style: "font-weight: 500;" %>
+      <div class="input-group">
+        <%= form.number_field :quantity,
+                              class: "form-control",
+                              min: 1,
+                              step: 1,
+                              required: true,
+                              placeholder: "생산 수량 입력" %>
+        <span class="input-group-text">개</span>
+      </div>
+      <small class="form-text text-muted">생산할 수량을 입력하세요.</small>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <%= form.label :notes, "비고", class: "form-label", style: "font-weight: 500;" %>
+    <%= form.text_area :notes,
+                       class: "form-control",
+                       rows: 4,
+                       placeholder: "추가 메모나 특이사항을 입력하세요 (선택사항)" %>
+    <small class="form-text text-muted">생산 계획에 대한 추가 메모를 입력할 수 있습니다.</small>
+  </div>
+
+  <%= form.hidden_field :view, value: params[:view] %>
+
+  <div class="d-flex justify-content-end gap-2">
+    <%= link_to production_plans_path(view: params[:view] || 'monthly', date: production_plan.production_date || Date.today),
+                class: "btn btn-outline-secondary" do %>
+      <i class="bi bi-x-lg me-2"></i>취소
+    <% end %>
+    <%= form.submit production_plan.new_record? ? "등록" : "수정",
+                    class: "btn-apple btn-apple-primary" %>
+  </div>
+<% end %>

@@ -1,0 +1,73 @@
+<%
+  # 해당 날짜의 생산 계획
+  day_plans = production_plans.select { |plan| plan.production_date == date }
+%>
+
+<div class="p-4">
+  <% if day_plans.any? %>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead style="background-color: #f5f5f7; border-bottom: 1px solid #d2d2d7;">
+          <tr>
+            <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem; width: 50%;">완제품명</th>
+            <th class="py-3 px-4 text-center" style="font-weight: 500; font-size: 0.875rem; width: 15%;">수량</th>
+            <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem; width: 25%;">비고</th>
+            <th class="py-3 px-4 text-center" style="font-weight: 500; font-size: 0.875rem; width: 10%;">관리</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% day_plans.each do |plan| %>
+            <tr style="border-bottom: 1px solid #e8e8ed;">
+              <td class="py-3 px-4" style="font-weight: 500;">
+                <%= plan.finished_product.name %>
+              </td>
+              <td class="py-3 px-4 text-center">
+                <span class="badge bg-primary">
+                  <%= number_with_delimiter(plan.quantity) %>개
+                </span>
+              </td>
+              <td class="py-3 px-4">
+                <% if plan.notes.present? %>
+                  <%= truncate(plan.notes, length: 50) %>
+                <% else %>
+                  <span class="text-muted">-</span>
+                <% end %>
+              </td>
+              <td class="py-3 px-4 text-center">
+                <div class="btn-group btn-group-sm" role="group">
+                  <%= link_to edit_production_plan_path(plan, view: 'daily'),
+                              class: "btn btn-sm btn-outline-primary",
+                              title: "수정" do %>
+                    <i class="bi bi-pencil"></i>
+                  <% end %>
+                  <%= button_to production_plan_path(plan, view: 'daily'),
+                                method: :delete,
+                                class: "btn btn-sm btn-outline-danger",
+                                title: "삭제",
+                                data: { turbo_confirm: "정말 삭제하시겠습니까?" } do %>
+                    <i class="bi bi-trash"></i>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+        <tfoot style="background-color: #f5f5f7; border-top: 2px solid #d2d2d7;">
+          <tr>
+            <th class="py-3 px-4" style="font-weight: 600;">총 계</th>
+            <th class="py-3 px-4 text-center" style="font-weight: 600;">
+              <%= number_with_delimiter(day_plans.sum(&:quantity)) %>개
+            </th>
+            <th colspan="2" class="py-3 px-4"></th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  <% else %>
+    <div class="text-center py-5">
+      <i class="bi bi-calendar-x" style="font-size: 4rem; color: #d2d2d7;"></i>
+      <h5 class="mt-4 mb-2" style="font-weight: 600; color: #86868b;">등록된 생산 계획이 없습니다</h5>
+      <p class="text-muted small">상단의 "새 생산 계획 등록" 버튼을 클릭하여 계획을 추가하세요.</p>
+    </div>
+  <% end %>
+</div>

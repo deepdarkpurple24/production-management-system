@@ -1,0 +1,151 @@
+<%= render 'production/shared/sub_navigation' %>
+
+<div class="container mt-4">
+  <!-- 헤더 섹션 -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1" style="font-weight: 600; letter-spacing: -0.02em;">생산 계획</h2>
+      <p class="text-muted small mb-0">Production Planning</p>
+    </div>
+    <%= link_to new_production_plan_path(date: @date, view: @view_type),
+                class: "btn-apple btn-apple-primary" do %>
+      <i class="bi bi-plus-lg me-2"></i>새 생산 계획 등록
+    <% end %>
+  </div>
+
+  <!-- 뷰 타입 탭 (월별/주간별/일별) -->
+  <div class="card-apple mb-3">
+    <div class="card-body p-3">
+      <ul class="nav nav-pills justify-content-center" style="gap: 0.5rem;">
+        <li class="nav-item">
+          <%= link_to production_plans_path(view: 'monthly', date: @date),
+                      class: "nav-link #{@view_type == 'monthly' ? 'active' : ''}",
+                      style: "border-radius: 8px; font-weight: 500; font-size: 0.9rem;" do %>
+            <i class="bi bi-calendar-month me-1"></i>월별
+          <% end %>
+        </li>
+        <li class="nav-item">
+          <%= link_to production_plans_path(view: 'weekly', date: @date),
+                      class: "nav-link #{@view_type == 'weekly' ? 'active' : ''}",
+                      style: "border-radius: 8px; font-weight: 500; font-size: 0.9rem;" do %>
+            <i class="bi bi-calendar-week me-1"></i>주간별
+          <% end %>
+        </li>
+        <li class="nav-item">
+          <%= link_to production_plans_path(view: 'daily', date: @date),
+                      class: "nav-link #{@view_type == 'daily' ? 'active' : ''}",
+                      style: "border-radius: 8px; font-weight: 500; font-size: 0.9rem;" do %>
+            <i class="bi bi-calendar-day me-1"></i>일별
+          <% end %>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 날짜 네비게이션 -->
+  <div class="card-apple mb-3">
+    <div class="card-body p-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <%= link_to production_plans_path(view: @view_type, date: @date - 1.send(@view_type == 'monthly' ? :month : @view_type == 'weekly' ? :week : :day)),
+                    class: "btn btn-sm btn-outline-secondary" do %>
+          <i class="bi bi-chevron-left"></i>
+        <% end %>
+
+        <div class="text-center">
+          <h4 class="mb-0" style="font-weight: 600;">
+            <% if @view_type == 'monthly' %>
+              <%= @date.strftime('%Y년 %m월') %>
+            <% elsif @view_type == 'weekly' %>
+              <%= @start_date.strftime('%Y년 %m월 %d일') %> - <%= @end_date.strftime('%m월 %d일') %>
+            <% else %>
+              <%= @date.strftime('%Y년 %m월 %d일 (%a)') %>
+            <% end %>
+          </h4>
+          <%= link_to "오늘", production_plans_path(view: @view_type, date: Date.today),
+                      class: "btn btn-sm btn-link text-muted" %>
+        </div>
+
+        <%= link_to production_plans_path(view: @view_type, date: @date + 1.send(@view_type == 'monthly' ? :month : @view_type == 'weekly' ? :week : :day)),
+                    class: "btn btn-sm btn-outline-secondary" do %>
+          <i class="bi bi-chevron-right"></i>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 캘린더 그리드 -->
+  <div class="card-apple">
+    <div class="card-body p-0">
+      <% if @view_type == 'monthly' %>
+        <%= render 'calendar_monthly',
+                   date: @date,
+                   start_date: @start_date,
+                   end_date: @end_date,
+                   production_plans: @production_plans %>
+      <% elsif @view_type == 'weekly' %>
+        <%= render 'calendar_weekly',
+                   start_date: @start_date,
+                   end_date: @end_date,
+                   production_plans: @production_plans %>
+      <% else %>
+        <%= render 'calendar_daily',
+                   date: @date,
+                   production_plans: @production_plans %>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<style>
+  .nav-pills .nav-link {
+    color: #1d1d1f;
+    transition: all 0.2s ease;
+  }
+  .nav-pills .nav-link:hover:not(.active) {
+    background-color: #f5f5f7;
+    color: #0071e3;
+  }
+  .nav-pills .nav-link.active {
+    background-color: #0071e3;
+    color: white;
+  }
+
+  .calendar-cell {
+    min-height: 120px;
+    border: 1px solid #e8e8ed;
+    padding: 8px;
+    transition: all 0.2s ease;
+  }
+
+  .calendar-cell:hover {
+    background-color: #f5f5f7;
+    cursor: pointer;
+  }
+
+  .calendar-cell.today {
+    background-color: #e3f2fd;
+    border-color: #0071e3;
+  }
+
+  .calendar-cell.other-month {
+    background-color: #fafafa;
+    color: #86868b;
+  }
+
+  .plan-item {
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    margin-bottom: 2px;
+    border-radius: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background-color: #0071e3;
+    color: white;
+    cursor: pointer;
+  }
+
+  .plan-item:hover {
+    opacity: 0.8;
+  }
+</style>

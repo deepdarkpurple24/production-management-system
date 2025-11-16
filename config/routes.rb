@@ -55,10 +55,10 @@ Rails.application.routes.draw do
     # resources :opened_items
   end
 
-  # namespace :production do
-  #   resources :plans
-  #   resources :logs
-  # end
+  namespace :production do
+    resources :plans
+    resources :logs
+  end
 
   # 레시피 관리
   resources :recipes do

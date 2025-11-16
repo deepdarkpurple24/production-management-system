@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_15_154725) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_16_060138) do
   create_table "equipment", force: :cascade do |t|
     t.decimal "capacity", precision: 10, scale: 2
     t.string "capacity_unit"
@@ -112,6 +112,42 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_15_154725) do
     t.decimal "weight"
     t.string "weight_unit"
     t.index ["item_code"], name: "index_items_on_item_code", unique: true
+  end
+
+  create_table "production_logs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.decimal "dough_count", precision: 10, scale: 1
+    t.decimal "dough_temp", precision: 10, scale: 1
+    t.decimal "fermentation_room_temp", precision: 10, scale: 1
+    t.integer "finished_product_id", null: false
+    t.decimal "flour_temp", precision: 10, scale: 1
+    t.decimal "makgeolli_consumption", precision: 10, scale: 1
+    t.date "makgeolli_expiry_date"
+    t.text "notes"
+    t.decimal "porridge_temp", precision: 10, scale: 1
+    t.date "production_date"
+    t.integer "production_plan_id", null: false
+    t.time "production_time"
+    t.decimal "refrigeration_room_temp", precision: 10, scale: 1
+    t.integer "salt_amount"
+    t.decimal "steiva_amount", precision: 10, scale: 1
+    t.integer "sugar_amount"
+    t.datetime "updated_at", null: false
+    t.decimal "water_amount", precision: 10, scale: 1
+    t.decimal "water_temp", precision: 10, scale: 1
+    t.integer "yeast_amount"
+    t.index ["finished_product_id"], name: "index_production_logs_on_finished_product_id"
+    t.index ["production_plan_id"], name: "index_production_logs_on_production_plan_id"
+  end
+
+  create_table "production_plans", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "finished_product_id", null: false
+    t.text "notes"
+    t.date "production_date"
+    t.integer "quantity"
+    t.datetime "updated_at", null: false
+    t.index ["finished_product_id"], name: "index_production_plans_on_finished_product_id"
   end
 
   create_table "receipts", force: :cascade do |t|
@@ -226,6 +262,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_15_154725) do
   add_foreign_key "finished_product_recipes", "recipes", on_delete: :cascade
   add_foreign_key "ingredient_items", "ingredients"
   add_foreign_key "ingredient_items", "items"
+  add_foreign_key "production_logs", "finished_products"
+  add_foreign_key "production_logs", "production_plans"
+  add_foreign_key "production_plans", "finished_products"
   add_foreign_key "receipts", "items"
   add_foreign_key "recipe_equipments", "equipment"
   add_foreign_key "recipe_equipments", "recipes", on_delete: :cascade

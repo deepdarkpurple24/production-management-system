@@ -3,11 +3,11 @@
   <div class="container">
     <ul class="nav nav-pills nav-fill py-2" style="gap: 0.5rem;">
       <li class="nav-item">
-        <a href="#"
-           class="nav-link disabled"
-           style="border-radius: 8px; font-weight: 500; font-size: 0.9rem;">
+        <%= link_to production_plans_path,
+                    class: "nav-link #{controller_name == 'plans' ? 'active' : ''}",
+                    style: "border-radius: 8px; font-weight: 500; font-size: 0.9rem;" do %>
           <i class="bi bi-calendar-check me-1"></i>생산계획
-        </a>
+        <% end %>
       </li>
       <li class="nav-item">
         <a href="#"

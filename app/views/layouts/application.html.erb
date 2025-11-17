@@ -19,7 +19,7 @@
     <link rel="apple-touch-icon" href="/icon.png">
 
     <%# Includes all stylesheet files in app/assets/stylesheets %>
-    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload", preload: false %>
     <%= javascript_importmap_tags %>
 
     <!-- Flatpickr CSS -->
@@ -50,8 +50,8 @@
                 생산관리
               </a>
               <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="#"><i class="bi bi-calendar-check me-2"></i>생산계획</a></li>
-                <li><a class="dropdown-item" href="#"><i class="bi bi-journal-text me-2"></i>반죽일지</a></li>
+                <li><%= link_to production_plans_path, class: "dropdown-item" do %><i class="bi bi-calendar-check me-2"></i>생산계획<% end %></li>
+                <li><%= link_to production_logs_path, class: "dropdown-item" do %><i class="bi bi-journal-text me-2"></i>반죽일지<% end %></li>
               </ul>
             </li>
             <li class="nav-item dropdown">

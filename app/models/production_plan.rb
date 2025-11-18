@@ -4,5 +4,5 @@ class ProductionPlan < ApplicationRecord
 
   validates :finished_product, presence: true
   validates :production_date, presence: true
-  validates :quantity, presence: true, numericality: { greater_than: 0, only_integer: true }
+  validates :quantity, presence: true, numericality: { greater_than: 0 }
 end

@@ -67,13 +67,13 @@
               <td style="position: relative; min-width: 200px;">
                 <div class="source-item" style="<%= 'display: none;' unless ingredient_fields.object.source_type.nil? || ingredient_fields.object.source_type == 'item' %>">
                   <%= ingredient_fields.collection_select :item_id, @items, :id, :name,
-                      { include_blank: "품목 선택" },
-                      { class: "form-select form-select-sm" } %>
+                      {},
+                      { class: "form-select form-select-sm", include_blank: false } %>
                 </div>
                 <div class="source-ingredient" style="<%= 'display: none;' unless ingredient_fields.object.source_type == 'ingredient' %>">
                   <%= ingredient_fields.collection_select :referenced_ingredient_id, @ingredients, :id, :name,
-                      { include_blank: "재료 선택" },
-                      { class: "form-select form-select-sm" } %>
+                      {},
+                      { class: "form-select form-select-sm", include_blank: false } %>
                 </div>
               </td>
               <td>
@@ -286,13 +286,11 @@ document.addEventListener('turbo:load', function() {
         <td style="position: relative; min-width: 200px;">
           <div class="source-item">
             <select class="form-select form-select-sm" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][item_id]">
-              <option value="">품목 선택</option>
               ${itemOptions}
             </select>
           </div>
           <div class="source-ingredient" style="display: none;">
             <select class="form-select form-select-sm" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][referenced_ingredient_id]">
-              <option value="">재료 선택</option>
               ${ingredientOptions}
             </select>
           </div>
@@ -870,9 +868,7 @@ document.addEventListener('turbo:load', function() {
   #ingredients-table .form-select.is-valid,
   #ingredients-table .form-control.is-valid,
   #ingredients-table .form-select,
-  #ingredients-table .form-control,
-  #ingredients-table .form-check-input.is-valid,
-  #ingredients-table .form-check-input {
+  #ingredients-table .form-control {
     background-image: none !important;
     border-color: #dee2e6;
   }
@@ -891,5 +887,38 @@ document.addEventListener('turbo:load', function() {
   .source-type-select.is-valid {
     background-image: none !important;
     padding-right: 0.75rem !important;
+  }
+
+  /* 주재료 체크박스 - 표준 체크 표시 사용 */
+  #ingredients-table .is-main-checkbox {
+    width: 1.125em;
+    height: 1.125em;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25em;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+  }
+
+  #ingredients-table .is-main-checkbox:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  #ingredients-table .is-main-checkbox:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  }
+
+  #ingredients-table .is-main-checkbox.is-valid,
+  #ingredients-table .is-main-checkbox:valid {
+    border-color: #dee2e6 !important;
   }
 </style>

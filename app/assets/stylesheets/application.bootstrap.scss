@@ -817,3 +817,29 @@ main {
   border-radius: 4px;
 }
 
+// ===================================
+// Bootstrap Form Validation Icons Override
+// Remove checkmark/X icons from validated form fields
+// ===================================
+
+// Remove validation icons from all form-select (dropdowns)
+.form-select.is-valid,
+.form-select.is-invalid,
+.form-select {
+  background-image: none !important;
+  padding-right: 2.25rem; // Restore default padding for dropdown arrow
+}
+
+// Remove validation icons from text inputs (but keep border color changes)
+.form-control.is-valid,
+.form-control.is-invalid {
+  background-image: none !important;
+  padding-right: 0.75rem;
+}
+
+// Remove validation icons from checkboxes
+.form-check-input.is-valid,
+.form-check-input.is-invalid {
+  background-image: none !important;
+}
+

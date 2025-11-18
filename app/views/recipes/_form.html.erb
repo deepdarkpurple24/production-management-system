@@ -642,6 +642,9 @@ document.addEventListener('turbo:load', function() {
   // 공정 데이터를 JSON으로 가져오기
   const processesData = <%= @recipe_processes.map { |p| { id: p.id, name: p.name } }.to_json.html_safe %>;
 
+  // 장비 데이터를 JSON으로 가져오기
+  const equipmentsData = <%= @equipments.map { |e| { id: e.id, name: e.name, capacity: e.capacity, capacity_unit: e.capacity_unit } }.to_json.html_safe %>;
+
   // 공정 추가
   const addProcessBtn = document.getElementById('add-process-btn');
   if (addProcessBtn) {
@@ -686,8 +689,7 @@ document.addEventListener('turbo:load', function() {
   if (addEquipmentBtn) {
     addEquipmentBtn.addEventListener('click', function() {
       const equipmentsTbody = document.getElementById('equipments-tbody');
-      const equipmentOptions = '<%= @equipments.map { |e| "<option value=#{e.id}>#{e.name}</option>" }.join.html_safe %>';
-      const equipmentsData = <%= @equipments.map { |e| { id: e.id, capacity: e.capacity, capacity_unit: e.capacity_unit } }.to_json.html_safe %>;
+      const equipmentOptions = equipmentsData.map(eq => `<option value="${eq.id}">${eq.name}</option>`).join('');
 
       const newRow = `
         <tr class="equipment-row">

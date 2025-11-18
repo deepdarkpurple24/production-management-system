@@ -1,0 +1,911 @@
+<div class="container mt-4">
+  <!-- 헤더 섹션 -->
+  <div class="mb-4">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><%= link_to "홈", root_path %></li>
+        <li class="breadcrumb-item"><%= link_to "설정", settings_path %></li>
+        <li class="breadcrumb-item active" aria-current="page">시스템 설정</li>
+      </ol>
+    </nav>
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h2 class="mb-1" style="font-weight: 600; letter-spacing: -0.02em;">시스템 설정</h2>
+        <p class="text-muted small mb-0">System Settings</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 서브 네비게이션 -->
+  <ul class="nav nav-tabs mb-4" id="settingsTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="production-tab" data-bs-toggle="tab" data-bs-target="#production-settings" type="button" role="tab">
+        <i class="bi bi-clipboard-data-fill me-2"></i>생산관리
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory-settings" type="button" role="tab">
+        <i class="bi bi-box-seam-fill me-2"></i>재고관리
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="recipe-tab" data-bs-toggle="tab" data-bs-target="#recipe-settings" type="button" role="tab">
+        <i class="bi bi-book-fill me-2"></i>레시피관리
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="equipment-tab" data-bs-toggle="tab" data-bs-target="#equipment-settings" type="button" role="tab">
+        <i class="bi bi-gear-fill me-2"></i>기기관리
+      </button>
+    </li>
+  </ul>
+
+  <!-- 탭 컨텐츠 -->
+  <div class="tab-content" id="settingsTabContent">
+    <!-- 생산관리 설정 탭 -->
+    <div class="tab-pane fade show active" id="production-settings" role="tabpanel">
+      <h4 class="mb-4" style="font-weight: 600; color: #1d1d1f;">
+        <i class="bi bi-clipboard-data-fill me-2" style="color: #0071e3;"></i>생산관리
+      </h4>
+    <div class="row g-4">
+      <!-- 장비 구분 관리 -->
+      <div class="col-12">
+        <div class="card-apple">
+          <div class="card-body p-4">
+            <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
+              <i class="bi bi-tag me-2"></i>장비 구분 관리
+            </h5>
+
+          <!-- 새 장비 구분 추가 폼 -->
+          <%= form_with(model: @equipment_type, url: create_equipment_type_path, local: true, class: "mb-4") do |f| %>
+            <div class="input-group">
+              <%= f.text_field :name, class: "form-control", placeholder: "새 장비 구분 입력 (예: 오븐, 믹서 등)", required: true %>
+              <%= f.submit "추가", class: "btn-apple btn-apple-primary" %>
+            </div>
+            <% if @equipment_type.errors.any? %>
+              <div class="text-danger small mt-2">
+                <%= @equipment_type.errors.full_messages.join(", ") %>
+              </div>
+            <% end %>
+          <% end %>
+
+          <!-- 장비 구분 목록 -->
+          <% if @equipment_types.any? %>
+            <small class="text-muted mb-2 d-block">
+              <i class="bi bi-arrows-move me-1"></i>드래그하여 순서 변경
+            </small>
+            <div class="list-group" id="equipment-types-list">
+              <% @equipment_types.each do |equipment_type| %>
+                <div class="list-group-item d-flex justify-content-between align-items-center sortable-item" style="border: 1px solid #e8e8ed; border-radius: 8px; margin-bottom: 8px; cursor: move;" data-id="<%= equipment_type.id %>">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-grip-vertical me-2 text-muted"></i>
+                    <span style="font-weight: 500;"><%= equipment_type.name %></span>
+                  </div>
+                  <%= button_to destroy_equipment_type_path(equipment_type), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn btn-sm btn-outline-danger" do %>
+                    <i class="bi bi-trash"></i>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-center text-muted py-3">
+              <i class="bi bi-inbox" style="font-size: 2rem; color: #d2d2d7;"></i>
+              <p class="mt-2 mb-0 small">등록된 장비 구분이 없습니다.</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- 장비 모드 관리 -->
+    <div class="col-12">
+      <div class="card-apple">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
+            <i class="bi bi-sliders me-2"></i>장비 모드 관리
+          </h5>
+
+          <!-- 장비 구분 선택 및 모드 추가 폼 -->
+          <%= form_with(model: @equipment_mode, url: create_equipment_mode_path, local: true, class: "mb-4") do |f| %>
+            <div class="row g-2">
+              <div class="col-md-4">
+                <label class="form-label">장비 구분 선택 <span class="text-danger">*</span></label>
+                <%= f.select :equipment_type_id,
+                             options_for_select(@equipment_types.map { |et| [et.name, et.id] }),
+                             { include_blank: "선택" },
+                             class: "form-select",
+                             id: "equipment-type-select",
+                             required: true %>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">모드명 <span class="text-danger">*</span></label>
+                <%= f.text_field :name, class: "form-control", placeholder: "예: 찜모드, 굽기모드 등", required: true %>
+              </div>
+              <div class="col-md-2 d-flex align-items-end">
+                <%= f.submit "추가", class: "btn-apple btn-apple-primary w-100" %>
+              </div>
+            </div>
+            <% if @equipment_mode.errors.any? %>
+              <div class="text-danger small mt-2">
+                <%= @equipment_mode.errors.full_messages.join(", ") %>
+              </div>
+            <% end %>
+          <% end %>
+
+          <!-- 장비 구분별 모드 목록 표시 -->
+          <div id="equipment-modes-container">
+            <% if @equipment_types.any? %>
+              <% @equipment_types.each do |equipment_type| %>
+                <div class="equipment-type-modes mb-4" data-equipment-type-id="<%= equipment_type.id %>" style="display: none;">
+                  <h6 class="mb-2" style="font-weight: 500; color: #0071e3;">
+                    <i class="bi bi-gear-fill me-1"></i><%= equipment_type.name %> 모드 목록
+                  </h6>
+                  <% if equipment_type.equipment_modes.any? %>
+                    <small class="text-muted mb-2 d-block">
+                      <i class="bi bi-arrows-move me-1"></i>드래그하여 순서 변경
+                    </small>
+                    <div class="list-group equipment-modes-list" id="equipment-modes-list-<%= equipment_type.id %>">
+                      <% equipment_type.equipment_modes.each do |mode| %>
+                        <div class="list-group-item d-flex justify-content-between align-items-center sortable-item" style="border: 1px solid #e8e8ed; border-radius: 8px; margin-bottom: 8px; cursor: move;" data-id="<%= mode.id %>">
+                          <div class="d-flex align-items-center">
+                            <i class="bi bi-grip-vertical me-2 text-muted"></i>
+                            <span style="font-weight: 500;"><%= mode.name %></span>
+                          </div>
+                          <%= button_to destroy_equipment_mode_path(mode), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn btn-sm btn-outline-danger" do %>
+                            <i class="bi bi-trash"></i>
+                          <% end %>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <div class="text-center text-muted py-2">
+                      <small>등록된 모드가 없습니다.</small>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+            <% else %>
+              <div class="text-center text-muted py-3">
+                <i class="bi bi-inbox" style="font-size: 2rem; color: #d2d2d7;"></i>
+                <p class="mt-2 mb-0 small">먼저 장비 구분을 등록해주세요.</p>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+      </div>
+    </div>
+    <!-- 레시피관리 설정 탭 -->
+    <div class="tab-pane fade" id="recipe-settings" role="tabpanel">
+      <!-- 레시피관리 설정 -->
+      <div class="mb-4">
+        <h4 class="mb-3" style="font-weight: 600; color: #1d1d1f;">
+          <i class="bi bi-book-fill me-2" style="color: #fd7e14;"></i>레시피관리
+        </h4>
+        <div class="row g-4">
+          <!-- 공정 관리 -->
+          <div class="col-12">
+      <div class="card-apple">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
+            <i class="bi bi-diagram-3 me-2"></i>공정 관리
+          </h5>
+
+          <!-- 새 공정 추가 폼 -->
+          <%= form_with(model: @recipe_process, url: create_recipe_process_path, local: true, class: "mb-4") do |f| %>
+            <div class="input-group">
+              <%= f.text_field :name, class: "form-control", placeholder: "새 공정 입력 (예: 반죽, 1차 발효, 성형 등)", required: true %>
+              <%= f.submit "추가", class: "btn-apple btn-apple-primary" %>
+            </div>
+            <% if @recipe_process.errors.any? %>
+              <div class="text-danger small mt-2">
+                <%= @recipe_process.errors.full_messages.join(", ") %>
+              </div>
+            <% end %>
+          <% end %>
+
+          <!-- 공정 목록 -->
+          <% if @recipe_processes.any? %>
+            <small class="text-muted mb-2 d-block">
+              <i class="bi bi-arrows-move me-1"></i>드래그하여 순서 변경
+            </small>
+            <div class="list-group" id="recipe-processes-list">
+              <% @recipe_processes.each do |recipe_process| %>
+                <div class="list-group-item d-flex justify-content-between align-items-center sortable-item" style="border: 1px solid #e8e8ed; border-radius: 8px; margin-bottom: 8px; cursor: move;" data-id="<%= recipe_process.id %>">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-grip-vertical me-2 text-muted"></i>
+                    <span style="font-weight: 500;"><%= recipe_process.name %></span>
+                  </div>
+                  <%= button_to destroy_recipe_process_path(recipe_process), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn btn-sm btn-outline-danger" do %>
+                    <i class="bi bi-trash"></i>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-center text-muted py-3">
+              <i class="bi bi-inbox" style="font-size: 2rem; color: #d2d2d7;"></i>
+              <p class="mt-2 mb-0 small">등록된 공정이 없습니다.</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+      </div>
+    </div>
+    <!-- 품목 관리 설정 탭 -->
+    <div class="tab-pane fade" id="item-settings" role="tabpanel">
+      <!-- 품목 관리 -->
+      <div class="mb-4">
+        <h4 class="mb-3" style="font-weight: 600; color: #1d1d1f;">
+          <i class="bi bi-tags-fill me-2" style="color: #007bff;"></i>품목 관리
+        </h4>
+    <div class="row g-4">
+      <div class="col-12">
+        <div class="card-apple">
+          <div class="card-body p-4">
+            <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
+              <i class="bi bi-tag me-2"></i>품목 카테고리 관리
+            </h5>
+
+            <!-- 새 카테고리 추가 폼 -->
+            <%= form_with(model: @item_category, url: create_item_category_path, local: true, class: "mb-4") do |f| %>
+              <div class="input-group">
+                <%= f.text_field :name, class: "form-control", placeholder: "새 카테고리 입력 (예: 원자재, 부자재, 완제품 등)", required: true %>
+                <%= f.submit "추가", class: "btn-apple btn-apple-primary" %>
+              </div>
+              <% if @item_category.errors.any? %>
+                <div class="text-danger small mt-2">
+                  <%= @item_category.errors.full_messages.join(", ") %>
+                </div>
+              <% end %>
+            <% end %>
+
+            <!-- 카테고리 목록 -->
+            <% if @item_categories.any? %>
+              <small class="text-muted mb-2 d-block">
+                <i class="bi bi-arrows-move me-1"></i>드래그하여 순서 변경
+              </small>
+              <div class="list-group" id="item-categories-list">
+                <% @item_categories.each do |item_category| %>
+                  <div class="list-group-item d-flex justify-content-between align-items-center sortable-item" style="border: 1px solid #e8e8ed; border-radius: 8px; margin-bottom: 8px; cursor: move;" data-id="<%= item_category.id %>">
+                    <div class="d-flex align-items-center">
+                      <i class="bi bi-grip-vertical me-2 text-muted"></i>
+                      <span style="font-weight: 500;"><%= item_category.name %></span>
+                    </div>
+                    <%= button_to destroy_item_category_path(item_category), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn btn-sm btn-outline-danger" do %>
+                      <i class="bi bi-trash"></i>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            <% else %>
+              <div class="text-center text-muted py-3">
+                <i class="bi bi-inbox" style="font-size: 2rem; color: #d2d2d7;"></i>
+                <p class="mt-2 mb-0 small">등록된 카테고리가 없습니다.</p>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 보관위치 관리 -->
+    <div class="row g-4">
+      <div class="col-12">
+        <div class="card-apple">
+          <div class="card-body p-4">
+            <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
+              <i class="bi bi-geo-alt me-2"></i>보관위치 관리
+            </h5>
+
+            <!-- 새 보관위치 추가 폼 -->
+            <%= form_with(model: @storage_location, url: create_storage_location_path, local: true, class: "mb-4") do |f| %>
+              <div class="input-group">
+                <%= f.text_field :name, class: "form-control", placeholder: "새 보관위치 입력 (예: 창고 A, 냉장고 등)", required: true %>
+                <%= f.submit "추가", class: "btn-apple btn-apple-primary" %>
+              </div>
+              <% if @storage_location.errors.any? %>
+                <div class="text-danger small mt-2">
+                  <%= @storage_location.errors.full_messages.join(", ") %>
+                </div>
+              <% end %>
+            <% end %>
+
+            <!-- 보관위치 목록 -->
+            <% if @storage_locations.any? %>
+              <small class="text-muted mb-2 d-block">
+                <i class="bi bi-arrows-move me-1"></i>드래그하여 순서 변경
+              </small>
+              <div class="list-group" id="storage-locations-list">
+                <% @storage_locations.each do |storage_location| %>
+                  <div class="list-group-item d-flex justify-content-between align-items-center sortable-item" style="border: 1px solid #e8e8ed; border-radius: 8px; margin-bottom: 8px; cursor: move;" data-id="<%= storage_location.id %>">
+                    <div class="d-flex align-items-center">
+                      <i class="bi bi-grip-vertical me-2 text-muted"></i>
+                      <span style="font-weight: 500;"><%= storage_location.name %></span>
+                    </div>
+                    <%= button_to destroy_storage_location_path(storage_location), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn btn-sm btn-outline-danger" do %>
+                      <i class="bi bi-trash"></i>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            <% else %>
+              <div class="text-center text-muted py-3">
+                <i class="bi bi-inbox" style="font-size: 2rem; color: #d2d2d7;"></i>
+                <p class="mt-2 mb-0 small">등록된 보관위치가 없습니다.</p>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+      </div>
+    </div>
+    <!-- 재고관리 설정 탭 -->
+    <div class="tab-pane fade" id="inventory-settings" role="tabpanel">
+      <!-- 재고관리 설정 -->
+      <div class="mb-4">
+        <h4 class="mb-3" style="font-weight: 600; color: #1d1d1f;">
+          <i class="bi bi-box-seam-fill me-2" style="color: #28a745;"></i>재고관리
+        </h4>
+    <div class="row g-4">
+      <!-- 출고 목적 관리 -->
+      <div class="col-12">
+        <div class="card-apple">
+          <div class="card-body p-4">
+            <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
+              <i class="bi bi-tag me-2"></i>출고 목적 관리
+            </h5>
+
+          <!-- 새 목적 추가 폼 -->
+          <%= form_with(model: @shipment_purpose, url: create_shipment_purpose_path, local: true, class: "mb-4") do |f| %>
+            <div class="input-group">
+              <%= f.text_field :name, class: "form-control", placeholder: "새 출고 목적 입력 (예: 생산, 판매, 샘플 등)", required: true %>
+              <%= f.submit "추가", class: "btn-apple btn-apple-primary" %>
+            </div>
+            <% if @shipment_purpose.errors.any? %>
+              <div class="text-danger small mt-2">
+                <%= @shipment_purpose.errors.full_messages.join(", ") %>
+              </div>
+            <% end %>
+          <% end %>
+
+          <!-- 목적 목록 -->
+          <% if @shipment_purposes.any? %>
+            <small class="text-muted mb-2 d-block">
+              <i class="bi bi-arrows-move me-1"></i>드래그하여 순서 변경
+            </small>
+            <div class="list-group" id="purposes-list">
+              <% @shipment_purposes.each do |purpose| %>
+                <div class="list-group-item d-flex justify-content-between align-items-center sortable-item" style="border: 1px solid #e8e8ed; border-radius: 8px; margin-bottom: 8px; cursor: move;" data-id="<%= purpose.id %>">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-grip-vertical me-2 text-muted"></i>
+                    <span style="font-weight: 500;"><%= purpose.name %></span>
+                  </div>
+                  <%= button_to destroy_shipment_purpose_path(purpose), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn btn-sm btn-outline-danger" do %>
+                    <i class="bi bi-trash"></i>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-center text-muted py-3">
+              <i class="bi bi-inbox" style="font-size: 2rem; color: #d2d2d7;"></i>
+              <p class="mt-2 mb-0 small">등록된 출고 목적이 없습니다.</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- 출고 요청자 관리 -->
+    <div class="col-12">
+      <div class="card-apple">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
+            <i class="bi bi-person me-2"></i>출고 요청자 관리
+          </h5>
+
+          <!-- 새 요청자 추가 폼 -->
+          <%= form_with(model: @shipment_requester, url: create_shipment_requester_path, local: true, class: "mb-4") do |f| %>
+            <div class="input-group">
+              <%= f.text_field :name, class: "form-control", placeholder: "새 출고 요청자 입력 (예: 홍길동, 생산팀 등)", required: true %>
+              <%= f.submit "추가", class: "btn-apple btn-apple-primary" %>
+            </div>
+            <% if @shipment_requester.errors.any? %>
+              <div class="text-danger small mt-2">
+                <%= @shipment_requester.errors.full_messages.join(", ") %>
+              </div>
+            <% end %>
+          <% end %>
+
+          <!-- 요청자 목록 -->
+          <% if @shipment_requesters.any? %>
+            <small class="text-muted mb-2 d-block">
+              <i class="bi bi-arrows-move me-1"></i>드래그하여 순서 변경
+            </small>
+            <div class="list-group" id="requesters-list">
+              <% @shipment_requesters.each do |requester| %>
+                <div class="list-group-item d-flex justify-content-between align-items-center sortable-item" style="border: 1px solid #e8e8ed; border-radius: 8px; margin-bottom: 8px; cursor: move;" data-id="<%= requester.id %>">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-grip-vertical me-2 text-muted"></i>
+                    <span style="font-weight: 500;"><%= requester.name %></span>
+                  </div>
+                  <%= button_to destroy_shipment_requester_path(requester), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn btn-sm btn-outline-danger" do %>
+                    <i class="bi bi-trash"></i>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-center text-muted py-3">
+              <i class="bi bi-inbox" style="font-size: 2rem; color: #d2d2d7;"></i>
+              <p class="mt-2 mb-0 small">등록된 출고 요청자가 없습니다.</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+        </div>
+      </div>
+      </div>
+    </div>
+    <!-- 생산관리 설정 탭 -->
+    <div class="tab-pane fade" id="production-settings" role="tabpanel">
+      <!-- 생산관리 설정 -->
+      <div class="mb-4">
+        <h4 class="mb-3" style="font-weight: 600; color: #1d1d1f;">
+          <i class="bi bi-clipboard-data-fill me-2" style="color: #0071e3;"></i>생산관리
+        </h4>
+    <div class="row g-4">
+      <!-- 기정떡 기본값 설정 -->
+      <div class="col-12">
+        <div class="card-apple">
+          <div class="card-body p-4">
+            <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
+              <i class="bi bi-clipboard-check me-2"></i>기정떡 생산일지 기본값 설정
+            </h5>
+            <p class="text-muted small mb-4">
+              기정떡 생산일지 입력 시 자동으로 채워질 기본값을 설정합니다. 드래그하여 순서를 변경할 수 있습니다.
+            </p>
+
+            <!-- 필드 순서 리스트 -->
+            <div id="gijeongddeok-fields-list" class="mb-4">
+              <% @gijeongddeok_fields.each do |field| %>
+                <div class="sortable-item p-3 mb-2"
+                     data-id="<%= field.id %>"
+                     style="background: #f5f5f7; border-radius: 8px; cursor: move; border: 1px solid #e5e5e7;">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-grip-vertical me-3" style="color: #86868b;"></i>
+                    <div class="flex-grow-1">
+                      <strong><%= field.label %></strong>
+                      <small class="text-muted ms-2">(<%= field.field_name %>)</small>
+                    </div>
+                    <span class="badge bg-secondary"><%= field.category == 'temperature' ? '온도' : field.category == 'ingredient' ? '재료' : '막걸리' %></span>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+
+            <%= form_with(model: @gijeongddeok_default, url: update_gijeongddeok_defaults_path, method: :patch, id: "gijeongddeok-form", local: true) do |f| %>
+              <h6 class="mb-3" style="font-weight: 600; color: #1d1d1f;">📝 기본값 입력</h6>
+              <div class="row g-3 mb-4">
+                <% @gijeongddeok_fields.each do |field| %>
+                  <div class="col-md-4">
+                    <%= f.label field.field_name, field.label, class: "form-label" %>
+                    <div class="input-group">
+                      <%= f.number_field field.field_name,
+                                        step: (field.field_name.ends_with?('_temp') || field.field_name.ends_with?('_amount') && field.field_name != 'yeast_amount' && field.field_name != 'salt_amount' && field.field_name != 'sugar_amount') ? 0.1 : nil,
+                                        class: "form-control",
+                                        placeholder: field.category == 'temperature' ? "예: 25.0" : (field.field_name == 'makgeolli_consumption' ? "예: 2500" : (field.field_name == 'water_amount' ? "예: 1.5" : "예: 100")) %>
+                      <span class="input-group-text">
+                        <%= case field.field_name
+                            when /temp$/
+                              '°C'
+                            when 'yeast_amount', 'salt_amount', 'sugar_amount', 'steiva_amount'
+                              'g'
+                            when 'water_amount'
+                              'L'
+                            when 'makgeolli_consumption'
+                              'mL'
+                            else
+                              ''
+                            end %>
+                      </span>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+
+              <div class="d-flex justify-content-end">
+                <%= f.submit "저장", class: "btn-apple btn-apple-primary" %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 버튼 -->
+  <div class="mt-4 pt-3 border-top d-flex justify-content-between">
+    <%= link_to settings_path, class: "btn-apple btn-apple-outline" do %>
+      <i class="bi bi-arrow-left me-2"></i>설정으로
+    <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SortableJS 라이브러리 -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+<script>
+  document.addEventListener('turbo:load', function() {
+    // Sortable이 로드되지 않았으면 대기
+    if (typeof Sortable === 'undefined') {
+      console.warn('Sortable 라이브러리가 아직 로드되지 않았습니다.');
+      return;
+    }
+
+    // 장비 구분 선택 시 해당 모드 목록 표시
+    var equipmentTypeSelect = document.getElementById('equipment-type-select');
+    if (equipmentTypeSelect) {
+      equipmentTypeSelect.addEventListener('change', function() {
+        var selectedTypeId = this.value;
+
+        // 모든 모드 목록 숨기기
+        document.querySelectorAll('.equipment-type-modes').forEach(function(element) {
+          element.style.display = 'none';
+        });
+
+        // 선택된 장비 구분의 모드 목록만 표시
+        if (selectedTypeId) {
+          var selectedModesList = document.querySelector('.equipment-type-modes[data-equipment-type-id="' + selectedTypeId + '"]');
+          if (selectedModesList) {
+            selectedModesList.style.display = 'block';
+          }
+        }
+      });
+    }
+
+    // 장비 모드 목록 드래그 앤 드롭
+    document.querySelectorAll('.equipment-modes-list').forEach(function(modesList) {
+      if (modesList && !modesList.hasAttribute('data-sortable-initialized')) {
+        modesList.setAttribute('data-sortable-initialized', 'true');
+        Sortable.create(modesList, {
+          animation: 150,
+          handle: '.sortable-item',
+          ghostClass: 'sortable-ghost',
+          onEnd: function(evt) {
+            var positions = [];
+            var items = modesList.querySelectorAll('.sortable-item');
+            items.forEach(function(item) {
+              positions.push(item.dataset.id);
+            });
+
+            // 서버에 순서 업데이트 요청
+            fetch('<%= update_equipment_mode_positions_path %>', {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+              },
+              body: JSON.stringify({ positions: positions })
+            })
+            .then(response => {
+              if (response.ok) {
+                console.log('장비 모드 순서가 업데이트되었습니다.');
+              }
+            })
+            .catch(error => {
+              console.error('순서 업데이트 에러:', error);
+            });
+          }
+        });
+      }
+    });
+
+    // 장비 구분 목록 드래그 앤 드롭
+    var equipmentTypesList = document.getElementById('equipment-types-list');
+    if (equipmentTypesList && !equipmentTypesList.hasAttribute('data-sortable-initialized')) {
+      equipmentTypesList.setAttribute('data-sortable-initialized', 'true');
+      var equipmentTypesSortable = Sortable.create(equipmentTypesList, {
+        animation: 150,
+        handle: '.sortable-item',
+        ghostClass: 'sortable-ghost',
+        onEnd: function(evt) {
+          var positions = [];
+          var items = equipmentTypesList.querySelectorAll('.sortable-item');
+          items.forEach(function(item) {
+            positions.push(item.dataset.id);
+          });
+
+          // 서버에 순서 업데이트 요청
+          fetch('<%= update_equipment_type_positions_path %>', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ positions: positions })
+          })
+          .then(response => {
+            if (response.ok) {
+              console.log('장비 구분 순서가 업데이트되었습니다.');
+            }
+          })
+          .catch(error => {
+            console.error('순서 업데이트 에러:', error);
+          });
+        }
+      });
+    }
+
+    // 출고 목적 목록 드래그 앤 드롭
+    var purposesList = document.getElementById('purposes-list');
+    if (purposesList && !purposesList.hasAttribute('data-sortable-initialized')) {
+      purposesList.setAttribute('data-sortable-initialized', 'true');
+      var purposesSortable = Sortable.create(purposesList, {
+        animation: 150,
+        handle: '.sortable-item',
+        ghostClass: 'sortable-ghost',
+        onEnd: function(evt) {
+          var positions = [];
+          var items = purposesList.querySelectorAll('.sortable-item');
+          items.forEach(function(item) {
+            positions.push(item.dataset.id);
+          });
+
+          // 서버에 순서 업데이트 요청
+          fetch('<%= update_purpose_positions_path %>', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ positions: positions })
+          })
+          .then(response => {
+            if (response.ok) {
+              console.log('출고 목적 순서가 업데이트되었습니다.');
+            }
+          })
+          .catch(error => {
+            console.error('순서 업데이트 에러:', error);
+          });
+        }
+      });
+    }
+
+    // 출고 요청자 목록 드래그 앤 드롭
+    var requestersList = document.getElementById('requesters-list');
+    if (requestersList && !requestersList.hasAttribute('data-sortable-initialized')) {
+      requestersList.setAttribute('data-sortable-initialized', 'true');
+      var requestersSortable = Sortable.create(requestersList, {
+        animation: 150,
+        handle: '.sortable-item',
+        ghostClass: 'sortable-ghost',
+        onEnd: function(evt) {
+          var positions = [];
+          var items = requestersList.querySelectorAll('.sortable-item');
+          items.forEach(function(item) {
+            positions.push(item.dataset.id);
+          });
+
+          // 서버에 순서 업데이트 요청
+          fetch('<%= update_requester_positions_path %>', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ positions: positions })
+          })
+          .then(response => {
+            if (response.ok) {
+              console.log('출고 요청자 순서가 업데이트되었습니다.');
+            }
+          })
+          .catch(error => {
+            console.error('순서 업데이트 에러:', error);
+          });
+        }
+      });
+    }
+
+    // 공정 목록 드래그 앤 드롭
+    var recipeProcessesList = document.getElementById('recipe-processes-list');
+    if (recipeProcessesList && !recipeProcessesList.hasAttribute('data-sortable-initialized')) {
+      recipeProcessesList.setAttribute('data-sortable-initialized', 'true');
+      var recipeProcessesSortable = Sortable.create(recipeProcessesList, {
+        animation: 150,
+        handle: '.sortable-item',
+        ghostClass: 'sortable-ghost',
+        onEnd: function(evt) {
+          var positions = [];
+          var items = recipeProcessesList.querySelectorAll('.sortable-item');
+          items.forEach(function(item) {
+            positions.push(item.dataset.id);
+          });
+
+          // 서버에 순서 업데이트 요청
+          fetch('<%= update_recipe_process_positions_path %>', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ positions: positions })
+          })
+          .then(response => {
+            if (response.ok) {
+              console.log('공정 순서가 업데이트되었습니다.');
+            }
+          })
+          .catch(error => {
+            console.error('순서 업데이트 에러:', error);
+          });
+        }
+      });
+    }
+
+    // 보관위치 목록 드래그 앤 드롭
+    var storageLocationsList = document.getElementById('storage-locations-list');
+    if (storageLocationsList && !storageLocationsList.hasAttribute('data-sortable-initialized')) {
+      storageLocationsList.setAttribute('data-sortable-initialized', 'true');
+      var storageLocationsSortable = Sortable.create(storageLocationsList, {
+        animation: 150,
+        handle: '.sortable-item',
+        ghostClass: 'sortable-ghost',
+        onEnd: function(evt) {
+          var positions = [];
+          var items = storageLocationsList.querySelectorAll('.sortable-item');
+          items.forEach(function(item) {
+            positions.push(item.dataset.id);
+          });
+
+          // 서버에 순서 업데이트 요청
+          fetch('<%= update_storage_location_positions_path %>', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ positions: positions })
+          })
+          .then(response => {
+            if (response.ok) {
+              console.log('보관위치 순서가 업데이트되었습니다.');
+            }
+          })
+          .catch(error => {
+            console.error('순서 업데이트 에러:', error);
+          });
+        }
+      });
+    }
+
+    // 품목 카테고리 목록 드래그 앤 드롭
+    var itemCategoriesList = document.getElementById('item-categories-list');
+    if (itemCategoriesList && !itemCategoriesList.hasAttribute('data-sortable-initialized')) {
+      itemCategoriesList.setAttribute('data-sortable-initialized', 'true');
+      var itemCategoriesSortable = Sortable.create(itemCategoriesList, {
+        animation: 150,
+        handle: '.sortable-item',
+        ghostClass: 'sortable-ghost',
+        onEnd: function(evt) {
+          var positions = [];
+          var items = itemCategoriesList.querySelectorAll('.sortable-item');
+          items.forEach(function(item) {
+            positions.push(item.dataset.id);
+          });
+
+          // 서버에 순서 업데이트 요청
+          fetch('<%= update_item_category_positions_path %>', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ positions: positions })
+          })
+          .then(response => {
+            if (response.ok) {
+              console.log('품목 카테고리 순서가 업데이트되었습니다.');
+            }
+          })
+          .catch(error => {
+            console.error('순서 업데이트 에러:', error);
+          });
+        }
+      });
+    }
+
+    // 기정떡 필드 목록 드래그 앤 드롭
+    var gijeongddeokFieldsList = document.getElementById('gijeongddeok-fields-list');
+    if (gijeongddeokFieldsList && !gijeongddeokFieldsList.hasAttribute('data-sortable-initialized')) {
+      gijeongddeokFieldsList.setAttribute('data-sortable-initialized', 'true');
+      var gijeongddeokFieldsSortable = Sortable.create(gijeongddeokFieldsList, {
+        animation: 150,
+        handle: '.sortable-item',
+        ghostClass: 'sortable-ghost',
+        onEnd: function(evt) {
+          var positions = [];
+          var items = gijeongddeokFieldsList.querySelectorAll('.sortable-item');
+          items.forEach(function(item) {
+            positions.push(item.dataset.id);
+          });
+
+          // 서버에 순서 업데이트 요청
+          fetch('<%= update_gijeongddeok_field_positions_path %>', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ positions: positions })
+          })
+          .then(response => {
+            if (response.ok) {
+              console.log('기정떡 필드 순서가 업데이트되었습니다.');
+              // 페이지 새로고침하여 기본값 입력 폼도 순서대로 재정렬
+              location.reload();
+            }
+          })
+          .catch(error => {
+            console.error('순서 업데이트 에러:', error);
+          });
+        }
+      });
+    }
+  });
+</script>
+
+<style>
+  /* 탭 네비게이션 스타일 */
+  #settingsTabs {
+    border-bottom: 2px solid #e8e8ed;
+    margin-bottom: 2rem;
+  }
+
+  #settingsTabs .nav-link {
+    color: #1d1d1f;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 0.75rem 1.25rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+
+  #settingsTabs .nav-link:hover {
+    color: #0071e3;
+    border-bottom-color: #0071e3;
+    background-color: transparent;
+  }
+
+  #settingsTabs .nav-link.active {
+    color: #0071e3;
+    border-bottom-color: #0071e3;
+    background-color: transparent;
+  }
+
+  #settingsTabs .nav-link i {
+    font-size: 1rem;
+  }
+
+  .sortable-ghost {
+    opacity: 0.4;
+    background: #f5f5f7;
+  }
+
+  .sortable-item:hover {
+    background-color: #fafafa;
+  }
+</style>

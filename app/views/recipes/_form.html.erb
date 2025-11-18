@@ -864,3 +864,18 @@ document.addEventListener('turbo:load', function() {
   initializeEquipmentSortable();
 });
 </script>
+
+<style>
+  /* Bootstrap 폼 검증 체크/X 표시 숨기기 */
+  #ingredients-table .form-select.is-valid,
+  #ingredients-table .form-control.is-valid {
+    background-image: none;
+    border-color: #dee2e6;
+  }
+
+  #ingredients-table .form-select.is-invalid,
+  #ingredients-table .form-control.is-invalid {
+    background-image: none;
+    border-color: #dee2e6;
+  }
+</style>

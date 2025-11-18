@@ -58,55 +58,50 @@
                 기정떡 반죽일지 입력 시 자동으로 채워질 기본값을 설정합니다. 드래그하여 순서를 변경할 수 있습니다.
               </p>
 
-              <!-- 필드 순서 리스트 -->
-              <div id="gijeongddeok-fields-list" class="mb-4">
-                <% @gijeongddeok_fields.each do |field| %>
-                  <div class="sortable-item p-3 mb-2"
-                       data-id="<%= field.id %>"
-                       style="background: #f5f5f7; border-radius: 8px; cursor: move; border: 1px solid #e5e5e7;">
-                    <div class="d-flex align-items-center">
-                      <i class="bi bi-grip-vertical me-3" style="color: #86868b;"></i>
-                      <div class="flex-grow-1">
-                        <strong><%= field.label %></strong>
-                        <small class="text-muted ms-2">(<%= field.field_name %>)</small>
-                      </div>
-                      <span class="badge bg-secondary"><%= field.category == 'temperature' ? '온도' : field.category == 'ingredient' ? '재료' : '막걸리' %></span>
-                    </div>
-                  </div>
-                <% end %>
-              </div>
-
               <%= form_with(model: @gijeongddeok_default, url: update_gijeongddeok_defaults_path, method: :patch, id: "gijeongddeok-form", local: true) do |f| %>
-                <h6 class="mb-3" style="font-weight: 600; color: #1d1d1f;">기본값 입력</h6>
-                <div class="row g-3 mb-4">
+                <div id="gijeongddeok-fields-list">
                   <% @gijeongddeok_fields.each do |field| %>
-                    <div class="col-md-4">
-                      <%= f.label field.field_name, field.label, class: "form-label" %>
-                      <div class="input-group">
-                        <%= f.number_field field.field_name,
-                                          step: (field.field_name.ends_with?('_temp') || field.field_name.ends_with?('_amount') && field.field_name != 'yeast_amount' && field.field_name != 'salt_amount' && field.field_name != 'sugar_amount') ? 0.1 : nil,
-                                          class: "form-control",
-                                          placeholder: field.category == 'temperature' ? "예: 25.0" : (field.field_name == 'makgeolli_consumption' ? "예: 2500" : (field.field_name == 'water_amount' ? "예: 1.5" : "예: 100")) %>
-                        <span class="input-group-text">
-                          <%= case field.field_name
-                              when /temp$/
-                                '°C'
-                              when 'yeast_amount', 'salt_amount', 'sugar_amount', 'steiva_amount'
-                                'g'
-                              when 'water_amount'
-                                'L'
-                              when 'makgeolli_consumption'
-                                'mL'
-                              else
-                                ''
-                              end %>
-                        </span>
+                    <div class="sortable-item p-3 mb-3"
+                         data-id="<%= field.id %>"
+                         style="background: #f5f5f7; border-radius: 8px; border: 1px solid #e5e5e7;">
+                      <div class="row align-items-center">
+                        <div class="col-auto" style="cursor: move;">
+                          <i class="bi bi-grip-vertical" style="color: #86868b; font-size: 1.2rem;"></i>
+                        </div>
+                        <div class="col-md-3">
+                          <strong style="color: #1d1d1f;"><%= field.label %></strong>
+                          <span class="badge bg-secondary ms-2" style="font-size: 0.7rem;">
+                            <%= field.category == 'temperature' ? '온도' : field.category == 'ingredient' ? '재료' : '막걸리' %>
+                          </span>
+                        </div>
+                        <div class="col-md-8">
+                          <div class="input-group">
+                            <%= f.number_field field.field_name,
+                                              step: (field.field_name.ends_with?('_temp') || ['steiva_amount', 'water_amount', 'makgeolli_consumption'].include?(field.field_name)) ? 0.1 : 1,
+                                              class: "form-control",
+                                              placeholder: field.category == 'temperature' ? "예: 25.0" : (field.field_name == 'makgeolli_consumption' ? "예: 2500.0" : (field.field_name == 'water_amount' ? "예: 1.5" : (field.field_name == 'steiva_amount' ? "예: 10.5" : "예: 100"))) %>
+                            <span class="input-group-text" style="min-width: 60px;">
+                              <%= case field.field_name
+                                  when /temp$/
+                                    '°C'
+                                  when 'yeast_amount', 'salt_amount', 'sugar_amount', 'steiva_amount'
+                                    'g'
+                                  when 'water_amount'
+                                    'L'
+                                  when 'makgeolli_consumption'
+                                    'mL'
+                                  else
+                                    ''
+                                  end %>
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   <% end %>
                 </div>
 
-                <div class="d-flex justify-content-end">
+                <div class="d-flex justify-content-end mt-4">
                   <%= f.submit "저장", class: "btn-apple btn-apple-primary" %>
                 </div>
               <% end %>

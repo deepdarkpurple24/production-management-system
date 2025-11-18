@@ -1,3 +1,9 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+---
+
 # Production Management System - Architecture Guide
 
 This document provides a comprehensive overview of the Production Management System for future Claude instances.
@@ -90,6 +96,8 @@ production-management-system/
   - Stock level calculations (minimum, optimal)
   - Weight tracking
   - Supplier management (JSON array)
+  - Configurable categories (via `ItemCategory`)
+  - Configurable storage locations (via `StorageLocation`)
   
 - **Receipt** (`receipts`): 입고 내역
   - Quantity, unit price
@@ -136,12 +144,14 @@ production-management-system/
   - Cooking time
   - Equipment type & mode associations
   - Sub-items composition
+  - **Unit conversion**: All quantities auto-convert to grams for totals
 
 - **IngredientItem** (`ingredient_items`): 재료-품목 연결
-  - Quantity tracking
+  - Quantity tracking with automatic gram conversion (Kg×1000, L×1000, mL×1)
   - Custom names
   - Can reference other ingredients (recursive)
   - Row types: 'item', 'ingredient', 'subtotal'
+  - Source types: 'item' (品目), 'ingredient' (재료), 'other' (기타)
 
 ### 4. Finished Products (완제품)
 - **FinishedProduct** (`finished_products`): 완제품
@@ -353,6 +363,44 @@ bin/kamal deploy
 ```
 
 
+## Settings Management System
+
+The **SettingsController** provides a centralized configuration interface with tabbed navigation:
+
+### Tab Structure
+- **생산관리 (Production)**: Gijeongddeok defaults, field ordering
+- **재고관리 (Inventory)**: Item categories, storage locations, shipment purposes/requesters
+- **레시피관리 (Recipe)**: Recipe processes
+- **기기관리 (Equipment)**: Equipment types and modes
+
+### Tab Persistence Pattern
+**CRITICAL**: When adding CRUD operations in settings, always include `tab` parameter:
+
+```ruby
+# Example from SettingsController
+def destroy_item_category
+  @item_category = ItemCategory.find(params[:id])
+  @item_category.destroy
+  redirect_to settings_system_path(tab: 'inventory'), notice: '품목 카테고리가 삭제되었습니다.'
+end
+```
+
+JavaScript automatically reads `?tab=` from URL and activates the correct tab on page load.
+
+### Scroll Position Preservation
+Settings page uses SessionStorage to maintain scroll position:
+```javascript
+// On form submit
+sessionStorage.setItem('settingsScrollPosition', window.scrollY);
+
+// On page load
+const savedScrollPosition = sessionStorage.getItem('settingsScrollPosition');
+if (savedScrollPosition) {
+  window.scrollTo(0, parseInt(savedScrollPosition));
+  sessionStorage.removeItem('settingsScrollPosition');
+}
+```
+
 ## Special Conventions & Patterns
 
 ### 1. Nested Attributes Pattern
@@ -410,7 +458,33 @@ source_type: distinguishes data source
 
 This allows mixing different types of rows in a single table for flexible UI.
 
-### 5. Stock Calculation Pattern
+### 5. Unit Conversion System
+**CRITICAL**: Ingredient forms automatically convert all units to grams for totals:
+
+```javascript
+function convertToGrams(quantity, unit) {
+  const qty = parseFloat(quantity) || 0;
+
+  switch(unit) {
+    case 'Kg': return qty * 1000;
+    case 'g': return qty;
+    case 'L': return qty * 1000;  // Assumes water density
+    case 'mL': return qty;         // Assumes water density
+    case '개': return 0;            // Cannot convert
+    default: return qty;
+  }
+}
+```
+
+This ensures accurate totals when mixing different units (e.g., 1 Kg + 3 L = 4000 g).
+
+**Frontend Requirements:**
+- Numeric inputs use `.quantity-input` class with `text-align: right`
+- Total displays always show "g" unit
+- Subtotals also converted to grams
+- Listen to both `input` (quantity change) and `change` (unit change) events
+
+### 6. Stock Calculation Pattern
 Calculated fields instead of stored values:
 ```ruby
 # Item model
@@ -433,7 +507,7 @@ def stock_status
 end
 ```
 
-### 6. Cascade Delete Protection
+### 7. Cascade Delete Protection
 Items cannot be deleted if they have receipts or shipments:
 ```ruby
 has_many :receipts, dependent: :restrict_with_error
@@ -442,7 +516,7 @@ has_many :shipments, dependent: :restrict_with_error
 
 This prevents accidental data loss and maintains referential integrity.
 
-### 7. Auto-generated Codes
+### 8. Auto-generated Codes
 Items automatically generate unique codes:
 ```ruby
 before_validation :generate_item_code, on: :create
@@ -507,6 +581,22 @@ bin/rails test:system            # Browser-based system tests
 
 ## Recent Development History
 
+### 2025-11-18: Settings Enhancement & Ingredient Management
+- **Item Categories & Storage Locations**: Added configurable item categories and storage locations in settings
+- **Settings Tab Navigation**: Implemented Bootstrap tabs with URL parameter persistence (`?tab=inventory`)
+- **Scroll Position Preservation**: SessionStorage maintains scroll position during form submissions in settings
+- **Ingredient Form Improvements**:
+  - Unit conversion system: All quantities auto-convert to grams (Kg×1000, L×1000, mL×1)
+  - Right-aligned numeric inputs in tables
+  - Bootstrap validation indicator cleanup (`.is-valid` / `.is-invalid`)
+  - Fixed dynamic row generation for ingredient selection
+- **Tab Persistence Pattern**: All settings CRUD operations include `tab` parameter in redirects
+
+### 2025-11-17: Production Features
+- **Gijeongddeok Defaults**: Special handling for 기정떡 product with customizable default values
+- **Field Ordering**: Drag-and-drop field ordering for production log forms
+- **Production Log Forms**: Enhanced with dynamic field management
+
 ### 2025-11-16: Production Planning & Logs
 - Added `production_plans` for scheduling production
 - Added `production_logs` (반죽일지) for detailed production tracking
@@ -526,6 +616,8 @@ bin/rails test:system            # Browser-based system tests
 3. **Position management**: Client-side drag & drop + server-side persistence
 4. **Calculated stock**: Real-time calculations prevent sync issues
 5. **Korean UI**: All user-facing text in Korean
+6. **Unit standardization**: All weight/volume units convert to grams for accurate totals
+7. **Tab state preservation**: URL parameters + SessionStorage maintain UI state across page reloads
 
 ## Common Tasks for Future Development
 
@@ -723,9 +815,9 @@ Common Paths:
 
 ---
 
-Document Version: 1.0
-Last Updated: 2025-11-17
-Schema Version: 20251116060138
+Document Version: 1.1
+Last Updated: 2025-11-18
+Schema Version: 20251118031946
 Rails Version: 8.1.1
 Ruby Version: 3.4.7
 Node Version: 24.11.1

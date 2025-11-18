@@ -60,7 +60,11 @@
       <label for="item_category" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
         카테고리
       </label>
-      <%= f.text_field :category, class: "form-control", placeholder: "예: 원자재, 부자재, 완제품 등" %>
+      <%= f.select :category,
+                   options_for_select(@item_categories.map(&:name), item.category),
+                   { include_blank: "선택" },
+                   class: "form-select" %>
+      <small class="text-muted">설정에서 카테고리를 추가할 수 있습니다</small>
     </div>
 
     <!-- 개당 중량 -->
@@ -119,7 +123,11 @@
       <label for="item_storage_location" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
         보관위치
       </label>
-      <%= f.text_field :storage_location, class: "form-control", placeholder: "예: 창고 A-1" %>
+      <%= f.select :storage_location,
+                   options_for_select(@storage_locations.map(&:name), item.storage_location),
+                   { include_blank: "선택" },
+                   class: "form-select" %>
+      <small class="text-muted">설정에서 보관위치를 추가할 수 있습니다</small>
     </div>
 
     <!-- 제조일로부터 (유통기한 일수) -->

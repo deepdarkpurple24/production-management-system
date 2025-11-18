@@ -10,6 +10,8 @@ class Inventory::ItemsController < ApplicationController
 
   def new
     @item = Item.new
+    @item_categories = ItemCategory.all
+    @storage_locations = StorageLocation.all
   end
 
   def create
@@ -29,6 +31,8 @@ class Inventory::ItemsController < ApplicationController
   end
 
   def edit
+    @item_categories = ItemCategory.all
+    @storage_locations = StorageLocation.all
   end
 
   def update

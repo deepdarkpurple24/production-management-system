@@ -8,11 +8,15 @@ class SettingsController < ApplicationController
     @shipment_requesters = ShipmentRequester.all
     @equipment_types = EquipmentType.all
     @recipe_processes = RecipeProcess.all
+    @item_categories = ItemCategory.all
+    @storage_locations = StorageLocation.all
     @shipment_purpose = ShipmentPurpose.new
     @shipment_requester = ShipmentRequester.new
     @equipment_type = EquipmentType.new
     @equipment_mode = EquipmentMode.new
     @recipe_process = RecipeProcess.new
+    @item_category = ItemCategory.new
+    @storage_location = StorageLocation.new
     @gijeongddeok_default = GijeongddeokDefault.instance
     @gijeongddeok_fields = GijeongddeokFieldOrder.all
   end
@@ -21,7 +25,7 @@ class SettingsController < ApplicationController
     @shipment_purpose = ShipmentPurpose.new(shipment_purpose_params)
 
     if @shipment_purpose.save
-      redirect_to settings_system_path, notice: '출고 목적이 추가되었습니다.'
+      redirect_to settings_system_path(tab: 'inventory'), notice: '출고 목적이 추가되었습니다.'
     else
       @shipment_purposes = ShipmentPurpose.all
       @shipment_requesters = ShipmentRequester.all
@@ -33,14 +37,14 @@ class SettingsController < ApplicationController
   def destroy_purpose
     @shipment_purpose = ShipmentPurpose.find(params[:id])
     @shipment_purpose.destroy
-    redirect_to settings_system_path, notice: '출고 목적이 삭제되었습니다.'
+    redirect_to settings_system_path(tab: 'inventory'), notice: '출고 목적이 삭제되었습니다.'
   end
 
   def create_requester
     @shipment_requester = ShipmentRequester.new(shipment_requester_params)
 
     if @shipment_requester.save
-      redirect_to settings_system_path, notice: '출고 요청자가 추가되었습니다.'
+      redirect_to settings_system_path(tab: 'inventory'), notice: '출고 요청자가 추가되었습니다.'
     else
       @shipment_purposes = ShipmentPurpose.all
       @shipment_requesters = ShipmentRequester.all
@@ -52,7 +56,7 @@ class SettingsController < ApplicationController
   def destroy_requester
     @shipment_requester = ShipmentRequester.find(params[:id])
     @shipment_requester.destroy
-    redirect_to settings_system_path, notice: '출고 요청자가 삭제되었습니다.'
+    redirect_to settings_system_path(tab: 'inventory'), notice: '출고 요청자가 삭제되었습니다.'
   end
 
   def update_purpose_positions
@@ -73,7 +77,7 @@ class SettingsController < ApplicationController
     @equipment_type = EquipmentType.new(equipment_type_params)
 
     if @equipment_type.save
-      redirect_to settings_system_path, notice: '장비 구분이 추가되었습니다.'
+      redirect_to settings_system_path(tab: 'equipment'), notice: '장비 구분이 추가되었습니다.'
     else
       @shipment_purposes = ShipmentPurpose.all
       @shipment_requesters = ShipmentRequester.all
@@ -87,7 +91,7 @@ class SettingsController < ApplicationController
   def destroy_equipment_type
     @equipment_type = EquipmentType.find(params[:id])
     @equipment_type.destroy
-    redirect_to settings_system_path, notice: '장비 구분이 삭제되었습니다.'
+    redirect_to settings_system_path(tab: 'equipment'), notice: '장비 구분이 삭제되었습니다.'
   end
 
   def update_equipment_type_positions
@@ -101,7 +105,7 @@ class SettingsController < ApplicationController
     @equipment_mode = EquipmentMode.new(equipment_mode_params)
 
     if @equipment_mode.save
-      redirect_to settings_system_path, notice: '장비 모드가 추가되었습니다.'
+      redirect_to settings_system_path(tab: 'equipment'), notice: '장비 모드가 추가되었습니다.'
     else
       @shipment_purposes = ShipmentPurpose.all
       @shipment_requesters = ShipmentRequester.all
@@ -116,7 +120,7 @@ class SettingsController < ApplicationController
   def destroy_equipment_mode
     @equipment_mode = EquipmentMode.find(params[:id])
     @equipment_mode.destroy
-    redirect_to settings_system_path, notice: '장비 모드가 삭제되었습니다.'
+    redirect_to settings_system_path(tab: 'equipment'), notice: '장비 모드가 삭제되었습니다.'
   end
 
   def update_equipment_mode_positions
@@ -136,7 +140,7 @@ class SettingsController < ApplicationController
     @recipe_process = RecipeProcess.new(recipe_process_params)
 
     if @recipe_process.save
-      redirect_to settings_system_path, notice: '공정이 추가되었습니다.'
+      redirect_to settings_system_path(tab: 'recipe'), notice: '공정이 추가되었습니다.'
     else
       @shipment_purposes = ShipmentPurpose.all
       @shipment_requesters = ShipmentRequester.all
@@ -153,7 +157,7 @@ class SettingsController < ApplicationController
   def destroy_recipe_process
     @recipe_process = RecipeProcess.find(params[:id])
     @recipe_process.destroy
-    redirect_to settings_system_path, notice: '공정이 삭제되었습니다.'
+    redirect_to settings_system_path(tab: 'recipe'), notice: '공정이 삭제되었습니다.'
   end
 
   def update_recipe_process_positions
@@ -167,7 +171,7 @@ class SettingsController < ApplicationController
     @gijeongddeok_default = GijeongddeokDefault.instance
 
     if @gijeongddeok_default.update(gijeongddeok_default_params)
-      redirect_to settings_system_path, notice: '기정떡 기본값이 저장되었습니다.'
+      redirect_to settings_system_path(tab: 'production'), notice: '기정떡 기본값이 저장되었습니다.'
     else
       @shipment_purposes = ShipmentPurpose.all
       @shipment_requesters = ShipmentRequester.all
@@ -185,6 +189,74 @@ class SettingsController < ApplicationController
   def update_gijeongddeok_field_positions
     params[:positions].each_with_index do |id, index|
       GijeongddeokFieldOrder.find(id).update_column(:position, index + 1)
+    end
+    head :ok
+  end
+
+  def create_item_category
+    @item_category = ItemCategory.new(item_category_params)
+
+    if @item_category.save
+      redirect_to settings_system_path(tab: 'inventory'), notice: '품목 카테고리가 추가되었습니다.'
+    else
+      @shipment_purposes = ShipmentPurpose.all
+      @shipment_requesters = ShipmentRequester.all
+      @equipment_types = EquipmentType.all
+      @recipe_processes = RecipeProcess.all
+      @item_categories = ItemCategory.all
+      @shipment_purpose = ShipmentPurpose.new
+      @shipment_requester = ShipmentRequester.new
+      @equipment_type = EquipmentType.new
+      @equipment_mode = EquipmentMode.new
+      @recipe_process = RecipeProcess.new
+      render :system, status: :unprocessable_entity
+    end
+  end
+
+  def destroy_item_category
+    @item_category = ItemCategory.find(params[:id])
+    @item_category.destroy
+    redirect_to settings_system_path(tab: 'inventory'), notice: '품목 카테고리가 삭제되었습니다.'
+  end
+
+  def update_item_category_positions
+    params[:positions].each_with_index do |id, index|
+      ItemCategory.unscoped.find(id).update_column(:position, index + 1)
+    end
+    head :ok
+  end
+
+  def create_storage_location
+    @storage_location = StorageLocation.new(storage_location_params)
+
+    if @storage_location.save
+      redirect_to settings_system_path(tab: 'inventory'), notice: '보관위치가 추가되었습니다.'
+    else
+      @shipment_purposes = ShipmentPurpose.all
+      @shipment_requesters = ShipmentRequester.all
+      @equipment_types = EquipmentType.all
+      @recipe_processes = RecipeProcess.all
+      @item_categories = ItemCategory.all
+      @storage_locations = StorageLocation.all
+      @shipment_purpose = ShipmentPurpose.new
+      @shipment_requester = ShipmentRequester.new
+      @equipment_type = EquipmentType.new
+      @equipment_mode = EquipmentMode.new
+      @recipe_process = RecipeProcess.new
+      @item_category = ItemCategory.new
+      render :system, status: :unprocessable_entity
+    end
+  end
+
+  def destroy_storage_location
+    @storage_location = StorageLocation.find(params[:id])
+    @storage_location.destroy
+    redirect_to settings_system_path(tab: 'inventory'), notice: '보관위치가 삭제되었습니다.'
+  end
+
+  def update_storage_location_positions
+    params[:positions].each_with_index do |id, index|
+      StorageLocation.unscoped.find(id).update_column(:position, index + 1)
     end
     head :ok
   end
@@ -218,5 +290,13 @@ class SettingsController < ApplicationController
       :yeast_amount, :steiva_amount, :salt_amount, :sugar_amount,
       :water_amount, :dough_count, :makgeolli_consumption
     )
+  end
+
+  def item_category_params
+    params.require(:item_category).permit(:name)
+  end
+
+  def storage_location_params
+    params.require(:storage_location).permit(:name)
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_16_060138) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_18_031946) do
   create_table "equipment", force: :cascade do |t|
     t.decimal "capacity", precision: 10, scale: 2
     t.string "capacity_unit"
@@ -64,6 +64,35 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_16_060138) do
     t.string "weight_unit"
   end
 
+  create_table "gijeongddeok_defaults", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.decimal "dough_count", precision: 10, scale: 1
+    t.decimal "dough_temp", precision: 10, scale: 1
+    t.decimal "fermentation_room_temp", precision: 10, scale: 1
+    t.decimal "flour_temp", precision: 10, scale: 1
+    t.decimal "makgeolli_consumption", precision: 10, scale: 1
+    t.decimal "porridge_temp", precision: 10, scale: 1
+    t.decimal "refrigeration_room_temp", precision: 10, scale: 1
+    t.integer "salt_amount"
+    t.decimal "steiva_amount", precision: 10, scale: 1
+    t.integer "sugar_amount"
+    t.datetime "updated_at", null: false
+    t.decimal "water_amount", precision: 10, scale: 1
+    t.decimal "water_temp", precision: 10, scale: 1
+    t.integer "yeast_amount"
+  end
+
+  create_table "gijeongddeok_field_orders", force: :cascade do |t|
+    t.string "category", null: false
+    t.datetime "created_at", null: false
+    t.string "field_name", null: false
+    t.string "label", null: false
+    t.integer "position", null: false
+    t.datetime "updated_at", null: false
+    t.index ["field_name"], name: "index_gijeongddeok_field_orders_on_field_name", unique: true
+    t.index ["position"], name: "index_gijeongddeok_field_orders_on_position"
+  end
+
   create_table "ingredient_items", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "custom_name"
@@ -93,6 +122,15 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_16_060138) do
     t.decimal "production_quantity"
     t.string "production_unit"
     t.datetime "updated_at", null: false
+  end
+
+  create_table "item_categories", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_item_categories_on_name", unique: true
+    t.index ["position"], name: "index_item_categories_on_position"
   end
 
   create_table "items", force: :cascade do |t|
@@ -255,6 +293,15 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_16_060138) do
     t.datetime "updated_at", null: false
     t.index ["item_id"], name: "index_shipments_on_item_id"
     t.index ["shipment_date"], name: "index_shipments_on_shipment_date"
+  end
+
+  create_table "storage_locations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_storage_locations_on_name", unique: true
+    t.index ["position"], name: "index_storage_locations_on_position"
   end
 
   add_foreign_key "equipment_modes", "equipment_types"

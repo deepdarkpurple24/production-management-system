@@ -33,6 +33,12 @@ Rails.application.routes.draw do
   patch "settings/recipe_processes/update_positions", to: "settings#update_recipe_process_positions", as: "update_recipe_process_positions"
   patch "settings/gijeongddeok_defaults", to: "settings#update_gijeongddeok_defaults", as: "update_gijeongddeok_defaults"
   patch "settings/gijeongddeok_fields/update_positions", to: "settings#update_gijeongddeok_field_positions", as: "update_gijeongddeok_field_positions"
+  post "settings/item_categories", to: "settings#create_item_category", as: "create_item_category"
+  delete "settings/item_categories/:id", to: "settings#destroy_item_category", as: "destroy_item_category"
+  patch "settings/item_categories/update_positions", to: "settings#update_item_category_positions", as: "update_item_category_positions"
+  post "settings/storage_locations", to: "settings#create_storage_location", as: "create_storage_location"
+  delete "settings/storage_locations/:id", to: "settings#destroy_storage_location", as: "destroy_storage_location"
+  patch "settings/storage_locations/update_positions", to: "settings#update_storage_location_positions", as: "update_storage_location_positions"
 
   # 각 모듈 메인 페이지
   get "production", to: "production#index", as: "production"

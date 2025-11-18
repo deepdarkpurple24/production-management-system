@@ -139,7 +139,7 @@
             <td></td>
             <td class="text-end"><strong>최종 합계</strong></td>
             <td class="text-end"><strong id="total-quantity">0</strong></td>
-            <td></td>
+            <td><strong>g</strong></td>
             <td>
               <%= f.text_field :notes, class: "form-control form-control-sm" %>
             </td>
@@ -340,7 +340,7 @@ document.addEventListener('turbo:load', function() {
           <td></td>
           <td class="text-end"><strong>소계</strong></td>
           <td class="text-end"><strong class="subtotal-quantity">0</strong></td>
-          <td></td>
+          <td><strong>g</strong></td>
           <td></td>
           <td class="text-center">
             <button type="button" class="btn btn-sm btn-outline-danger remove-subtotal-btn">
@@ -406,6 +406,33 @@ document.addEventListener('turbo:load', function() {
     }
   });
 
+  // 단위 선택 변경 시 계산
+  document.addEventListener('change', function(e) {
+    if (e.target.name && e.target.name.includes('[unit]')) {
+      calculateTotals();
+    }
+  });
+
+  // 단위를 g으로 변환하는 함수
+  function convertToGrams(quantity, unit) {
+    const qty = parseFloat(quantity) || 0;
+
+    switch(unit) {
+      case 'Kg':
+        return qty * 1000;
+      case 'g':
+        return qty;
+      case 'L':
+        return qty * 1000; // 물 기준 (비중 1)
+      case 'mL':
+        return qty; // 물 기준 (비중 1)
+      case '개':
+        return 0; // 개는 중량 변환 불가
+      default:
+        return qty;
+    }
+  }
+
   function calculateTotals() {
     const tbody = document.getElementById('items-tbody');
     if (!tbody) return;
@@ -413,8 +440,8 @@ document.addEventListener('turbo:load', function() {
     const allRows = Array.from(tbody.querySelectorAll('tr'));
     const subtotalRow = tbody.querySelector('.subtotal-row');
 
-    let totalQuantity = 0;
-    let subtotalQuantity = 0;
+    let totalQuantityInGrams = 0;
+    let subtotalQuantityInGrams = 0;
     let beforeSubtotal = true;
 
     allRows.forEach(row => {
@@ -426,27 +453,34 @@ document.addEventListener('turbo:load', function() {
       }
 
       if (row.classList.contains('item-row')) {
-        const quantity = parseFloat(row.querySelector('.quantity-input')?.value) || 0;
-        totalQuantity += quantity;
+        const quantityInput = row.querySelector('.quantity-input');
+        const unitSelect = row.querySelector('select[name*="[unit]"]');
+
+        const quantity = parseFloat(quantityInput?.value) || 0;
+        const unit = unitSelect?.value || '';
+
+        const quantityInGrams = convertToGrams(quantity, unit);
+
+        totalQuantityInGrams += quantityInGrams;
 
         if (beforeSubtotal) {
-          subtotalQuantity += quantity;
+          subtotalQuantityInGrams += quantityInGrams;
         }
       }
     });
 
-    // 소계 표시
+    // 소계 표시 (g 단위)
     if (subtotalRow) {
       const subtotalElement = subtotalRow.querySelector('.subtotal-quantity');
       if (subtotalElement) {
-        subtotalElement.textContent = subtotalQuantity.toFixed(2);
+        subtotalElement.textContent = subtotalQuantityInGrams.toFixed(2);
       }
     }
 
-    // 총 수량 표시
+    // 총 수량 표시 (g 단위)
     const totalQuantityElement = document.getElementById('total-quantity');
     if (totalQuantityElement) {
-      totalQuantityElement.textContent = totalQuantity.toFixed(2);
+      totalQuantityElement.textContent = totalQuantityInGrams.toFixed(2);
     }
   }
 
@@ -516,3 +550,23 @@ document.addEventListener('turbo:load', function() {
   initializeSortable();
 });
 </script>
+
+<style>
+  /* Bootstrap 폼 검증 체크/X 표시 숨기기 */
+  #items-table .form-select.is-valid,
+  #items-table .form-control.is-valid {
+    background-image: none;
+    border-color: #dee2e6;
+  }
+
+  #items-table .form-select.is-invalid,
+  #items-table .form-control.is-invalid {
+    background-image: none;
+    border-color: #dee2e6;
+  }
+
+  /* 중량 입력 필드 숫자 오른쪽 정렬 */
+  #items-table .quantity-input {
+    text-align: right;
+  }
+</style>

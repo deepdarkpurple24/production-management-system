@@ -58,9 +58,9 @@
               </td>
               <td>
                 <%= ingredient_fields.select :source_type,
-                    options_for_select([['품목', 'item'], ['재료', 'ingredient']], ingredient_fields.object.source_type || 'item'),
-                    {},
-                    { class: "form-select form-select-sm source-type-select", required: true, style: "appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22 viewBox=%220 0 12 8%22%3E%3Cpath fill=%22%23333%22 d=%22M0 0l6 8 6-8z%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 0.5rem center; padding-right: 2rem;" } %>
+                    [['품목', 'item'], ['재료', 'ingredient']],
+                    { selected: ingredient_fields.object.source_type || 'item' },
+                    { class: "form-select form-select-sm source-type-select", required: true } %>
                 <%= ingredient_fields.hidden_field :row_type, value: "ingredient" %>
                 <%= ingredient_fields.hidden_field :position %>
               </td>
@@ -248,11 +248,11 @@ document.addEventListener('turbo:load', function() {
     if (ingredientDiv) ingredientDiv.style.display = sourceType === 'ingredient' ? 'block' : 'none';
   }
 
-  // 기존 행들의 source type select에 이벤트 리스너 추가
-  document.querySelectorAll('.source-type-select').forEach(select => {
-    select.addEventListener('change', function() {
-      handleSourceTypeChange(this);
-    });
+  // 이벤트 위임 방식으로 source type 변경 처리
+  tbody.addEventListener('change', function(e) {
+    if (e.target.classList.contains('source-type-select')) {
+      handleSourceTypeChange(e.target);
+    }
   });
 
   // 데이터 준비
@@ -276,8 +276,8 @@ document.addEventListener('turbo:load', function() {
           <input type="checkbox" class="form-check-input is-main-checkbox" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][is_main]" value="1">
         </td>
         <td>
-          <select class="form-select form-select-sm source-type-select" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][source_type]" required style="appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22 viewBox=%220 0 12 8%22%3E%3Cpath fill=%22%23333%22 d=%22M0 0l6 8 6-8z%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 0.5rem center; padding-right: 2rem;">
-            <option value="item">품목</option>
+          <select class="form-select form-select-sm source-type-select" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][source_type]" required>
+            <option value="item" selected>품목</option>
             <option value="ingredient">재료</option>
           </select>
           <input type="hidden" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][row_type]" value="ingredient">
@@ -318,15 +318,6 @@ document.addEventListener('turbo:load', function() {
     `;
 
     tbody.insertAdjacentHTML('beforeend', newRow);
-
-    // 새로 추가된 행의 source-type-select에 이벤트 리스너 추가
-    const newSourceTypeSelect = tbody.lastElementChild.querySelector('.source-type-select');
-    if (newSourceTypeSelect) {
-      newSourceTypeSelect.addEventListener('change', function() {
-        handleSourceTypeChange(this);
-      });
-    }
-
     ingredientIndex++;
     calculatePercentages();
     initializeSortable();

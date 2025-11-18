@@ -91,8 +91,8 @@
                       <strong><%= plan.finished_product.name %></strong>
                     </div>
                     <div class="col-md-4">
-                      <small class="text-muted d-block">계획 수량</small>
-                      <strong><%= plan.quantity %>개</strong>
+                      <small class="text-muted d-block">반죽 통수</small>
+                      <strong><%= plan.quantity %>통</strong>
                     </div>
                   </div>
                   <% if plan.notes.present? %>
@@ -153,23 +153,35 @@
                             <div class="col-md-4">
                               <%= form.label field.field_name, field.label, class: "form-label" %>
                               <div class="input-group">
+                                <% if field.field_name == 'dough_count' %>
+                                  <button type="button" class="btn btn-outline-secondary" onclick="adjustValue('production_log_<%= plan.id %>_<%= field.field_name %>', -0.5)">
+                                    <i class="bi bi-dash"></i>
+                                  </button>
+                                <% end %>
                                 <%= form.number_field field.field_name,
-                                                      step: (field.field_name.ends_with?('_temp') || field.field_name.ends_with?('_amount') && field.field_name != 'yeast_amount' && field.field_name != 'salt_amount' && field.field_name != 'sugar_amount') ? 0.1 : nil,
+                                                      step: field.field_name == 'dough_count' ? 0.5 : ((field.field_name.ends_with?('_temp') || field.field_name.ends_with?('_amount') && field.field_name != 'yeast_amount' && field.field_name != 'salt_amount' && field.field_name != 'sugar_amount') ? 0.1 : nil),
                                                       class: "form-control",
                                                       id: "production_log_#{plan.id}_#{field.field_name}",
                                                       placeholder: field.category == 'temperature' ? "예: 25.0" : (field.field_name == 'water_amount' ? "예: 1.5" : "예: 100") %>
-                                <span class="input-group-text">
-                                  <%= case field.field_name
-                                      when /temp$/
-                                        '°C'
-                                      when 'yeast_amount', 'salt_amount', 'sugar_amount', 'steiva_amount'
-                                        'g'
-                                      when 'water_amount'
-                                        'L'
-                                      else
-                                        ''
-                                      end %>
-                                </span>
+                                <% if field.field_name == 'dough_count' %>
+                                  <button type="button" class="btn btn-outline-secondary" onclick="adjustValue('production_log_<%= plan.id %>_<%= field.field_name %>', 0.5)">
+                                    <i class="bi bi-plus"></i>
+                                  </button>
+                                  <span class="input-group-text">통</span>
+                                <% else %>
+                                  <span class="input-group-text">
+                                    <%= case field.field_name
+                                        when /temp$/
+                                          '°C'
+                                        when 'yeast_amount', 'salt_amount', 'sugar_amount', 'steiva_amount'
+                                          'g'
+                                        when 'water_amount'
+                                          'L'
+                                        else
+                                          ''
+                                        end %>
+                                  </span>
+                                <% end %>
                               </div>
                             </div>
                           <% end %>
@@ -251,7 +263,8 @@
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  // 기본값 로드 함수
+  function loadGijeongddeokDefaults() {
     // 기정떡 기본값 데이터
     const defaults = {
       <% @gijeongddeok_fields.each do |field| %>
@@ -266,12 +279,29 @@
         <% if log.new_record? %>
           // 새 레코드인 경우에만 기본값 적용
           <% @gijeongddeok_fields.each do |field| %>
-            document.querySelector(`#production_log_<%= plan.id %>_<%= field.field_name %>`)?.setAttribute('value', defaults.<%= field.field_name %> || '');
+            const field_<%= plan.id %>_<%= field.field_name %> = document.querySelector(`#production_log_<%= plan.id %>_<%= field.field_name %>`);
+            if (field_<%= plan.id %>_<%= field.field_name %> && field_<%= plan.id %>_<%= field.field_name %>.value === '') {
+              field_<%= plan.id %>_<%= field.field_name %>.value = defaults.<%= field.field_name %> || '';
+            }
           <% end %>
         <% end %>
       <% end %>
     <% end %>
-  });
+  }
+
+  // DOMContentLoaded와 turbo:load 모두에서 실행
+  document.addEventListener('DOMContentLoaded', loadGijeongddeokDefaults);
+  document.addEventListener('turbo:load', loadGijeongddeokDefaults);
+
+  // 반죽 통수 +/- 버튼 핸들러
+  function adjustValue(fieldId, delta) {
+    const field = document.getElementById(fieldId);
+    if (field) {
+      const currentValue = parseFloat(field.value) || 0;
+      const newValue = currentValue + delta;
+      field.value = Math.max(0, newValue).toFixed(1);
+    }
+  }
 </script>
 
 <style>

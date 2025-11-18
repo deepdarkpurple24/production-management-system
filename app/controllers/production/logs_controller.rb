@@ -56,6 +56,8 @@ class Production::LogsController < ApplicationController
       .order(:created_at)
 
     @finished_products = FinishedProduct.order(:name)
+    @gijeongddeok_default = GijeongddeokDefault.instance
+    @gijeongddeok_fields = GijeongddeokFieldOrder.all
   end
 
   def create
@@ -73,6 +75,8 @@ class Production::LogsController < ApplicationController
         .where(production_date: @production_log.production_date)
         .order(:created_at)
       @finished_products = FinishedProduct.order(:name)
+      @gijeongddeok_default = GijeongddeokDefault.instance
+      @gijeongddeok_fields = GijeongddeokFieldOrder.all
       render :new, status: :unprocessable_entity
     end
   end
@@ -83,6 +87,8 @@ class Production::LogsController < ApplicationController
       .where(production_date: @production_log.production_date)
       .order(:created_at)
     @finished_products = FinishedProduct.order(:name)
+    @gijeongddeok_default = GijeongddeokDefault.instance
+    @gijeongddeok_fields = GijeongddeokFieldOrder.all
   end
 
   def update
@@ -102,6 +108,8 @@ class Production::LogsController < ApplicationController
         .where(production_date: @production_log.production_date)
         .order(:created_at)
       @finished_products = FinishedProduct.order(:name)
+      @gijeongddeok_default = GijeongddeokDefault.instance
+      @gijeongddeok_fields = GijeongddeokFieldOrder.all
       render :edit, status: :unprocessable_entity
     end
   end

@@ -573,7 +573,7 @@
         modesList.setAttribute('data-sortable-initialized', 'true');
         Sortable.create(modesList, {
           animation: 150,
-          handle: '.sortable-item',
+          handle: '.bi-grip-vertical',
           ghostClass: 'sortable-ghost',
           onEnd: function(evt) {
             var positions = [];
@@ -594,10 +594,16 @@
             .then(response => {
               if (response.ok) {
                 console.log('장비 모드 순서가 업데이트되었습니다.');
+                if (window.toast) {
+                  window.toast.success('순서가 변경되었습니다.', '장비 모드');
+                }
               }
             })
             .catch(error => {
               console.error('순서 업데이트 에러:', error);
+              if (window.toast) {
+                window.toast.error('순서 변경에 실패했습니다.', '오류');
+              }
             });
           }
         });
@@ -610,7 +616,7 @@
       equipmentTypesList.setAttribute('data-sortable-initialized', 'true');
       var equipmentTypesSortable = Sortable.create(equipmentTypesList, {
         animation: 150,
-        handle: '.sortable-item',
+        handle: '.bi-grip-vertical',
         ghostClass: 'sortable-ghost',
         onEnd: function(evt) {
           var positions = [];
@@ -631,10 +637,16 @@
           .then(response => {
             if (response.ok) {
               console.log('장비 구분 순서가 업데이트되었습니다.');
+              if (window.toast) {
+                window.toast.success('순서가 변경되었습니다.', '장비 구분');
+              }
             }
           })
           .catch(error => {
             console.error('순서 업데이트 에러:', error);
+            if (window.toast) {
+              window.toast.error('순서 변경에 실패했습니다.', '오류');
+            }
           });
         }
       });
@@ -646,7 +658,7 @@
       purposesList.setAttribute('data-sortable-initialized', 'true');
       var purposesSortable = Sortable.create(purposesList, {
         animation: 150,
-        handle: '.sortable-item',
+        handle: '.bi-grip-vertical',
         ghostClass: 'sortable-ghost',
         onEnd: function(evt) {
           var positions = [];
@@ -667,10 +679,16 @@
           .then(response => {
             if (response.ok) {
               console.log('출고 목적 순서가 업데이트되었습니다.');
+              if (window.toast) {
+                window.toast.success('순서가 변경되었습니다.', '출고 목적');
+              }
             }
           })
           .catch(error => {
             console.error('순서 업데이트 에러:', error);
+            if (window.toast) {
+              window.toast.error('순서 변경에 실패했습니다.', '오류');
+            }
           });
         }
       });
@@ -682,7 +700,7 @@
       requestersList.setAttribute('data-sortable-initialized', 'true');
       var requestersSortable = Sortable.create(requestersList, {
         animation: 150,
-        handle: '.sortable-item',
+        handle: '.bi-grip-vertical',
         ghostClass: 'sortable-ghost',
         onEnd: function(evt) {
           var positions = [];
@@ -703,10 +721,16 @@
           .then(response => {
             if (response.ok) {
               console.log('출고 요청자 순서가 업데이트되었습니다.');
+              if (window.toast) {
+                window.toast.success('순서가 변경되었습니다.', '출고 요청자');
+              }
             }
           })
           .catch(error => {
             console.error('순서 업데이트 에러:', error);
+            if (window.toast) {
+              window.toast.error('순서 변경에 실패했습니다.', '오류');
+            }
           });
         }
       });
@@ -718,7 +742,7 @@
       recipeProcessesList.setAttribute('data-sortable-initialized', 'true');
       var recipeProcessesSortable = Sortable.create(recipeProcessesList, {
         animation: 150,
-        handle: '.sortable-item',
+        handle: '.bi-grip-vertical',
         ghostClass: 'sortable-ghost',
         onEnd: function(evt) {
           var positions = [];
@@ -739,10 +763,16 @@
           .then(response => {
             if (response.ok) {
               console.log('공정 순서가 업데이트되었습니다.');
+              if (window.toast) {
+                window.toast.success('순서가 변경되었습니다.', '공정');
+              }
             }
           })
           .catch(error => {
             console.error('순서 업데이트 에러:', error);
+            if (window.toast) {
+              window.toast.error('순서 변경에 실패했습니다.', '오류');
+            }
           });
         }
       });
@@ -754,7 +784,7 @@
       storageLocationsList.setAttribute('data-sortable-initialized', 'true');
       var storageLocationsSortable = Sortable.create(storageLocationsList, {
         animation: 150,
-        handle: '.sortable-item',
+        handle: '.bi-grip-vertical',
         ghostClass: 'sortable-ghost',
         onEnd: function(evt) {
           var positions = [];
@@ -775,10 +805,16 @@
           .then(response => {
             if (response.ok) {
               console.log('보관위치 순서가 업데이트되었습니다.');
+              if (window.toast) {
+                window.toast.success('순서가 변경되었습니다.', '보관위치');
+              }
             }
           })
           .catch(error => {
             console.error('순서 업데이트 에러:', error);
+            if (window.toast) {
+              window.toast.error('순서 변경에 실패했습니다.', '오류');
+            }
           });
         }
       });
@@ -790,7 +826,7 @@
       itemCategoriesList.setAttribute('data-sortable-initialized', 'true');
       var itemCategoriesSortable = Sortable.create(itemCategoriesList, {
         animation: 150,
-        handle: '.sortable-item',
+        handle: '.bi-grip-vertical',
         ghostClass: 'sortable-ghost',
         onEnd: function(evt) {
           var positions = [];
@@ -811,10 +847,16 @@
           .then(response => {
             if (response.ok) {
               console.log('품목 카테고리 순서가 업데이트되었습니다.');
+              if (window.toast) {
+                window.toast.success('순서가 변경되었습니다.', '품목 카테고리');
+              }
             }
           })
           .catch(error => {
             console.error('순서 업데이트 에러:', error);
+            if (window.toast) {
+              window.toast.error('순서 변경에 실패했습니다.', '오류');
+            }
           });
         }
       });
@@ -826,7 +868,7 @@
       gijeongddeokFieldsList.setAttribute('data-sortable-initialized', 'true');
       var gijeongddeokFieldsSortable = Sortable.create(gijeongddeokFieldsList, {
         animation: 150,
-        handle: '.sortable-item',
+        handle: '.bi-grip-vertical',
         ghostClass: 'sortable-ghost',
         onEnd: function(evt) {
           var positions = [];
@@ -847,13 +889,16 @@
           .then(response => {
             if (response.ok) {
               console.log('기정떡 필드 순서가 업데이트되었습니다.');
-              // 스크롤 위치 저장 후 페이지 새로고침
-              sessionStorage.setItem('settingsScrollPosition', window.scrollY);
-              location.reload();
+              if (window.toast) {
+                window.toast.success('순서가 변경되었습니다.', '기정떡 필드');
+              }
             }
           })
           .catch(error => {
             console.error('순서 업데이트 에러:', error);
+            if (window.toast) {
+              window.toast.error('순서 변경에 실패했습니다.', '오류');
+            }
           });
         }
       });

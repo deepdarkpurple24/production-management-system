@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_18_031946) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_18_045312) do
   create_table "equipment", force: :cascade do |t|
     t.decimal "capacity", precision: 10, scale: 2
     t.string "capacity_unit"
@@ -226,12 +226,16 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_18_031946) do
     t.text "notes"
     t.integer "position", default: 0
     t.integer "recipe_id", null: false
+    t.integer "referenced_ingredient_id"
     t.string "row_type", default: "ingredient"
+    t.string "source_type", default: "item"
     t.datetime "updated_at", null: false
     t.decimal "weight", precision: 10, scale: 2
     t.index ["item_id"], name: "index_recipe_ingredients_on_item_id"
     t.index ["position"], name: "index_recipe_ingredients_on_position"
     t.index ["recipe_id"], name: "index_recipe_ingredients_on_recipe_id"
+    t.index ["referenced_ingredient_id"], name: "index_recipe_ingredients_on_referenced_ingredient_id"
+    t.index ["source_type"], name: "index_recipe_ingredients_on_source_type"
   end
 
   create_table "recipe_processes", force: :cascade do |t|
@@ -315,6 +319,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_18_031946) do
   add_foreign_key "receipts", "items"
   add_foreign_key "recipe_equipments", "equipment"
   add_foreign_key "recipe_equipments", "recipes", on_delete: :cascade
+  add_foreign_key "recipe_ingredients", "ingredients", column: "referenced_ingredient_id", on_delete: :cascade
   add_foreign_key "recipe_ingredients", "items"
   add_foreign_key "recipe_ingredients", "recipes", on_delete: :cascade
   add_foreign_key "recipe_versions", "recipes", on_delete: :cascade

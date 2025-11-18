@@ -12,12 +12,14 @@ class RecipesController < ApplicationController
     @recipe = Recipe.new
     @recipe.recipe_ingredients.build # 초기 빈 재료 행 추가
     @items = Item.all.order(:name)
+    @ingredients = Ingredient.all.order(:name)
     @equipments = Equipment.all.order(:name)
     @recipe_processes = RecipeProcess.all
   end
 
   def edit
     @items = Item.all.order(:name)
+    @ingredients = Ingredient.all.order(:name)
     @equipments = Equipment.all.order(:name)
     @recipe_processes = RecipeProcess.all
   end
@@ -29,6 +31,7 @@ class RecipesController < ApplicationController
       redirect_to recipes_path, notice: '레시피가 성공적으로 등록되었습니다.'
     else
       @items = Item.all.order(:name)
+      @ingredients = Ingredient.all.order(:name)
       @equipments = Equipment.all.order(:name)
       @recipe_processes = RecipeProcess.all
       render :new, status: :unprocessable_entity
@@ -40,6 +43,7 @@ class RecipesController < ApplicationController
       redirect_to recipes_path, notice: '레시피 정보가 수정되었습니다.'
     else
       @items = Item.all.order(:name)
+      @ingredients = Ingredient.all.order(:name)
       @equipments = Equipment.all.order(:name)
       @recipe_processes = RecipeProcess.all
       render :edit, status: :unprocessable_entity
@@ -75,7 +79,7 @@ class RecipesController < ApplicationController
       :name,
       :description,
       :notes,
-      recipe_ingredients_attributes: [:id, :item_id, :weight, :is_main, :row_type, :notes, :position, :_destroy],
+      recipe_ingredients_attributes: [:id, :source_type, :item_id, :referenced_ingredient_id, :weight, :is_main, :row_type, :notes, :position, :_destroy],
       recipe_equipments_attributes: [:id, :equipment_id, :work_capacity, :work_capacity_unit, :position, :row_type, :process_id, :_destroy]
     )
   end

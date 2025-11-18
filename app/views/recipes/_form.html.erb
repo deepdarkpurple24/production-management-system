@@ -57,10 +57,17 @@
                 <%= ingredient_fields.check_box :is_main, class: "form-check-input is-main-checkbox" %>
               </td>
               <td>
-                <%= ingredient_fields.select :source_type,
-                    options_for_select([['품목', 'item'], ['재료', 'ingredient']], ingredient_fields.object.source_type || 'item'),
-                    {},
-                    { class: "form-select form-select-sm source-type-select", required: true } %>
+                <% if ingredient_fields.object.new_record? %>
+                  <%= ingredient_fields.select :source_type,
+                      options_for_select([['품목', 'item'], ['재료', 'ingredient']], ingredient_fields.object.source_type || 'item'),
+                      {},
+                      { class: "form-select form-select-sm source-type-select", required: true } %>
+                <% else %>
+                  <span class="badge bg-<%= ingredient_fields.object.source_type == 'ingredient' ? 'success' : 'primary' %>">
+                    <%= ingredient_fields.object.source_type == 'ingredient' ? '재료' : '품목' %>
+                  </span>
+                  <%= ingredient_fields.hidden_field :source_type %>
+                <% end %>
                 <%= ingredient_fields.hidden_field :row_type, value: "ingredient" %>
                 <%= ingredient_fields.hidden_field :position %>
               </td>

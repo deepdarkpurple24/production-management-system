@@ -249,12 +249,12 @@
   <%= form.hidden_field :view, value: params[:view] %>
 
   <div class="d-flex justify-content-end gap-2 mt-4">
+    <%= form.submit @production_log.new_record? ? "등록" : "수정",
+                    class: "btn-apple btn-apple-primary" %>
     <%= link_to production_logs_path(view: params[:view] || 'monthly', date: @production_log.production_date || Date.today),
                 class: "btn btn-outline-secondary" do %>
       <i class="bi bi-x-lg me-2"></i>취소
     <% end %>
-    <%= form.submit @production_log.new_record? ? "등록" : "수정",
-                    class: "btn-apple btn-apple-primary" %>
   </div>
 <% end %>
 

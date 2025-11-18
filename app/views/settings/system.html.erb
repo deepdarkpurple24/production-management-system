@@ -28,12 +28,12 @@
 
 <div class="container mt-4">
   <!-- 헤더 섹션 -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-      <h2 class="mb-1" style="font-weight: 600; letter-spacing: -0.02em;">시스템 설정</h2>
+      <h4 class="mb-0" style="font-weight: 600; letter-spacing: -0.02em;">시스템 설정</h4>
       <p class="text-muted small mb-0">System Settings</p>
     </div>
-    <%= link_to settings_path, class: "btn-apple btn-apple-outline" do %>
+    <%= link_to settings_path, class: "btn-modern btn-modern-outline" do %>
       <i class="bi bi-arrow-left me-2"></i>설정으로
     <% end %>
   </div>
@@ -49,21 +49,25 @@
       <div class="row g-4">
         <!-- 기정떡 기본값 설정 -->
         <div class="col-12">
-          <div class="card-apple">
+          <div class="card-modern">
             <div class="card-body p-4">
               <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
                 <i class="bi bi-clipboard-check me-2"></i>기정떡 반죽일지 기본값 설정
               </h5>
-              <p class="text-muted small mb-4">
+              <p class="text-muted small mb-3">
                 기정떡 반죽일지 입력 시 자동으로 채워질 기본값을 설정합니다. 드래그하여 순서를 변경할 수 있습니다.
               </p>
 
               <%= form_with(model: @gijeongddeok_default, url: update_gijeongddeok_defaults_path, method: :patch, id: "gijeongddeok-form", local: true) do |f| %>
+                <div class="alert alert-info mb-3">
+                  <i class="bi bi-info-circle me-2"></i>
+                  <strong>반죽통수</strong>는 생산계획에서 자동으로 불러오므로 여기서 설정할 필요가 없습니다.
+                </div>
                 <small class="text-muted mb-2 d-block">
                   <i class="bi bi-arrows-move me-1"></i>드래그하여 순서 변경
                 </small>
                 <div id="gijeongddeok-fields-list">
-                  <% @gijeongddeok_fields.each do |field| %>
+                  <% @gijeongddeok_fields.reject { |field| field.field_name == 'dough_count' }.each do |field| %>
                     <div class="list-group-item d-flex justify-content-between align-items-center sortable-item"
                          data-id="<%= field.id %>"
                          style="border: 1px solid #e8e8ed; border-radius: 8px; margin-bottom: 8px; cursor: move;">
@@ -96,7 +100,7 @@
                 </div>
 
                 <div class="d-flex justify-content-end mt-4">
-                  <%= f.submit "저장", class: "btn-apple btn-apple-primary" %>
+                  <%= f.submit "저장", class: "btn-modern btn-modern-primary" %>
                 </div>
               <% end %>
             </div>
@@ -114,7 +118,7 @@
       <div class="row g-4">
         <!-- 품목 카테고리 관리 -->
         <div class="col-12">
-          <div class="card-apple">
+          <div class="card-modern">
             <div class="card-body p-4">
               <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
                 <i class="bi bi-tag me-2"></i>품목 카테고리 관리
@@ -124,7 +128,7 @@
               <%= form_with(model: @item_category, url: create_item_category_path, local: true, class: "mb-4") do |f| %>
                 <div class="input-group">
                   <%= f.text_field :name, class: "form-control", placeholder: "새 카테고리 입력 (예: 원자재, 부자재, 완제품 등)", required: true %>
-                  <%= f.submit "추가", class: "btn-apple btn-apple-primary" %>
+                  <%= f.submit "추가", class: "btn-modern btn-modern-primary" %>
                 </div>
                 <% if @item_category.errors.any? %>
                   <div class="text-danger small mt-2">
@@ -163,7 +167,7 @@
 
         <!-- 보관위치 관리 -->
         <div class="col-12">
-          <div class="card-apple">
+          <div class="card-modern">
             <div class="card-body p-4">
               <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
                 <i class="bi bi-geo-alt me-2"></i>보관위치 관리
@@ -173,7 +177,7 @@
               <%= form_with(model: @storage_location, url: create_storage_location_path, local: true, class: "mb-4") do |f| %>
                 <div class="input-group">
                   <%= f.text_field :name, class: "form-control", placeholder: "새 보관위치 입력 (예: 창고 A, 냉장고 등)", required: true %>
-                  <%= f.submit "추가", class: "btn-apple btn-apple-primary" %>
+                  <%= f.submit "추가", class: "btn-modern btn-modern-primary" %>
                 </div>
                 <% if @storage_location.errors.any? %>
                   <div class="text-danger small mt-2">
@@ -212,7 +216,7 @@
 
         <!-- 출고 목적 관리 -->
         <div class="col-12">
-          <div class="card-apple">
+          <div class="card-modern">
             <div class="card-body p-4">
               <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
                 <i class="bi bi-tag me-2"></i>출고 목적 관리
@@ -222,7 +226,7 @@
               <%= form_with(model: @shipment_purpose, url: create_shipment_purpose_path, local: true, class: "mb-4") do |f| %>
                 <div class="input-group">
                   <%= f.text_field :name, class: "form-control", placeholder: "새 출고 목적 입력 (예: 생산, 판매, 샘플 등)", required: true %>
-                  <%= f.submit "추가", class: "btn-apple btn-apple-primary" %>
+                  <%= f.submit "추가", class: "btn-modern btn-modern-primary" %>
                 </div>
                 <% if @shipment_purpose.errors.any? %>
                   <div class="text-danger small mt-2">
@@ -261,7 +265,7 @@
 
         <!-- 출고 요청자 관리 -->
         <div class="col-12">
-          <div class="card-apple">
+          <div class="card-modern">
             <div class="card-body p-4">
               <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
                 <i class="bi bi-person me-2"></i>출고 요청자 관리
@@ -271,7 +275,7 @@
               <%= form_with(model: @shipment_requester, url: create_shipment_requester_path, local: true, class: "mb-4") do |f| %>
                 <div class="input-group">
                   <%= f.text_field :name, class: "form-control", placeholder: "새 출고 요청자 입력 (예: 홍길동, 생산팀 등)", required: true %>
-                  <%= f.submit "추가", class: "btn-apple btn-apple-primary" %>
+                  <%= f.submit "추가", class: "btn-modern btn-modern-primary" %>
                 </div>
                 <% if @shipment_requester.errors.any? %>
                   <div class="text-danger small mt-2">
@@ -319,7 +323,7 @@
       <div class="row g-4">
         <!-- 공정 관리 -->
         <div class="col-12">
-          <div class="card-apple">
+          <div class="card-modern">
             <div class="card-body p-4">
               <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
                 <i class="bi bi-diagram-3 me-2"></i>공정 관리
@@ -329,7 +333,7 @@
               <%= form_with(model: @recipe_process, url: create_recipe_process_path, local: true, class: "mb-4") do |f| %>
                 <div class="input-group">
                   <%= f.text_field :name, class: "form-control", placeholder: "새 공정 입력 (예: 반죽, 1차 발효, 성형 등)", required: true %>
-                  <%= f.submit "추가", class: "btn-apple btn-apple-primary" %>
+                  <%= f.submit "추가", class: "btn-modern btn-modern-primary" %>
                 </div>
                 <% if @recipe_process.errors.any? %>
                   <div class="text-danger small mt-2">
@@ -377,7 +381,7 @@
       <div class="row g-4">
         <!-- 장비 구분 관리 -->
         <div class="col-12">
-          <div class="card-apple">
+          <div class="card-modern">
             <div class="card-body p-4">
               <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
                 <i class="bi bi-tag me-2"></i>장비 구분 관리
@@ -387,7 +391,7 @@
               <%= form_with(model: @equipment_type, url: create_equipment_type_path, local: true, class: "mb-4") do |f| %>
                 <div class="input-group">
                   <%= f.text_field :name, class: "form-control", placeholder: "새 장비 구분 입력 (예: 오븐, 믹서 등)", required: true %>
-                  <%= f.submit "추가", class: "btn-apple btn-apple-primary" %>
+                  <%= f.submit "추가", class: "btn-modern btn-modern-primary" %>
                 </div>
                 <% if @equipment_type.errors.any? %>
                   <div class="text-danger small mt-2">
@@ -426,7 +430,7 @@
 
         <!-- 장비 모드 관리 -->
         <div class="col-12">
-          <div class="card-apple">
+          <div class="card-modern">
             <div class="card-body p-4">
               <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
                 <i class="bi bi-sliders me-2"></i>장비 모드 관리
@@ -449,7 +453,7 @@
                     <%= f.text_field :name, class: "form-control", placeholder: "예: 찜모드, 굽기모드 등", required: true %>
                   </div>
                   <div class="col-md-2 d-flex align-items-end">
-                    <%= f.submit "추가", class: "btn-apple btn-apple-primary w-100" %>
+                    <%= f.submit "추가", class: "btn-modern btn-modern-primary w-100" %>
                   </div>
                 </div>
                 <% if @equipment_mode.errors.any? %>

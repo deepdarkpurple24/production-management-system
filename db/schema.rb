@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_18_045312) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_18_154716) do
   create_table "equipment", force: :cascade do |t|
     t.decimal "capacity", precision: 10, scale: 2
     t.string "capacity_unit"
@@ -183,7 +183,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_18_045312) do
     t.integer "finished_product_id", null: false
     t.text "notes"
     t.date "production_date"
-    t.integer "quantity"
+    t.decimal "quantity", precision: 10, scale: 2
     t.datetime "updated_at", null: false
     t.index ["finished_product_id"], name: "index_production_plans_on_finished_product_id"
   end

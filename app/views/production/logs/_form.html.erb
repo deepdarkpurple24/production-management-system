@@ -18,7 +18,7 @@
   <% end %>
 
   <!-- 생산 계획 선택 (Optional) -->
-  <div class="mb-4">
+  <div class="mb-3">
     <%= form.label :production_plan_id, "생산 계획", class: "form-label", style: "font-weight: 500;" %>
     <%= form.select :production_plan_id,
                     options_from_collection_for_select(@production_plans, :id,
@@ -31,7 +31,7 @@
   </div>
 
   <!-- 완제품 선택 -->
-  <div class="mb-4">
+  <div class="mb-3">
     <%= form.label :finished_product_id, "완제품", class: "form-label", style: "font-weight: 500;" %>
     <span class="text-danger">*</span>
     <%= form.select :finished_product_id,
@@ -44,7 +44,7 @@
   </div>
 
   <!-- 생산 일시 -->
-  <div class="row mb-4">
+  <div class="row mb-3">
     <div class="col-md-6">
       <%= form.label :production_date, "생산 일자", class: "form-label", style: "font-weight: 500;" %>
       <span class="text-danger">*</span>
@@ -61,15 +61,6 @@
                           placeholder: "예: 09:00" %>
       <small class="form-text text-muted">생산 시작 시간을 입력하세요 (선택사항).</small>
     </div>
-  </div>
-
-  <!-- 기본 비고 -->
-  <div class="mb-4">
-    <%= form.label :notes, "비고", class: "form-label", style: "font-weight: 500;" %>
-    <%= form.text_area :notes,
-                       class: "form-control",
-                       rows: 3,
-                       placeholder: "생산 과정 중 특이사항이나 메모를 입력하세요 (선택사항)" %>
   </div>
 
   <!-- 기정떡 전용 필드 섹션 -->
@@ -152,22 +143,45 @@
     <% end %>
   </div>
 
+  <!-- 기본 비고 -->
+  <div class="mb-3">
+    <%= form.label :notes, "비고", class: "form-label", style: "font-weight: 500;" %>
+    <%= form.text_area :notes,
+                       class: "form-control",
+                       rows: 3,
+                       placeholder: "생산 과정 중 특이사항이나 메모를 입력하세요 (선택사항)" %>
+  </div>
+
   <%= form.hidden_field :view, value: params[:view] %>
 
   <div class="d-flex justify-content-end gap-2 mt-4">
     <%= form.submit @production_log.new_record? ? "등록" : "수정",
-                    class: "btn-apple btn-apple-primary" %>
-    <%= link_to production_logs_path(view: params[:view] || 'monthly', date: @production_log.production_date || Date.today),
-                class: "btn btn-outline-secondary" do %>
-      <i class="bi bi-x-lg me-2"></i>취소
-    <% end %>
+                    class: "btn-modern btn-modern-primary" %>
+    <%= link_to "취소", production_logs_path(view: params[:view] || 'monthly', date: @production_log.production_date || Date.today),
+                class: "btn-modern btn-modern-outline" %>
   </div>
 <% end %>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+function initProductionLogForm() {
   const finishedProductSelect = document.getElementById('finished_product_select');
+  const productionPlanSelect = document.getElementById('production_plan_select');
   const gijeongddeokFields = document.getElementById('gijeongddeok-fields');
+
+  if (!finishedProductSelect || !productionPlanSelect || !gijeongddeokFields) {
+    return;
+  }
+
+  // 생산 계획 데이터 (반죽통수 포함)
+  const productionPlansData = {
+    <% @production_plans.each do |plan| %>
+      <%= plan.id %>: {
+        finished_product_id: <%= plan.finished_product_id %>,
+        production_date: '<%= plan.production_date %>',
+        quantity: <%= plan.quantity || 0 %>
+      },
+    <% end %>
+  };
 
   // 기정떡 기본값 데이터
   const gijeongddeokDefaults = {
@@ -179,6 +193,33 @@ document.addEventListener('DOMContentLoaded', function() {
   // 기본값 로드 여부 플래그
   let defaultsLoaded = false;
 
+  // 생산계획 선택 시 처리
+  productionPlanSelect.addEventListener('change', function() {
+    const selectedPlanId = this.value;
+
+    if (selectedPlanId && productionPlansData[selectedPlanId]) {
+      const plan = productionPlansData[selectedPlanId];
+
+      // 완제품 자동 선택
+      finishedProductSelect.value = plan.finished_product_id;
+
+      // 생산 날짜 자동 입력
+      const productionDateField = document.getElementById('production_log_production_date');
+      if (productionDateField) {
+        productionDateField.value = plan.production_date;
+      }
+
+      // 반죽통수 자동 입력 (dough_count 필드)
+      const doughCountField = document.getElementById('production_log_dough_count');
+      if (doughCountField && plan.quantity > 0) {
+        doughCountField.value = plan.quantity;
+      }
+
+      // 완제품 변경에 따른 기정떡 필드 토글
+      toggleGijeongddeokFields();
+    }
+  });
+
   // 기본값 로드 함수
   function loadGijeongddeokDefaults() {
     // 이미 로드했거나 수정 모드인 경우 로드하지 않음
@@ -188,7 +229,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <% @gijeongddeok_fields.each do |field| %>
       const <%= field.field_name %>_field = document.getElementById('production_log_<%= field.field_name %>');
-      if (<%= field.field_name %>_field && <%= field.field_name %>_field.value === '') {
+      // dough_count는 생산계획에서 로드되므로 기본값 적용 제외
+      if (<%= field.field_name %>_field && <%= field.field_name %>_field.value === '' && '<%= field.field_name %>' !== 'dough_count') {
         <%= field.field_name %>_field.value = gijeongddeokDefaults.<%= field.field_name %>;
       }
     <% end %>
@@ -218,7 +260,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 완제품 선택 변경 시 체크
   finishedProductSelect.addEventListener('change', toggleGijeongddeokFields);
-});
+}
+
+// DOMContentLoaded와 turbo:load 모두에서 실행
+document.addEventListener('DOMContentLoaded', initProductionLogForm);
+document.addEventListener('turbo:load', initProductionLogForm);
 
 // 반죽 통수 +/- 버튼 핸들러
 function adjustValue(fieldId, delta) {

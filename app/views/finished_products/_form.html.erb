@@ -10,7 +10,7 @@
     </div>
   <% end %>
 
-  <div class="row g-3 mb-4">
+  <div class="row g-3 mb-3">
     <div class="col-md-6">
       <label for="finished_product_name" class="form-label">완제품명 <span class="text-danger">*</span></label>
       <%= f.text_field :name, class: "form-control", required: true, placeholder: "예: 식빵 1개" %>
@@ -27,7 +27,7 @@
   </div>
 
   <!-- 레시피 목록 -->
-  <div class="mb-4">
+  <div class="mb-3">
     <div class="d-flex justify-content-between align-items-center mb-2">
       <label class="form-label mb-0">레시피 목록</label>
       <button type="button" class="btn btn-sm btn-outline-primary" id="add-recipe-btn">
@@ -87,20 +87,20 @@
   </div>
 
   <!-- 설명 -->
-  <div class="mb-4">
+  <div class="mb-3">
     <label for="finished_product_description" class="form-label">설명</label>
     <%= f.text_area :description, class: "form-control", rows: 3, placeholder: "완제품에 대한 설명을 입력하세요" %>
   </div>
 
   <!-- 비고 -->
-  <div class="mb-4">
+  <div class="mb-3">
     <label for="finished_product_notes" class="form-label">비고</label>
     <%= f.text_area :notes, class: "form-control", rows: 2, placeholder: "추가 메모사항" %>
   </div>
 
   <div class="d-flex gap-2 justify-content-end mt-4">
-    <%= f.submit "#{finished_product.new_record? ? '등록' : '수정'}하기", class: "btn-apple btn-apple-primary" %>
-    <%= link_to "취소", finished_products_path, class: "btn-apple btn-apple-outline" %>
+    <%= f.submit "#{finished_product.new_record? ? '등록' : '수정', class: "btn-modern btn-modern-primary" %>
+    <%= link_to "취소", finished_products_path, class: "btn-modern btn-modern-outline" %>
   </div>
 <% end %>
 

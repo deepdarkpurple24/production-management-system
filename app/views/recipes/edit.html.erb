@@ -2,7 +2,7 @@
 
 <div class="container mt-4">
   <!-- 헤더 섹션 -->
-  <div class="mb-4">
+  <div class="mb-3">
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
         <li class="breadcrumb-item"><%= link_to "레시피 관리", recipes_path %></li>
@@ -10,12 +10,12 @@
         <li class="breadcrumb-item active" aria-current="page">수정</li>
       </ol>
     </nav>
-    <h2 class="mb-1" style="font-weight: 600; letter-spacing: -0.02em;">레시피 수정</h2>
+    <h4 class="mb-0" style="font-weight: 600; letter-spacing: -0.02em;">레시피 수정</h4>
     <p class="text-muted small mb-0">Edit Recipe</p>
   </div>
 
   <!-- 레시피 수정 폼 -->
-  <div class="card-apple">
+  <div class="card-modern">
     <div class="card-body p-4">
       <%= render 'recipes/form', recipe: @recipe %>
     </div>

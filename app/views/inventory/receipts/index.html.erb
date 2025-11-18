@@ -2,18 +2,18 @@
 
 <div class="container mt-4">
   <!-- 헤더 섹션 -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-      <h2 class="mb-1" style="font-weight: 600; letter-spacing: -0.02em;">입고관리</h2>
+      <h4 class="mb-0" style="font-weight: 600; letter-spacing: -0.02em;">입고관리</h4>
       <p class="text-muted small mb-0">Receipt Management</p>
     </div>
-    <%= link_to new_inventory_receipt_path, class: "btn-apple btn-apple-primary" do %>
-      <i class="bi bi-plus-lg me-2"></i>새 입고 등록
+    <%= link_to new_inventory_receipt_path, class: "btn-modern btn-modern-primary" do %>
+      <i class="bi bi-plus-lg me-2"></i>입고 등록
     <% end %>
   </div>
 
   <!-- 입고 목록 테이블 -->
-  <div class="card-apple">
+  <div class="card-modern">
     <div class="card-body p-0">
       <% if @receipts.any? %>
         <div class="table-responsive">
@@ -67,8 +67,8 @@
         <div class="text-center py-5">
           <i class="bi bi-inbox" style="font-size: 3rem; color: #d2d2d7;"></i>
           <p class="mt-3 text-muted">등록된 입고 내역이 없습니다.</p>
-          <%= link_to new_inventory_receipt_path, class: "btn-apple btn-apple-outline mt-2" do %>
-            <i class="bi bi-plus-lg me-2"></i>첫 입고 등록하기
+          <%= link_to new_inventory_receipt_path, class: "btn-modern btn-modern-outline mt-2" do %>
+            <i class="bi bi-plus-lg me-2"></i>입고 등록
           <% end %>
         </div>
       <% end %>

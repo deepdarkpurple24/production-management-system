@@ -43,10 +43,11 @@
               </div>
               <div class="plans-container">
                 <% day_plans.first(3).each do |plan| %>
+                  <% unit = plan.finished_product.name == '기정떡' ? '통' : '개' %>
                   <div class="plan-item"
                        onclick="event.stopPropagation(); window.location.href='<%= edit_production_plan_path(plan, view: 'monthly') %>'"
-                       title="<%= plan.finished_product.name %> (<%= plan.quantity %>개)">
-                    <%= truncate(plan.finished_product.name, length: 15) %> (<%= plan.quantity %>)
+                       title="<%= plan.finished_product.name %> <%= plan.quantity %><%= unit %>">
+                    <%= truncate(plan.finished_product.name, length: 15) %> <%= plan.quantity %><%= unit %>
                   </div>
                 <% end %>
                 <% if day_plans.size > 3 %>

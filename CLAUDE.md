@@ -586,6 +586,33 @@ The system has special default value management for Gijeongddeok production logs
 - Settings page allows drag-and-drop reordering and default value configuration
 - Field order is persisted via AJAX to maintain user preferences
 
+### 12. Production Plan Auto-Update
+**CRITICAL**: Production logs automatically update related production plan quantities:
+```ruby
+# In Production::LogsController
+def create
+  @production_log = ProductionLog.new(production_log_params)
+  if @production_log.save
+    update_production_plan_quantity(@production_log)  # Auto-update plan
+    # ... other processing
+  end
+end
+
+def update_production_plan_quantity(production_log)
+  return unless production_log.production_plan_id.present? && production_log.dough_count.present?
+
+  production_plan = ProductionPlan.find(production_log.production_plan_id)
+  production_plan.update(quantity: production_log.dough_count)
+end
+```
+
+**Behavior**: When a production log is created or updated with a `dough_count` that differs from the associated production plan's `quantity`, the production plan automatically updates to match the actual production amount.
+
+**Example**:
+- Production plan has 2.5 units planned
+- User creates production log with 3 units actual production
+- Production plan quantity automatically updates to 3 units
+
 ## Configuration Notes
 
 ### Time Zone
@@ -631,6 +658,20 @@ bin/rails test:system            # Browser-based system tests
 ```
 
 ## Recent Development History
+
+### 2025-11-19: Production Log Restructuring & Auto-sync
+- **Production Logs UI Overhaul**:
+  - Changed from daily form view to list-based table view showing all production logs
+  - Added dedicated "반죽일지 추가" button that loads production plans as tabs
+  - Date navigation (+/- buttons) in new log form to switch between dates
+  - Production plans for selected date automatically loaded in tab interface
+- **Production Plan Auto-sync**:
+  - Production log quantity changes automatically update associated production plan
+  - Bidirectional synchronization between logs and plans
+  - Ensures actual production always reflects in planning
+- **Calendar Cell Height Fix**: Standardized calendar cell heights to 100px for consistent layout
+- **Date Auto-navigation**: Fixed date display bug with automatic redirect to current date using SessionStorage
+- **Decimal Quantity Support**: Changed production plan quantity from integer to decimal(10,2)
 
 ### 2025-11-18: Recipe Ingredient Source Selection & UI Improvements
 - **Recipe Ingredient Selection Enhancement**:
@@ -920,9 +961,9 @@ const itemOptions = itemsData.map(item => `<option value="${item.id}">${item.nam
 
 ---
 
-Document Version: 1.2
-Last Updated: 2025-11-18
-Schema Version: 20251118045312
+Document Version: 1.3
+Last Updated: 2025-11-19
+Schema Version: 20251118154716
 Rails Version: 8.1.1
 Ruby Version: 3.4.7
 Node Version: 24.11.1

@@ -22,8 +22,9 @@
                 <%= plan.finished_product.name %>
               </td>
               <td class="py-3 px-4 text-center">
+                <% unit = plan.finished_product.name == '기정떡' ? '통' : '개' %>
                 <span class="badge bg-primary">
-                  <%= number_with_delimiter(plan.quantity) %>개
+                  <%= number_with_delimiter(plan.quantity) %><%= unit %>
                 </span>
               </td>
               <td class="py-3 px-4">
@@ -67,7 +68,7 @@
     <div class="text-center py-5">
       <i class="bi bi-calendar-x" style="font-size: 4rem; color: #d2d2d7;"></i>
       <h5 class="mt-4 mb-2" style="font-weight: 600; color: #86868b;">등록된 생산 계획이 없습니다</h5>
-      <p class="text-muted small">상단의 "새 생산 계획 등록" 버튼을 클릭하여 계획을 추가하세요.</p>
+      <p class="text-muted small">상단의 "생산 계획 등록" 버튼을 클릭하여 계획을 추가하세요.</p>
     </div>
   <% end %>
 </div>

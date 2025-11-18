@@ -2,18 +2,18 @@
 
 <div class="container mt-4">
   <!-- 헤더 섹션 -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-      <h2 class="mb-1" style="font-weight: 600; letter-spacing: -0.02em;">장비목록</h2>
+      <h4 class="mb-0" style="font-weight: 600; letter-spacing: -0.02em;">장비목록</h4>
       <p class="text-muted small mb-0">Equipment Management</p>
     </div>
-    <%= link_to new_equipment_path, class: "btn-apple btn-apple-primary" do %>
-      <i class="bi bi-plus-lg me-2"></i>새 장비 등록
+    <%= link_to new_equipment_path, class: "btn-modern btn-modern-primary" do %>
+      <i class="bi bi-plus-lg me-2"></i>장비 등록
     <% end %>
   </div>
 
   <!-- 장비 목록 -->
-  <div class="card-apple">
+  <div class="card-modern">
     <div class="card-body p-0">
       <% if @equipments.any? %>
         <div class="table-responsive">
@@ -94,8 +94,8 @@
         <div class="text-center py-5">
           <i class="bi bi-gear" style="font-size: 3rem; color: #d2d2d7;"></i>
           <p class="mt-3 text-muted">등록된 장비가 없습니다.</p>
-          <%= link_to new_equipment_path, class: "btn-apple btn-apple-outline mt-2" do %>
-            <i class="bi bi-plus-lg me-2"></i>첫 장비 등록하기
+          <%= link_to new_equipment_path, class: "btn-modern btn-modern-outline mt-2" do %>
+            <i class="bi bi-plus-lg me-2"></i>장비 등록
           <% end %>
         </div>
       <% end %>

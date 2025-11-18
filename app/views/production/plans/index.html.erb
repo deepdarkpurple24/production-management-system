@@ -2,49 +2,45 @@
 
 <div class="container mt-4">
   <!-- 헤더 섹션 -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-      <h2 class="mb-1" style="font-weight: 600; letter-spacing: -0.02em;">생산 계획</h2>
+      <h4 class="mb-0" style="font-weight: 600; letter-spacing: -0.02em;">생산 계획</h4>
       <p class="text-muted small mb-0">Production Planning</p>
     </div>
+
+    <ul class="nav nav-pills" style="gap: 0.5rem;">
+      <li class="nav-item">
+        <%= link_to production_plans_path(view: 'monthly', date: @date),
+                    class: "nav-link #{@view_type == 'monthly' ? 'active' : ''}",
+                    style: "border-radius: 8px; font-weight: 500; font-size: 0.9rem;" do %>
+          <i class="bi bi-calendar-month me-1"></i>월별
+        <% end %>
+      </li>
+      <li class="nav-item">
+        <%= link_to production_plans_path(view: 'weekly', date: @date),
+                    class: "nav-link #{@view_type == 'weekly' ? 'active' : ''}",
+                    style: "border-radius: 8px; font-weight: 500; font-size: 0.9rem;" do %>
+          <i class="bi bi-calendar-week me-1"></i>주간별
+        <% end %>
+      </li>
+      <li class="nav-item">
+        <%= link_to production_plans_path(view: 'daily', date: @date),
+                    class: "nav-link #{@view_type == 'daily' ? 'active' : ''}",
+                    style: "border-radius: 8px; font-weight: 500; font-size: 0.9rem;" do %>
+          <i class="bi bi-calendar-day me-1"></i>일별
+        <% end %>
+      </li>
+    </ul>
+
     <%= link_to new_production_plan_path(date: @date, view: @view_type),
-                class: "btn-apple btn-apple-primary" do %>
-      <i class="bi bi-plus-lg me-2"></i>새 생산 계획 등록
+                class: "btn-modern btn-modern-primary" do %>
+      <i class="bi bi-plus-lg me-2"></i>생산 계획 등록
     <% end %>
   </div>
 
-  <!-- 뷰 타입 탭 (월별/주간별/일별) -->
-  <div class="card-apple mb-3">
-    <div class="card-body p-3">
-      <ul class="nav nav-pills justify-content-center" style="gap: 0.5rem;">
-        <li class="nav-item">
-          <%= link_to production_plans_path(view: 'monthly', date: @date),
-                      class: "nav-link #{@view_type == 'monthly' ? 'active' : ''}",
-                      style: "border-radius: 8px; font-weight: 500; font-size: 0.9rem;" do %>
-            <i class="bi bi-calendar-month me-1"></i>월별
-          <% end %>
-        </li>
-        <li class="nav-item">
-          <%= link_to production_plans_path(view: 'weekly', date: @date),
-                      class: "nav-link #{@view_type == 'weekly' ? 'active' : ''}",
-                      style: "border-radius: 8px; font-weight: 500; font-size: 0.9rem;" do %>
-            <i class="bi bi-calendar-week me-1"></i>주간별
-          <% end %>
-        </li>
-        <li class="nav-item">
-          <%= link_to production_plans_path(view: 'daily', date: @date),
-                      class: "nav-link #{@view_type == 'daily' ? 'active' : ''}",
-                      style: "border-radius: 8px; font-weight: 500; font-size: 0.9rem;" do %>
-            <i class="bi bi-calendar-day me-1"></i>일별
-          <% end %>
-        </li>
-      </ul>
-    </div>
-  </div>
-
   <!-- 날짜 네비게이션 -->
-  <div class="card-apple mb-3">
-    <div class="card-body p-3">
+  <div class="card-modern mb-3">
+    <div class="card-body py-2 px-3">
       <div class="d-flex justify-content-between align-items-center">
         <%= link_to production_plans_path(view: @view_type, date: @date - 1.send(@view_type == 'monthly' ? :month : @view_type == 'weekly' ? :week : :day)),
                     class: "btn btn-sm btn-outline-secondary" do %>
@@ -52,7 +48,7 @@
         <% end %>
 
         <div class="text-center">
-          <h4 class="mb-0" style="font-weight: 600;">
+          <h5 class="mb-0" style="font-weight: 600;">
             <% if @view_type == 'monthly' %>
               <%= @date.strftime('%Y년 %m월') %>
             <% elsif @view_type == 'weekly' %>
@@ -60,7 +56,7 @@
             <% else %>
               <%= @date.strftime('%Y년 %m월 %d일 (%a)') %>
             <% end %>
-          </h4>
+          </h5>
           <%= link_to "오늘", production_plans_path(view: @view_type, date: Date.today),
                       class: "btn btn-sm btn-link text-muted" %>
         </div>
@@ -74,7 +70,7 @@
   </div>
 
   <!-- 캘린더 그리드 -->
-  <div class="card-apple">
+  <div class="card-modern">
     <div class="card-body p-0">
       <% if @view_type == 'monthly' %>
         <%= render 'calendar_monthly',
@@ -111,10 +107,12 @@
   }
 
   .calendar-cell {
-    min-height: 120px;
+    height: 100px;
     border: 1px solid #e8e8ed;
     padding: 8px;
     transition: all 0.2s ease;
+    vertical-align: top;
+    overflow: hidden;
   }
 
   .calendar-cell:hover {
@@ -149,3 +147,39 @@
     opacity: 0.8;
   }
 </style>
+
+<script>
+  function checkAndUpdateDate() {
+    // URL에서 date 파라미터 추출
+    const urlParams = new URLSearchParams(window.location.search);
+    const dateParam = urlParams.get('date');
+    const viewParam = urlParams.get('view') || 'monthly';
+
+    if (dateParam) {
+      // 오늘 날짜
+      const today = new Date();
+      const todayStr = today.getFullYear() + '-' +
+                       String(today.getMonth() + 1).padStart(2, '0') + '-' +
+                       String(today.getDate()).padStart(2, '0');
+
+      // 세션 스토리지에서 마지막 방문 날짜 확인
+      const lastVisitDate = sessionStorage.getItem('productionPlansLastVisit');
+
+      // 마지막 방문이 오늘이 아니고, URL의 날짜가 오늘이 아니면 오늘로 리다이렉트
+      if (lastVisitDate && lastVisitDate !== todayStr && dateParam !== todayStr) {
+        sessionStorage.setItem('productionPlansLastVisit', todayStr);
+        window.location.replace('/production/plans?view=' + viewParam + '&date=' + todayStr);
+        return;
+      }
+
+      // 현재 방문 날짜 저장
+      sessionStorage.setItem('productionPlansLastVisit', todayStr);
+    }
+  }
+
+  // 일반 페이지 로드
+  document.addEventListener('DOMContentLoaded', checkAndUpdateDate);
+
+  // Turbo 페이지 전환
+  document.addEventListener('turbo:load', checkAndUpdateDate);
+</script>

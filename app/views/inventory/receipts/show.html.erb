@@ -2,7 +2,7 @@
 
 <div class="container mt-4">
   <!-- 헤더 섹션 -->
-  <div class="mb-4">
+  <div class="mb-3">
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
         <li class="breadcrumb-item"><%= link_to "재고관리", inventory_path %></li>
@@ -12,14 +12,14 @@
     </nav>
     <div class="d-flex justify-content-between align-items-center">
       <div>
-        <h2 class="mb-1" style="font-weight: 600; letter-spacing: -0.02em;">입고 상세정보</h2>
+        <h4 class="mb-0" style="font-weight: 600; letter-spacing: -0.02em;">입고 상세정보</h4>
         <p class="text-muted small mb-0"><%= @receipt.item.name %> - <%= @receipt.receipt_date.strftime("%Y년 %m월 %d일") %></p>
       </div>
       <div class="d-flex gap-2">
-        <%= link_to edit_inventory_receipt_path(@receipt), class: "btn-apple btn-apple-outline" do %>
+        <%= link_to edit_inventory_receipt_path(@receipt), class: "btn-modern btn-modern-outline" do %>
           <i class="bi bi-pencil me-2"></i>수정
         <% end %>
-        <%= button_to inventory_receipt_path(@receipt), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn-apple btn-apple-outline text-danger border-danger" do %>
+        <%= button_to inventory_receipt_path(@receipt), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn-modern btn-modern-outline text-danger border-danger" do %>
           <i class="bi bi-trash me-2"></i>삭제
         <% end %>
       </div>
@@ -30,7 +30,7 @@
   <div class="row g-4">
     <!-- 품목 정보 -->
     <div class="col-md-6">
-      <div class="card-apple h-100">
+      <div class="card-modern h-100">
         <div class="card-body p-4">
           <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">품목 정보</h5>
           <dl class="row mb-0">
@@ -52,7 +52,7 @@
 
     <!-- 입고 정보 -->
     <div class="col-md-6">
-      <div class="card-apple h-100">
+      <div class="card-modern h-100">
         <div class="card-body p-4">
           <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">입고 정보</h5>
           <dl class="row mb-0">
@@ -89,7 +89,7 @@
 
     <!-- 유통기한 정보 -->
     <div class="col-md-6">
-      <div class="card-apple h-100">
+      <div class="card-modern h-100">
         <div class="card-body p-4">
           <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">유통기한 정보</h5>
           <dl class="row mb-0">
@@ -131,7 +131,7 @@
 
     <!-- 공급업체 정보 -->
     <div class="col-md-6">
-      <div class="card-apple h-100">
+      <div class="card-modern h-100">
         <div class="card-body p-4">
           <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">공급업체 정보</h5>
           <dl class="row mb-0">
@@ -145,7 +145,7 @@
     <!-- 비고 -->
     <% if @receipt.notes.present? %>
       <div class="col-12">
-        <div class="card-apple">
+        <div class="card-modern">
           <div class="card-body p-4">
             <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">비고</h5>
             <p class="mb-0" style="white-space: pre-line;"><%= @receipt.notes %></p>
@@ -156,7 +156,7 @@
 
     <!-- 시스템 정보 -->
     <div class="col-12">
-      <div class="card-apple">
+      <div class="card-modern">
         <div class="card-body p-4">
           <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">시스템 정보</h5>
           <dl class="row mb-0">
@@ -173,7 +173,7 @@
 
   <!-- 하단 버튼 -->
   <div class="mt-4 pt-3 border-top d-flex justify-content-between">
-    <%= link_to inventory_receipts_path, class: "btn-apple btn-apple-outline" do %>
+    <%= link_to inventory_receipts_path, class: "btn-modern btn-modern-outline" do %>
       <i class="bi bi-arrow-left me-2"></i>목록으로
     <% end %>
   </div>

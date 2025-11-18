@@ -48,7 +48,7 @@ h1, h2, h3, h4, h5, h6, .display-font {
 }
 
 // Refined Navigation
-.navbar-apple {
+.navbar-modern {
   background: rgba(254, 254, 254, 0.85) !important;
   backdrop-filter: saturate(200%) blur(30px);
   -webkit-backdrop-filter: saturate(200%) blur(30px);
@@ -137,7 +137,7 @@ h1, h2, h3, h4, h5, h6, .display-font {
 }
 
 // Refined Cards with Depth
-.card-apple {
+.card-modern {
   border: 1px solid rgba(31, 41, 55, 0.06);
   border-radius: 24px;
   background: linear-gradient(to bottom, #ffffff 0%, #fefefe 100%);
@@ -282,18 +282,40 @@ h1, h2, h3, h4, h5, h6, .display-font {
   }
 }
 
-// Refined Buttons
-.btn-apple {
-  border-radius: 14px;
-  padding: 0.875rem 1.75rem;
-  font-size: 0.9rem;
+// Refined Buttons - Perfectly Sized
+.btn-modern {
+  // Explicit box model control
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  // Exact sizing
+  min-height: 44px;
+  min-width: 100px;
+  padding: 0.625rem 1.5rem;
+  border: 2px solid;
+  border-radius: 12px;
+
+  // Typography
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.9375rem;
   font-weight: 600;
-  letter-spacing: -0.015em;
-  border: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+
+  // Layout
+  gap: 0.5rem;
   position: relative;
   overflow: hidden;
+  cursor: pointer;
 
+  // Smooth transitions
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  // Ripple effect
   &::before {
     content: '';
     position: absolute;
@@ -302,9 +324,9 @@ h1, h2, h3, h4, h5, h6, .display-font {
     width: 0;
     height: 0;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.25);
     transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
+    transition: width 0.5s ease, height 0.5s ease;
   }
 
   &:hover::before {
@@ -312,31 +334,76 @@ h1, h2, h3, h4, h5, h6, .display-font {
     height: 300px;
   }
 
-  &.btn-apple-primary {
+  // Primary variant
+  &.btn-modern-primary {
     background: linear-gradient(135deg, $refined-sapphire 0%, $refined-sapphire-deep 100%);
+    border-color: $refined-sapphire;
     color: white;
-    box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+    box-shadow:
+      0 1px 3px rgba(0, 102, 204, 0.12),
+      0 1px 2px rgba(0, 102, 204, 0.24);
 
     &:hover {
-      box-shadow: 0 8px 24px rgba(0, 102, 204, 0.4);
-      transform: translateY(-2px);
+      background: linear-gradient(135deg, $refined-sapphire-deep 0%, darken($refined-sapphire-deep, 5%) 100%);
+      border-color: $refined-sapphire-deep;
+      box-shadow:
+        0 4px 12px rgba(0, 102, 204, 0.2),
+        0 2px 4px rgba(0, 102, 204, 0.3);
+      transform: translateY(-1px);
     }
 
     &:active {
       transform: translateY(0);
+      box-shadow:
+        0 1px 2px rgba(0, 102, 204, 0.2);
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow:
+        0 0 0 3px rgba(0, 102, 204, 0.2),
+        0 1px 3px rgba(0, 102, 204, 0.12);
     }
   }
 
-  &.btn-apple-outline {
-    background: transparent;
-    border: 2px solid $refined-ash;
-    color: $refined-sapphire;
+  // Outline variant
+  &.btn-modern-outline {
+    background: white;
+    border-color: #d1d5db;
+    color: #374151;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.05);
 
     &:hover {
-      background: $refined-silver;
-      border-color: $refined-sapphire;
-      transform: translateY(-2px);
+      background: #f9fafb;
+      border-color: rgba(0, 102, 204, 0.4);
+      color: $refined-sapphire;
+      box-shadow:
+        0 4px 12px rgba(0, 102, 204, 0.08),
+        0 2px 4px rgba(0, 102, 204, 0.12);
+      transform: translateY(-1px);
     }
+
+    &:active {
+      background: #f3f4f6;
+      transform: translateY(0);
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: rgba(0, 102, 204, 0.5);
+      box-shadow:
+        0 0 0 3px rgba(0, 102, 204, 0.1),
+        0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+  }
+
+  // Icon alignment
+  i {
+    line-height: 1;
+    font-size: 1em;
   }
 }
 
@@ -398,7 +465,7 @@ h1, h2, h3, h4, h5, h6, .display-font {
 }
 
 // Refined Footer
-.footer-apple {
+.footer-modern {
   background: linear-gradient(to top, $refined-silver 0%, $refined-pearl 100%);
   border-top: 1px solid $refined-ash;
   padding: 2.5rem 0;
@@ -440,13 +507,13 @@ main {
     font-size: 1rem;
   }
 
-  .card-apple .card-icon {
+  .card-modern .card-icon {
     width: 48px;
     height: 48px;
     font-size: 1.5rem;
   }
 
-  .card-apple .card-title {
+  .card-modern .card-title {
     font-size: 1rem;
   }
 }
@@ -459,7 +526,7 @@ main {
 
 // Mobile Navigation Improvements
 @media (max-width: 991px) {
-  .navbar-apple {
+  .navbar-modern {
     .navbar-collapse {
       margin-top: 1rem;
       padding: 1rem 0;
@@ -643,7 +710,7 @@ main {
 }
 
 // Button Loading State
-.btn-apple {
+.btn-modern {
   position: relative;
 
   &.btn-loading {

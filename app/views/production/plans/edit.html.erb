@@ -4,9 +4,9 @@
   <div class="row justify-content-center">
     <div class="col-lg-8">
       <!-- 헤더 -->
-      <div class="d-flex justify-content-between align-items-center mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-          <h2 class="mb-1" style="font-weight: 600; letter-spacing: -0.02em;">생산 계획 수정</h2>
+          <h4 class="mb-0" style="font-weight: 600; letter-spacing: -0.02em;">생산 계획 수정</h4>
           <p class="text-muted small mb-0">Edit Production Plan</p>
         </div>
         <%= link_to production_plans_path(view: params[:view] || 'monthly', date: @production_plan.production_date),
@@ -16,7 +16,7 @@
       </div>
 
       <!-- 폼 -->
-      <div class="card-apple">
+      <div class="card-modern">
         <div class="card-body p-4">
           <%= render 'form', production_plan: @production_plan %>
         </div>

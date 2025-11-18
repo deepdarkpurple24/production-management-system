@@ -1,16 +1,5 @@
 <div class="container-fluid px-4 py-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h2 class="mb-1" style="color: #1d1d1f; font-weight: 600;">생산 일지 수정</h2>
-      <p class="text-muted mb-0">생산 기록을 수정합니다</p>
-    </div>
-    <%= link_to production_logs_path(view: params[:view] || 'monthly', date: @production_log.production_date || Date.today),
-                class: "btn btn-outline-secondary" do %>
-      <i class="bi bi-arrow-left me-2"></i>목록으로
-    <% end %>
-  </div>
-
-  <div class="card" style="border: 1px solid #d2d2d7; border-radius: 12px;">
+  <div class="card-modern">
     <div class="card-body p-4">
       <%= render 'form' %>
     </div>

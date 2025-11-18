@@ -2,7 +2,7 @@
 
 <div class="container mt-4">
   <!-- 헤더 섹션 -->
-  <div class="mb-4">
+  <div class="mb-3">
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
         <li class="breadcrumb-item"><%= link_to "레시피 관리", recipes_path %></li>
@@ -11,14 +11,14 @@
     </nav>
     <div class="d-flex justify-content-between align-items-center">
       <div>
-        <h2 class="mb-1" style="font-weight: 600; letter-spacing: -0.02em;"><%= @recipe.name %></h2>
+        <h4 class="mb-0" style="font-weight: 600; letter-spacing: -0.02em;"><%= @recipe.name %></h4>
         <p class="text-muted small mb-0">Recipe Details</p>
       </div>
       <div class="d-flex gap-2">
-        <%= link_to edit_recipe_path(@recipe), class: "btn-apple btn-apple-outline" do %>
+        <%= link_to edit_recipe_path(@recipe), class: "btn-modern btn-modern-outline" do %>
           <i class="bi bi-pencil me-2"></i>수정
         <% end %>
-        <%= button_to recipe_path(@recipe), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn-apple btn-apple-outline text-danger border-danger" do %>
+        <%= button_to recipe_path(@recipe), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn-modern btn-modern-outline text-danger border-danger" do %>
           <i class="bi bi-trash me-2"></i>삭제
         <% end %>
       </div>
@@ -29,7 +29,7 @@
   <div class="row g-4">
     <!-- 기본 정보 -->
     <div class="col-md-12">
-      <div class="card-apple">
+      <div class="card-modern">
         <div class="card-body p-4">
           <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">기본 정보</h5>
           <dl class="row mb-0">
@@ -57,7 +57,7 @@
     <!-- 사용 장비 목록 -->
     <% if @recipe.recipe_equipments.where(row_type: ['equipment', 'process']).any? %>
       <div class="col-12">
-        <div class="card-apple">
+        <div class="card-modern">
           <div class="card-body p-4">
             <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">사용 장비 목록</h5>
             <div class="table-responsive">
@@ -104,7 +104,7 @@
 
     <!-- 재료 목록 -->
     <div class="col-12">
-      <div class="card-apple">
+      <div class="card-modern">
         <div class="card-body p-4">
           <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">재료 목록</h5>
           <div class="table-responsive">
@@ -178,7 +178,7 @@
 
     <!-- 시스템 정보 -->
     <div class="col-12">
-      <div class="card-apple">
+      <div class="card-modern">
         <div class="card-body p-4">
           <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">시스템 정보</h5>
           <dl class="row mb-0">
@@ -195,7 +195,7 @@
 
   <!-- 하단 버튼 -->
   <div class="mt-4 pt-3 border-top d-flex justify-content-between">
-    <%= link_to recipes_path, class: "btn-apple btn-apple-outline" do %>
+    <%= link_to recipes_path, class: "btn-modern btn-modern-outline" do %>
       <i class="bi bi-arrow-left me-2"></i>목록으로
     <% end %>
   </div>

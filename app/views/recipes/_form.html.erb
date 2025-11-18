@@ -58,8 +58,8 @@
               </td>
               <td>
                 <%= ingredient_fields.select :source_type,
-                    options_for_select([['품목', 'item'], ['재료', 'ingredient']], ingredient_fields.object.source_type || 'item'),
-                    { include_blank: false },
+                    [['품목', 'item'], ['재료', 'ingredient']],
+                    { selected: ingredient_fields.object.source_type || 'item' },
                     { class: "form-select form-select-sm source-type-select", required: true } %>
                 <%= ingredient_fields.hidden_field :row_type, value: "ingredient" %>
                 <%= ingredient_fields.hidden_field :position %>

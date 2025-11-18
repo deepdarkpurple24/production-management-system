@@ -13,6 +13,8 @@ class SettingsController < ApplicationController
     @equipment_type = EquipmentType.new
     @equipment_mode = EquipmentMode.new
     @recipe_process = RecipeProcess.new
+    @gijeongddeok_default = GijeongddeokDefault.instance
+    @gijeongddeok_fields = GijeongddeokFieldOrder.all
   end
 
   def create_purpose
@@ -161,6 +163,32 @@ class SettingsController < ApplicationController
     head :ok
   end
 
+  def update_gijeongddeok_defaults
+    @gijeongddeok_default = GijeongddeokDefault.instance
+
+    if @gijeongddeok_default.update(gijeongddeok_default_params)
+      redirect_to settings_system_path, notice: '기정떡 기본값이 저장되었습니다.'
+    else
+      @shipment_purposes = ShipmentPurpose.all
+      @shipment_requesters = ShipmentRequester.all
+      @equipment_types = EquipmentType.all
+      @recipe_processes = RecipeProcess.all
+      @shipment_purpose = ShipmentPurpose.new
+      @shipment_requester = ShipmentRequester.new
+      @equipment_type = EquipmentType.new
+      @equipment_mode = EquipmentMode.new
+      @recipe_process = RecipeProcess.new
+      render :system, status: :unprocessable_entity
+    end
+  end
+
+  def update_gijeongddeok_field_positions
+    params[:positions].each_with_index do |id, index|
+      GijeongddeokFieldOrder.find(id).update_column(:position, index + 1)
+    end
+    head :ok
+  end
+
   private
 
   def shipment_purpose_params
@@ -181,5 +209,14 @@ class SettingsController < ApplicationController
 
   def recipe_process_params
     params.require(:recipe_process).permit(:name)
+  end
+
+  def gijeongddeok_default_params
+    params.require(:gijeongddeok_default).permit(
+      :fermentation_room_temp, :refrigeration_room_temp,
+      :water_temp, :flour_temp, :porridge_temp, :dough_temp,
+      :yeast_amount, :steiva_amount, :salt_amount, :sugar_amount,
+      :water_amount, :dough_count, :makgeolli_consumption
+    )
   end
 end

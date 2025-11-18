@@ -31,6 +31,8 @@ Rails.application.routes.draw do
   post "settings/recipe_processes", to: "settings#create_recipe_process", as: "create_recipe_process"
   delete "settings/recipe_processes/:id", to: "settings#destroy_recipe_process", as: "destroy_recipe_process"
   patch "settings/recipe_processes/update_positions", to: "settings#update_recipe_process_positions", as: "update_recipe_process_positions"
+  patch "settings/gijeongddeok_defaults", to: "settings#update_gijeongddeok_defaults", as: "update_gijeongddeok_defaults"
+  patch "settings/gijeongddeok_fields/update_positions", to: "settings#update_gijeongddeok_field_positions", as: "update_gijeongddeok_field_positions"
 
   # 각 모듈 메인 페이지
   get "production", to: "production#index", as: "production"

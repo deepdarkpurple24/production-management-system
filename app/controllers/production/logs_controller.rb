@@ -2,7 +2,7 @@ class Production::LogsController < ApplicationController
   before_action :set_production_log, only: [:edit, :update, :destroy]
 
   def index
-    @view_type = params[:view] || 'monthly'
+    @view_type = params[:view] || 'daily'
     @date = params[:date] ? Date.parse(params[:date]) : Date.today
 
     case @view_type
@@ -27,7 +27,15 @@ class Production::LogsController < ApplicationController
       .where(production_date: @start_date..@end_date)
       .order(:production_date)
 
+    # 당일 생산 계획 (탭용)
+    @today_plans = ProductionPlan
+      .includes(:finished_product, :production_logs)
+      .where(production_date: @date)
+      .order(:created_at)
+
     @finished_products = FinishedProduct.order(:name)
+    @gijeongddeok_default = GijeongddeokDefault.instance
+    @gijeongddeok_fields = GijeongddeokFieldOrder.all
   end
 
   def new

@@ -59,41 +59,37 @@
               </p>
 
               <%= form_with(model: @gijeongddeok_default, url: update_gijeongddeok_defaults_path, method: :patch, id: "gijeongddeok-form", local: true) do |f| %>
+                <small class="text-muted mb-2 d-block">
+                  <i class="bi bi-arrows-move me-1"></i>드래그하여 순서 변경
+                </small>
                 <div id="gijeongddeok-fields-list">
                   <% @gijeongddeok_fields.each do |field| %>
-                    <div class="sortable-item d-flex justify-content-between align-items-center p-3 mb-2"
+                    <div class="list-group-item d-flex justify-content-between align-items-center sortable-item"
                          data-id="<%= field.id %>"
-                         style="background: #f5f5f7; border-radius: 8px; border: 1px solid #e5e5e7; cursor: move;">
-                      <div class="d-flex align-items-center flex-grow-1">
-                        <i class="bi bi-grip-vertical me-3 text-muted"></i>
-                        <div style="min-width: 120px;">
-                          <strong style="color: #1d1d1f; font-weight: 500;"><%= field.label %></strong>
-                          <span class="badge bg-secondary ms-2" style="font-size: 0.65rem;">
-                            <%= field.category == 'temperature' ? '온도' : field.category == 'ingredient' ? '재료' : '막걸리' %>
-                          </span>
-                        </div>
+                         style="border: 1px solid #e8e8ed; border-radius: 8px; margin-bottom: 8px; cursor: move;">
+                      <div class="d-flex align-items-center">
+                        <i class="bi bi-grip-vertical me-2 text-muted"></i>
+                        <span style="font-weight: 500;"><%= field.label %></span>
                       </div>
-                      <div style="width: 250px;">
-                        <div class="input-group">
-                          <%= f.number_field field.field_name,
-                                            step: (field.field_name.ends_with?('_temp') || ['steiva_amount', 'water_amount', 'makgeolli_consumption'].include?(field.field_name)) ? 0.1 : 1,
-                                            class: "form-control",
-                                            placeholder: field.category == 'temperature' ? "예: 25.0" : (field.field_name == 'makgeolli_consumption' ? "예: 2500.0" : (field.field_name == 'water_amount' ? "예: 1.5" : (field.field_name == 'steiva_amount' ? "예: 10.5" : "예: 100"))) %>
-                          <span class="input-group-text" style="min-width: 50px;">
-                            <%= case field.field_name
-                                when /temp$/
-                                  '°C'
-                                when 'yeast_amount', 'salt_amount', 'sugar_amount', 'steiva_amount'
-                                  'g'
-                                when 'water_amount'
-                                  'L'
-                                when 'makgeolli_consumption'
-                                  'mL'
-                                else
-                                  ''
-                                end %>
-                          </span>
-                        </div>
+                      <div class="input-group" style="width: auto; max-width: 250px;">
+                        <%= f.number_field field.field_name,
+                                          step: (field.field_name.ends_with?('_temp') || ['steiva_amount', 'water_amount', 'makgeolli_consumption'].include?(field.field_name)) ? 0.1 : 1,
+                                          class: "form-control",
+                                          placeholder: field.category == 'temperature' ? "예: 25.0" : (field.field_name == 'makgeolli_consumption' ? "예: 2500.0" : (field.field_name == 'water_amount' ? "예: 1.5" : (field.field_name == 'steiva_amount' ? "예: 10.5" : "예: 100"))) %>
+                        <span class="input-group-text">
+                          <%= case field.field_name
+                              when /temp$/
+                                '°C'
+                              when 'yeast_amount', 'salt_amount', 'sugar_amount', 'steiva_amount'
+                                'g'
+                              when 'water_amount'
+                                'L'
+                              when 'makgeolli_consumption'
+                                'mL'
+                              else
+                                ''
+                              end %>
+                        </span>
                       </div>
                     </div>
                   <% end %>

@@ -57,10 +57,10 @@
                 <%= ingredient_fields.check_box :is_main, class: "form-check-input is-main-checkbox" %>
               </td>
               <td>
-                <span class="source-type-text" style="cursor: pointer; color: #007bff; text-decoration: underline;" data-current="<%= ingredient_fields.object.source_type || 'item' %>">
-                  <%= (ingredient_fields.object.source_type || 'item') == 'item' ? '품목' : '재료' %>
-                </span>
-                <%= ingredient_fields.hidden_field :source_type, value: ingredient_fields.object.source_type || 'item', class: 'source-type-input' %>
+                <%= ingredient_fields.select :source_type,
+                    options_for_select([['품목', 'item'], ['재료', 'ingredient']], ingredient_fields.object.source_type || 'item'),
+                    {},
+                    { class: "form-select form-select-sm source-type-select", required: true } %>
                 <%= ingredient_fields.hidden_field :row_type, value: "ingredient" %>
                 <%= ingredient_fields.hidden_field :position %>
               </td>
@@ -236,32 +236,22 @@ document.addEventListener('turbo:load', function() {
 
   let ingredientIndex = <%= recipe.recipe_ingredients.length %>;
 
-  // Source type 토글 처리
-  function toggleSourceType(textElement) {
-    const row = textElement.closest('tr');
-    const hiddenInput = row.querySelector('.source-type-input');
-    const currentType = textElement.dataset.current;
-    const newType = currentType === 'item' ? 'ingredient' : 'item';
+  // Source type 변경 시 표시/숨김 처리
+  function handleSourceTypeChange(selectElement) {
+    const row = selectElement.closest('tr');
+    const sourceType = selectElement.value;
 
-    // hidden field 값 변경
-    hiddenInput.value = newType;
-
-    // 텍스트 변경
-    textElement.textContent = newType === 'item' ? '품목' : '재료';
-    textElement.dataset.current = newType;
-
-    // 드롭다운 표시/숨김
     const itemDiv = row.querySelector('.source-item');
     const ingredientDiv = row.querySelector('.source-ingredient');
 
-    if (itemDiv) itemDiv.style.display = newType === 'item' ? 'block' : 'none';
-    if (ingredientDiv) ingredientDiv.style.display = newType === 'ingredient' ? 'block' : 'none';
+    if (itemDiv) itemDiv.style.display = sourceType === 'item' ? 'block' : 'none';
+    if (ingredientDiv) ingredientDiv.style.display = sourceType === 'ingredient' ? 'block' : 'none';
   }
 
-  // 이벤트 위임 방식으로 source type 클릭 처리
-  tbody.addEventListener('click', function(e) {
-    if (e.target.classList.contains('source-type-text')) {
-      toggleSourceType(e.target);
+  // 이벤트 위임 방식으로 source type 변경 처리
+  tbody.addEventListener('change', function(e) {
+    if (e.target.classList.contains('source-type-select')) {
+      handleSourceTypeChange(e.target);
     }
   });
 
@@ -286,8 +276,10 @@ document.addEventListener('turbo:load', function() {
           <input type="checkbox" class="form-check-input is-main-checkbox" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][is_main]" value="1">
         </td>
         <td>
-          <span class="source-type-text" style="cursor: pointer; color: #007bff; text-decoration: underline;" data-current="item">품목</span>
-          <input type="hidden" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][source_type]" value="item" class="source-type-input">
+          <select class="form-select form-select-sm source-type-select" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][source_type]" required>
+            <option value="item">품목</option>
+            <option value="ingredient">재료</option>
+          </select>
           <input type="hidden" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][row_type]" value="ingredient">
           <input type="hidden" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][position]" value="${ingredientIndex}">
         </td>

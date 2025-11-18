@@ -450,6 +450,7 @@ Flexible table structures using `row_type` column:
 ```ruby
 # RecipeIngredient
 row_type: 'ingredient' | 'subtotal'
+source_type: 'item' | 'ingredient'  # Added 2025-11-18
 
 # IngredientItem
 row_type: 'item' | 'ingredient' | 'subtotal'
@@ -457,6 +458,15 @@ source_type: distinguishes data source
 ```
 
 This allows mixing different types of rows in a single table for flexible UI.
+
+**CRITICAL for Recipe Forms**: When rendering forms, check `row_type` to conditionally render subtotal rows vs ingredient rows:
+```erb
+<% if ingredient_fields.object.row_type == 'subtotal' %>
+  <!-- Render subtotal row -->
+<% else %>
+  <!-- Render ingredient input row -->
+<% end %>
+```
 
 ### 5. Unit Conversion System
 **CRITICAL**: Ingredient forms automatically convert all units to grams for totals:
@@ -523,17 +533,58 @@ before_validation :generate_item_code, on: :create
 
 def generate_item_code
   return if item_code.present?
-  
+
   last_item = Item.order(:item_code).last
   if last_item && last_item.item_code =~ /ITEM-(\d+)/
     next_number = $1.to_i + 1
   else
     next_number = 1
   end
-  
+
   self.item_code = "ITEM-#{next_number.to_s.rjust(4, '0')}"
 end
 ```
+
+### 9. Bootstrap Form Validation Override
+**CRITICAL**: Bootstrap validation icons (checkmarks/X marks) are globally disabled:
+```scss
+// app/assets/stylesheets/application.bootstrap.scss
+.form-select.is-valid,
+.form-select.is-invalid,
+.form-select {
+  background-image: none !important;
+}
+```
+
+This prevents unwanted checkmarks from appearing in dropdowns when forms are validated. The global CSS override was added 2025-11-18.
+
+### 10. Recipe Ingredient Source Selection
+Recipes can use both Items (품목) and Ingredients (재료) as sources:
+```ruby
+# RecipeIngredient model
+belongs_to :item, optional: true
+belongs_to :referenced_ingredient, class_name: 'Ingredient', foreign_key: 'referenced_ingredient_id', optional: true
+
+def display_name
+  case source_type
+  when 'item'
+    item&.name || '품목'
+  when 'ingredient'
+    referenced_ingredient&.name || '재료'
+  else
+    item&.name || '품목'
+  end
+end
+```
+
+This pattern allows recipes to reference both raw materials and pre-made ingredient compositions.
+
+### 11. Gijeongddeok (기정떡) Special Handling
+The system has special default value management for Gijeongddeok production logs:
+- **GijeongddeokDefault**: Singleton model (`first_or_create!`) stores default values for production log fields
+- **GijeongddeokFieldOrder**: Manages field display order and metadata (label, category, position)
+- Settings page allows drag-and-drop reordering and default value configuration
+- Field order is persisted via AJAX to maintain user preferences
 
 ## Configuration Notes
 
@@ -581,16 +632,26 @@ bin/rails test:system            # Browser-based system tests
 
 ## Recent Development History
 
-### 2025-11-18: Settings Enhancement & Ingredient Management
-- **Item Categories & Storage Locations**: Added configurable item categories and storage locations in settings
-- **Settings Tab Navigation**: Implemented Bootstrap tabs with URL parameter persistence (`?tab=inventory`)
-- **Scroll Position Preservation**: SessionStorage maintains scroll position during form submissions in settings
-- **Ingredient Form Improvements**:
+### 2025-11-18: Recipe Ingredient Source Selection & UI Improvements
+- **Recipe Ingredient Selection Enhancement**:
+  - Added ability to select both Items (품목) and Ingredients (재료) in recipes
+  - Migration: `add_ingredient_reference_to_recipe_ingredients.rb`
+  - Added `source_type` and `referenced_ingredient_id` columns
+  - Implemented `display_name` method for polymorphic display
+- **Global Bootstrap Validation Override**: Disabled form validation icons globally to prevent unwanted checkmarks
+- **Button Order Standardization**: All forms now use consistent button order (submit left, cancel right)
+- **Production Plan Quantity Validation**: Removed `only_integer` constraint to allow decimal quantities
+- **Gijeongddeok Settings UI**:
+  - Renamed "생산일지" to "반죽일지" (Production Log → Dough Log)
+  - Unified field ordering and default value input into single interface
+  - Consistent styling with other settings sections (list-group-item pattern)
+- **Equipment List Loading Fix**: Fixed JavaScript equipment dropdown generation in recipe forms
+- **Settings Enhancement & Ingredient Management**:
+  - Item Categories & Storage Locations: Added configurable item categories and storage locations
+  - Settings Tab Navigation: Bootstrap tabs with URL parameter persistence (`?tab=inventory`)
+  - Scroll Position Preservation: SessionStorage maintains scroll position during form submissions
   - Unit conversion system: All quantities auto-convert to grams (Kg×1000, L×1000, mL×1)
-  - Right-aligned numeric inputs in tables
-  - Bootstrap validation indicator cleanup (`.is-valid` / `.is-invalid`)
-  - Fixed dynamic row generation for ingredient selection
-- **Tab Persistence Pattern**: All settings CRUD operations include `tab` parameter in redirects
+  - Tab Persistence Pattern: All settings CRUD operations include `tab` parameter
 
 ### 2025-11-17: Production Features
 - **Gijeongddeok Defaults**: Special handling for 기정떡 product with customizable default values
@@ -813,11 +874,55 @@ Common Paths:
 - /production/plans - Production planning
 - /production/logs - Production logs
 
+## UI/UX Consistency Patterns
+
+### Form Button Order
+**All forms must follow this order** (left to right):
+1. Submit button (등록/수정) - Primary action
+2. Cancel button (취소) - Secondary action
+
+Example:
+```erb
+<div class="d-flex justify-content-end gap-2">
+  <%= form.submit "등록", class: "btn-apple btn-apple-primary" %>
+  <%= link_to "취소", back_path, class: "btn btn-outline-secondary" %>
+</div>
+```
+
+### Settings Page List Items
+All sortable lists in settings follow this pattern:
+```erb
+<div class="list-group-item d-flex justify-content-between align-items-center sortable-item"
+     data-id="<%= item.id %>"
+     style="border: 1px solid #e8e8ed; border-radius: 8px; margin-bottom: 8px; cursor: move;">
+  <div class="d-flex align-items-center">
+    <i class="bi bi-grip-vertical me-2 text-muted"></i>
+    <span style="font-weight: 500;"><%= item.name %></span>
+  </div>
+  <!-- Right side: input field or delete button -->
+</div>
+```
+
+This ensures visual consistency across all settings sections (item categories, storage locations, gijeongddeok defaults, etc.).
+
+### Dynamic Row Generation
+When adding rows dynamically (e.g., recipe ingredients, equipment), ensure:
+1. Event delegation for change handlers (not direct event listeners)
+2. JSON data generation in Ruby template, consumed by JavaScript
+3. Proper escaping of quotes in HTML template strings
+4. Consistent naming: use direct HTML `<select>` tags instead of Rails helpers when needed to avoid validation icons
+
+Example pattern:
+```javascript
+const itemsData = <%= @items.map { |item| { id: item.id, name: item.name } }.to_json.html_safe %>;
+const itemOptions = itemsData.map(item => `<option value="${item.id}">${item.name}</option>`).join('');
+```
+
 ---
 
-Document Version: 1.1
+Document Version: 1.2
 Last Updated: 2025-11-18
-Schema Version: 20251118031946
+Schema Version: 20251118045312
 Rails Version: 8.1.1
 Ruby Version: 3.4.7
 Node Version: 24.11.1

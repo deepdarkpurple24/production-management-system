@@ -57,17 +57,12 @@
                 <%= ingredient_fields.check_box :is_main, class: "form-check-input is-main-checkbox" %>
               </td>
               <td>
-                <% if ingredient_fields.object.new_record? %>
-                  <%= ingredient_fields.select :source_type,
-                      options_for_select([['품목', 'item'], ['재료', 'ingredient']], ingredient_fields.object.source_type || 'item'),
-                      {},
-                      { class: "form-select form-select-sm source-type-select", required: true } %>
-                <% else %>
-                  <span class="badge bg-<%= ingredient_fields.object.source_type == 'ingredient' ? 'success' : 'primary' %>">
-                    <%= ingredient_fields.object.source_type == 'ingredient' ? '재료' : '품목' %>
-                  </span>
-                  <%= ingredient_fields.hidden_field :source_type %>
-                <% end %>
+                <span class="badge bg-<%= (ingredient_fields.object.source_type || 'item') == 'ingredient' ? 'success' : 'primary' %>"
+                      style="cursor: pointer;"
+                      title="클릭하여 품목/재료 전환">
+                  <%= (ingredient_fields.object.source_type || 'item') == 'ingredient' ? '재료' : '품목' %>
+                </span>
+                <%= ingredient_fields.hidden_field :source_type, value: ingredient_fields.object.source_type || 'item', class: 'source-type-value' %>
                 <%= ingredient_fields.hidden_field :row_type, value: "ingredient" %>
                 <%= ingredient_fields.hidden_field :position %>
               </td>
@@ -243,23 +238,38 @@ document.addEventListener('turbo:load', function() {
 
   let ingredientIndex = <%= recipe.recipe_ingredients.length %>;
 
-  // Source type 변경 시 표시/숨김 처리
-  function handleSourceTypeChange(selectElement) {
-    const row = selectElement.closest('tr');
-    const sourceType = selectElement.value;
+  // Source type 토글 처리
+  function toggleSourceType(badge) {
+    const row = badge.closest('tr');
+    const hiddenField = row.querySelector('.source-type-value');
+    const currentType = hiddenField.value;
+    const newType = currentType === 'item' ? 'ingredient' : 'item';
 
+    // hidden field 값 변경
+    hiddenField.value = newType;
+
+    // 배지 텍스트 및 색상 변경
+    badge.textContent = newType === 'ingredient' ? '재료' : '품목';
+    badge.className = 'badge bg-' + (newType === 'ingredient' ? 'success' : 'primary');
+    badge.style.cursor = 'pointer';
+    badge.title = '클릭하여 품목/재료 전환';
+
+    // 드롭다운 표시/숨김
     const itemDiv = row.querySelector('.source-item');
     const ingredientDiv = row.querySelector('.source-ingredient');
 
-    if (itemDiv) itemDiv.style.display = sourceType === 'item' ? 'block' : 'none';
-    if (ingredientDiv) ingredientDiv.style.display = sourceType === 'ingredient' ? 'block' : 'none';
+    if (itemDiv) itemDiv.style.display = newType === 'item' ? 'block' : 'none';
+    if (ingredientDiv) ingredientDiv.style.display = newType === 'ingredient' ? 'block' : 'none';
   }
 
-  // 기존 행들의 source type select에 이벤트 리스너 추가
-  document.querySelectorAll('.source-type-select').forEach(select => {
-    select.addEventListener('change', function() {
-      handleSourceTypeChange(this);
-    });
+  // 기존 배지들에 클릭 이벤트 추가
+  document.querySelectorAll('.badge').forEach(badge => {
+    if (badge.closest('td') && badge.closest('td').querySelector('.source-type-value')) {
+      badge.style.cursor = 'pointer';
+      badge.addEventListener('click', function() {
+        toggleSourceType(this);
+      });
+    }
   });
 
   // 데이터 준비
@@ -283,10 +293,8 @@ document.addEventListener('turbo:load', function() {
           <input type="checkbox" class="form-check-input is-main-checkbox" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][is_main]" value="1">
         </td>
         <td>
-          <select class="form-select form-select-sm source-type-select" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][source_type]" required>
-            <option value="item">품목</option>
-            <option value="ingredient">재료</option>
-          </select>
+          <span class="badge bg-primary" style="cursor: pointer;" title="클릭하여 품목/재료 전환">품목</span>
+          <input type="hidden" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][source_type]" value="item" class="source-type-value">
           <input type="hidden" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][row_type]" value="ingredient">
           <input type="hidden" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][position]" value="${ingredientIndex}">
         </td>
@@ -326,11 +334,11 @@ document.addEventListener('turbo:load', function() {
 
     tbody.insertAdjacentHTML('beforeend', newRow);
 
-    // 새로 추가된 행의 source-type-select에 이벤트 리스너 추가
-    const newSourceTypeSelect = tbody.lastElementChild.querySelector('.source-type-select');
-    if (newSourceTypeSelect) {
-      newSourceTypeSelect.addEventListener('change', function() {
-        handleSourceTypeChange(this);
+    // 새로 추가된 행의 배지에 클릭 이벤트 추가
+    const newBadge = tbody.lastElementChild.querySelector('.badge');
+    if (newBadge) {
+      newBadge.addEventListener('click', function() {
+        toggleSourceType(this);
       });
     }
 

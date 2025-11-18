@@ -49,53 +49,73 @@
         </thead>
         <tbody id="ingredients-tbody">
           <%= f.fields_for :recipe_ingredients do |ingredient_fields| %>
-            <tr class="ingredient-row">
-              <td style="cursor: move;" class="text-center">
-                <i class="bi bi-grip-vertical text-muted drag-handle"></i>
-              </td>
-              <td class="text-center">
-                <%= ingredient_fields.check_box :is_main, class: "form-check-input is-main-checkbox" %>
-              </td>
-              <td>
-                <select name="recipe[recipe_ingredients_attributes][<%= ingredient_fields.index %>][source_type]"
-                        class="form-select form-select-sm source-type-select" required>
-                  <option value="item" <%= 'selected' if (ingredient_fields.object.source_type || 'item') == 'item' %>>품목</option>
-                  <option value="ingredient" <%= 'selected' if ingredient_fields.object.source_type == 'ingredient' %>>재료</option>
-                </select>
-                <%= ingredient_fields.hidden_field :row_type, value: "ingredient" %>
-                <%= ingredient_fields.hidden_field :position %>
-              </td>
-              <td style="position: relative; min-width: 200px;">
-                <div class="source-item" style="<%= 'display: none;' unless ingredient_fields.object.source_type.nil? || ingredient_fields.object.source_type == 'item' %>">
-                  <%= ingredient_fields.collection_select :item_id, @items, :id, :name,
-                      {},
-                      { class: "form-select form-select-sm", include_blank: false } %>
-                </div>
-                <div class="source-ingredient" style="<%= 'display: none;' unless ingredient_fields.object.source_type == 'ingredient' %>">
-                  <%= ingredient_fields.collection_select :referenced_ingredient_id, @ingredients, :id, :name,
-                      {},
-                      { class: "form-select form-select-sm", include_blank: false } %>
-                </div>
-              </td>
-              <td>
-                <%= ingredient_fields.number_field :weight, step: 0.01, class: "form-control form-control-sm text-end weight-input", required: true %>
-              </td>
-              <td>
-                <input type="text" class="form-control form-control-sm text-end bakery-percentage" readonly>
-              </td>
-              <td>
-                <input type="text" class="form-control form-control-sm text-end percentage" readonly>
-              </td>
-              <td>
-                <%= ingredient_fields.text_field :notes, class: "form-control form-control-sm" %>
-              </td>
-              <td class="text-center">
-                <%= ingredient_fields.hidden_field :_destroy %>
-                <button type="button" class="btn btn-sm btn-outline-danger remove-ingredient-btn">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
+            <% if ingredient_fields.object.row_type == 'subtotal' %>
+              <tr class="subtotal-row table-secondary">
+                <td class="text-center"><i class="bi bi-grip-vertical text-muted" style="visibility: hidden;"></i></td>
+                <td></td>
+                <td colspan="2" class="text-end"><strong>소계</strong></td>
+                <td class="text-end"><strong class="subtotal-weight">0</strong> g</td>
+                <td class="text-end"><strong class="subtotal-bakery-pct">-</strong></td>
+                <td class="text-end"><strong class="subtotal-pct">-</strong></td>
+                <td></td>
+                <td class="text-center">
+                  <%= ingredient_fields.hidden_field :row_type, value: "subtotal" %>
+                  <%= ingredient_fields.hidden_field :position %>
+                  <%= ingredient_fields.hidden_field :_destroy %>
+                  <button type="button" class="btn btn-sm btn-outline-danger remove-subtotal-btn">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            <% else %>
+              <tr class="ingredient-row">
+                <td style="cursor: move;" class="text-center">
+                  <i class="bi bi-grip-vertical text-muted drag-handle"></i>
+                </td>
+                <td class="text-center">
+                  <%= ingredient_fields.check_box :is_main, class: "form-check-input is-main-checkbox" %>
+                </td>
+                <td>
+                  <select name="recipe[recipe_ingredients_attributes][<%= ingredient_fields.index %>][source_type]"
+                          class="form-select form-select-sm source-type-select" required>
+                    <option value="item" <%= 'selected' if (ingredient_fields.object.source_type || 'item') == 'item' %>>품목</option>
+                    <option value="ingredient" <%= 'selected' if ingredient_fields.object.source_type == 'ingredient' %>>재료</option>
+                  </select>
+                  <%= ingredient_fields.hidden_field :row_type, value: "ingredient" %>
+                  <%= ingredient_fields.hidden_field :position %>
+                </td>
+                <td style="position: relative; min-width: 200px;">
+                  <div class="source-item" style="<%= 'display: none;' unless ingredient_fields.object.source_type.nil? || ingredient_fields.object.source_type == 'item' %>">
+                    <%= ingredient_fields.collection_select :item_id, @items, :id, :name,
+                        {},
+                        { class: "form-select form-select-sm", include_blank: false } %>
+                  </div>
+                  <div class="source-ingredient" style="<%= 'display: none;' unless ingredient_fields.object.source_type == 'ingredient' %>">
+                    <%= ingredient_fields.collection_select :referenced_ingredient_id, @ingredients, :id, :name,
+                        {},
+                        { class: "form-select form-select-sm", include_blank: false } %>
+                  </div>
+                </td>
+                <td>
+                  <%= ingredient_fields.number_field :weight, step: 0.01, class: "form-control form-control-sm text-end weight-input", required: true %>
+                </td>
+                <td>
+                  <input type="text" class="form-control form-control-sm text-end bakery-percentage" readonly>
+                </td>
+                <td>
+                  <input type="text" class="form-control form-control-sm text-end percentage" readonly>
+                </td>
+                <td>
+                  <%= ingredient_fields.text_field :notes, class: "form-control form-control-sm" %>
+                </td>
+                <td class="text-center">
+                  <%= ingredient_fields.hidden_field :_destroy %>
+                  <button type="button" class="btn btn-sm btn-outline-danger remove-ingredient-btn">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            <% end %>
           <% end %>
         </tbody>
         <tfoot style="background-color: #fafafa;">

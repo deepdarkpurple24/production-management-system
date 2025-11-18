@@ -57,13 +57,10 @@
                 <%= ingredient_fields.check_box :is_main, class: "form-check-input is-main-checkbox" %>
               </td>
               <td>
-                <div class="btn-group btn-group-sm" role="group">
-                  <input type="radio" class="btn-check source-type-radio" name="recipe[recipe_ingredients_attributes][<%= ingredient_fields.index %>][source_type]" id="source_type_item_<%= ingredient_fields.index %>" value="item" <%= 'checked' if ingredient_fields.object.source_type.nil? || ingredient_fields.object.source_type == 'item' %> autocomplete="off">
-                  <label class="btn btn-outline-primary btn-sm" for="source_type_item_<%= ingredient_fields.index %>">품목</label>
-
-                  <input type="radio" class="btn-check source-type-radio" name="recipe[recipe_ingredients_attributes][<%= ingredient_fields.index %>][source_type]" id="source_type_ingredient_<%= ingredient_fields.index %>" value="ingredient" <%= 'checked' if ingredient_fields.object.source_type == 'ingredient' %> autocomplete="off">
-                  <label class="btn btn-outline-success btn-sm" for="source_type_ingredient_<%= ingredient_fields.index %>">재료</label>
-                </div>
+                <%= ingredient_fields.select :source_type,
+                    [['품목', 'item'], ['재료', 'ingredient']],
+                    { selected: ingredient_fields.object.source_type || 'item' },
+                    { class: "form-select form-select-sm source-type-select", required: true } %>
                 <%= ingredient_fields.hidden_field :row_type, value: "ingredient" %>
                 <%= ingredient_fields.hidden_field :position %>
               </td>
@@ -240,9 +237,9 @@ document.addEventListener('turbo:load', function() {
   let ingredientIndex = <%= recipe.recipe_ingredients.length %>;
 
   // Source type 변경 시 표시/숨김 처리
-  function handleSourceTypeChange(radioElement) {
-    const row = radioElement.closest('tr');
-    const sourceType = radioElement.value;
+  function handleSourceTypeChange(selectElement) {
+    const row = selectElement.closest('tr');
+    const sourceType = selectElement.value;
 
     const itemDiv = row.querySelector('.source-item');
     const ingredientDiv = row.querySelector('.source-ingredient');
@@ -253,7 +250,7 @@ document.addEventListener('turbo:load', function() {
 
   // 이벤트 위임 방식으로 source type 변경 처리
   tbody.addEventListener('change', function(e) {
-    if (e.target.classList.contains('source-type-radio')) {
+    if (e.target.classList.contains('source-type-select')) {
       handleSourceTypeChange(e.target);
     }
   });
@@ -279,13 +276,10 @@ document.addEventListener('turbo:load', function() {
           <input type="checkbox" class="form-check-input is-main-checkbox" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][is_main]" value="1">
         </td>
         <td>
-          <div class="btn-group btn-group-sm" role="group">
-            <input type="radio" class="btn-check source-type-radio" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][source_type]" id="source_type_item_${ingredientIndex}" value="item" checked autocomplete="off">
-            <label class="btn btn-outline-primary btn-sm" for="source_type_item_${ingredientIndex}">품목</label>
-
-            <input type="radio" class="btn-check source-type-radio" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][source_type]" id="source_type_ingredient_${ingredientIndex}" value="ingredient" autocomplete="off">
-            <label class="btn btn-outline-success btn-sm" for="source_type_ingredient_${ingredientIndex}">재료</label>
-          </div>
+          <select class="form-select form-select-sm source-type-select" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][source_type]" required>
+            <option value="item" selected>품목</option>
+            <option value="ingredient">재료</option>
+          </select>
           <input type="hidden" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][row_type]" value="ingredient">
           <input type="hidden" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][position]" value="${ingredientIndex}">
         </td>

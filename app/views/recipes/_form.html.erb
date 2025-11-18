@@ -67,7 +67,7 @@
                 <%= ingredient_fields.hidden_field :row_type, value: "ingredient" %>
                 <%= ingredient_fields.hidden_field :position %>
               </td>
-              <td>
+              <td style="position: relative; min-width: 200px;">
                 <div class="source-item" style="<%= 'display: none;' unless ingredient_fields.object.source_type.nil? || ingredient_fields.object.source_type == 'item' %>">
                   <%= ingredient_fields.collection_select :item_id, @items, :id, :name,
                       { include_blank: "품목 선택" },
@@ -289,7 +289,7 @@ document.addEventListener('turbo:load', function() {
           <input type="hidden" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][row_type]" value="ingredient">
           <input type="hidden" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][position]" value="${ingredientIndex}">
         </td>
-        <td>
+        <td style="position: relative; min-width: 200px;">
           <div class="source-item">
             <select class="form-select form-select-sm" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][item_id]">
               <option value="">품목 선택</option>

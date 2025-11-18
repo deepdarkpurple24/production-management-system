@@ -57,10 +57,11 @@
                 <%= ingredient_fields.check_box :is_main, class: "form-check-input is-main-checkbox" %>
               </td>
               <td>
-                <%= ingredient_fields.select :source_type,
-                    [['품목', 'item'], ['재료', 'ingredient']],
-                    { selected: ingredient_fields.object.source_type || 'item' },
-                    { class: "form-select form-select-sm source-type-select", required: true } %>
+                <select name="recipe[recipe_ingredients_attributes][<%= ingredient_fields.index %>][source_type]"
+                        class="form-select form-select-sm source-type-select" required>
+                  <option value="item" <%= 'selected' if (ingredient_fields.object.source_type || 'item') == 'item' %>>품목</option>
+                  <option value="ingredient" <%= 'selected' if ingredient_fields.object.source_type == 'ingredient' %>>재료</option>
+                </select>
                 <%= ingredient_fields.hidden_field :row_type, value: "ingredient" %>
                 <%= ingredient_fields.hidden_field :position %>
               </td>

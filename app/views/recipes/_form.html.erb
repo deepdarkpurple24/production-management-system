@@ -868,14 +868,28 @@ document.addEventListener('turbo:load', function() {
 <style>
   /* Bootstrap 폼 검증 체크/X 표시 숨기기 */
   #ingredients-table .form-select.is-valid,
-  #ingredients-table .form-control.is-valid {
-    background-image: none;
+  #ingredients-table .form-control.is-valid,
+  #ingredients-table .form-select,
+  #ingredients-table .form-control,
+  #ingredients-table .form-check-input.is-valid,
+  #ingredients-table .form-check-input {
+    background-image: none !important;
     border-color: #dee2e6;
   }
 
   #ingredients-table .form-select.is-invalid,
   #ingredients-table .form-control.is-invalid {
-    background-image: none;
+    background-image: none !important;
     border-color: #dee2e6;
+  }
+
+  /* source-type-select의 체크 표시 완전히 제거 */
+  .source-type-select {
+    background-image: none !important;
+  }
+
+  .source-type-select.is-valid {
+    background-image: none !important;
+    padding-right: 0.75rem !important;
   }
 </style>

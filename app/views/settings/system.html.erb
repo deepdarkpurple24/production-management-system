@@ -926,11 +926,15 @@
     }
 
     // 기정떡 필드 목록 드래그 앤 드롭 초기화 함수
+    var gijeongddeokFieldsSortable = null;
     function initGijeongddeokSortable() {
       var gijeongddeokFieldsList = document.getElementById('gijeongddeok-fields-list');
-      if (gijeongddeokFieldsList && !gijeongddeokFieldsList.hasAttribute('data-sortable-initialized')) {
-        gijeongddeokFieldsList.setAttribute('data-sortable-initialized', 'true');
-        var gijeongddeokFieldsSortable = Sortable.create(gijeongddeokFieldsList, {
+      if (gijeongddeokFieldsList) {
+        // 기존 Sortable 인스턴스가 있으면 제거
+        if (gijeongddeokFieldsSortable) {
+          gijeongddeokFieldsSortable.destroy();
+        }
+        gijeongddeokFieldsSortable = Sortable.create(gijeongddeokFieldsList, {
           animation: 150,
           handle: '.bi-grip-vertical',
           ghostClass: 'sortable-ghost',

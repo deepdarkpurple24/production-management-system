@@ -71,18 +71,22 @@
     </h5>
 
     <%
-      # 카테고리별로 그룹화
+      # 카테고리별로 그룹화 (순서 보장)
+      category_order = ['production', 'temperature', 'ingredient', 'makgeolli', 'other']
       category_names = {
         'production' => { name: '📊 생산 정보', cols: 4 },
         'temperature' => { name: '🌡️ 온도 관리', cols: 4 },
         'ingredient' => { name: '📦 재료 투입량', cols: 4 },
-        'makgeolli' => { name: '🍶 막걸리 관리', cols: 6 }
+        'makgeolli' => { name: '🍶 막걸리 관리', cols: 6 },
+        'other' => { name: '🔧 기타', cols: 4 }
       }
 
       grouped_fields = @gijeongddeok_fields.group_by(&:category)
     %>
 
-    <% grouped_fields.each do |category, fields| %>
+    <% category_order.each do |category| %>
+      <% next unless grouped_fields[category].present? %>
+      <% fields = grouped_fields[category] %>
       <div class="card mb-3">
         <div class="card-header" style="background-color: #f5f5f7;">
           <h6 class="mb-0" style="font-weight: 500;"><%= category_names[category][:name] %></h6>

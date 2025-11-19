@@ -366,7 +366,28 @@ bin/kamal deploy
 
 **CRITICAL**: After pulling changes from remote repository, always run these checks to ensure proper environment sync:
 
-#### Automatic Setup Script
+#### Fully Automated (Recommended) 🎯
+
+Install Git hooks once to automate everything:
+
+```bash
+# One-time setup: Install Git hooks
+bin/install-hooks
+```
+
+After installation, **git pull automatically triggers environment sync**:
+- ✅ Detects and runs pending migrations
+- ✅ Updates dependencies if Gemfile/package.json changed
+- ✅ Rebuilds CSS if SCSS files changed
+- ✅ Shows summary and server restart reminder
+
+**Usage after hook installation:**
+```bash
+git pull  # Everything happens automatically!
+# Then restart server: bin/dev
+```
+
+#### Semi-Automatic (Manual trigger)
 ```bash
 # Run this script after git pull to sync everything
 bin/setup-after-pull

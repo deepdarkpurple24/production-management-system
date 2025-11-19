@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Git post-merge hook
+# Automatically runs after successful git pull or git merge
+
+# Colors for output
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+echo ""
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${BLUE}🔄 Git Pull 완료 - 자동 환경 동기화 시작${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+
+# Run the setup script
+if [ -f "bin/setup-after-pull" ]; then
+  bash bin/setup-after-pull
+  EXIT_CODE=$?
+
+  if [ $EXIT_CODE -eq 0 ]; then
+    echo ""
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${GREEN}✅ 환경 동기화 완료!${NC}"
+    echo ""
+    echo -e "${YELLOW}⚠️  다음 단계:${NC}"
+    echo -e "   1. 현재 실행 중인 서버가 있다면 ${YELLOW}Ctrl+C${NC}로 중지하세요"
+    echo -e "   2. ${GREEN}bin/dev${NC} 명령으로 서버를 재시작하세요"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+  else
+    echo ""
+    echo -e "${YELLOW}⚠️  환경 동기화 중 일부 오류가 발생했습니다.${NC}"
+    echo -e "   위의 메시지를 확인하고 필요한 작업을 수동으로 완료하세요."
+    echo ""
+  fi
+else
+  echo -e "${YELLOW}⚠️  bin/setup-after-pull 스크립트를 찾을 수 없습니다.${NC}"
+  echo "   다음 명령을 수동으로 실행하세요:"
+  echo "   1. bin/rails db:migrate"
+  echo "   2. bundle install && yarn install"
+  echo "   3. yarn build:css"
+  echo "   4. bin/dev (서버 재시작)"
+  echo ""
+fi

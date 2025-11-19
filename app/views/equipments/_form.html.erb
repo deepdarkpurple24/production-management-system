@@ -101,7 +101,7 @@
   </div>
 
   <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
-    <%= f.submit "#{@equipment.new_record? ? '등록' : '수정', class: "btn-modern btn-modern-primary" %>
+    <%= f.submit (@equipment.new_record? ? '등록' : '수정'), class: "btn-modern btn-modern-primary" %>
     <%= link_to "취소", equipments_path, class: "btn-modern btn-modern-outline" %>
   </div>
 <% end %>

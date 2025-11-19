@@ -308,6 +308,21 @@ Global utilities available throughout the application:
 ## Development Workflow
 
 ### Setup & Installation
+
+#### Recommended: Automated Setup
+```bash
+# One command to set up everything!
+bin/setup
+
+# Automatically handles:
+# - Dependency installation (bundle, yarn)
+# - Database creation and migration
+# - CSS building
+# - Git hooks installation (for auto-sync on pull)
+# - Server start
+```
+
+#### Manual Setup (if needed)
 ```bash
 # Install dependencies
 bundle install
@@ -315,6 +330,12 @@ yarn install
 
 # Database setup
 bin/rails db:create db:migrate db:seed
+
+# Build CSS
+yarn build:css
+
+# Install Git hooks (recommended)
+bin/install-hooks
 
 # Start development server
 bin/dev  # Runs both Rails server & CSS watch

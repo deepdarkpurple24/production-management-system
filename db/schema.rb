@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_19_111301) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_19_112108) do
   create_table "equipment", force: :cascade do |t|
     t.decimal "capacity", precision: 10, scale: 2
     t.string "capacity_unit"
@@ -66,6 +66,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_19_111301) do
 
   create_table "gijeongddeok_defaults", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.json "custom_field_defaults", default: {}
     t.decimal "dough_count", precision: 10, scale: 1
     t.decimal "dough_temp", precision: 10, scale: 1
     t.decimal "fermentation_room_temp", precision: 10, scale: 1

@@ -78,6 +78,7 @@
                       <div class="d-flex align-items-center gap-2">
                         <div class="input-group" style="width: auto; max-width: 250px;">
                           <%= f.number_field field.field_name,
+                                            value: @gijeongddeok_default.read_field(field.field_name),
                                             step: (field.field_name.ends_with?('_temp') || ['steiva_amount', 'water_amount', 'makgeolli_consumption'].include?(field.field_name)) ? 0.1 : 1,
                                             class: "form-control",
                                             placeholder: field.category == 'temperature' ? "예: 25.0" : (field.field_name == 'makgeolli_consumption' ? "예: 2500.0" : (field.field_name == 'water_amount' ? "예: 1.5" : (field.field_name == 'steiva_amount' ? "예: 10.5" : "예: 100"))) %>

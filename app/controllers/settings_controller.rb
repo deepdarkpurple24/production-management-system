@@ -170,7 +170,13 @@ class SettingsController < ApplicationController
   def update_gijeongddeok_defaults
     @gijeongddeok_default = GijeongddeokDefault.instance
 
-    if @gijeongddeok_default.update(gijeongddeok_default_params)
+    # 각 필드 값을 개별적으로 설정 (커스텀 필드는 JSON에, 기본 필드는 컬럼에)
+    field_params = params.require(:gijeongddeok_default)
+    field_params.each do |field_name, value|
+      @gijeongddeok_default.write_field(field_name, value)
+    end
+
+    if @gijeongddeok_default.save
       redirect_to settings_system_path(tab: 'production'), notice: '기정떡 기본값이 저장되었습니다.'
     else
       @shipment_purposes = ShipmentPurpose.all

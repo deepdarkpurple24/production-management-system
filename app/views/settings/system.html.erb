@@ -866,47 +866,64 @@
       });
     }
 
-    // 기정떡 필드 목록 드래그 앤 드롭
-    var gijeongddeokFieldsList = document.getElementById('gijeongddeok-fields-list');
-    if (gijeongddeokFieldsList && !gijeongddeokFieldsList.hasAttribute('data-sortable-initialized')) {
-      gijeongddeokFieldsList.setAttribute('data-sortable-initialized', 'true');
-      var gijeongddeokFieldsSortable = Sortable.create(gijeongddeokFieldsList, {
-        animation: 150,
-        handle: '.bi-grip-vertical',
-        ghostClass: 'sortable-ghost',
-        onEnd: function(evt) {
-          var positions = [];
-          var items = gijeongddeokFieldsList.querySelectorAll('.sortable-item');
-          items.forEach(function(item) {
-            positions.push(item.dataset.id);
-          });
+    // 기정떡 필드 목록 드래그 앤 드롭 초기화 함수
+    function initGijeongddeokSortable() {
+      var gijeongddeokFieldsList = document.getElementById('gijeongddeok-fields-list');
+      if (gijeongddeokFieldsList && !gijeongddeokFieldsList.hasAttribute('data-sortable-initialized')) {
+        gijeongddeokFieldsList.setAttribute('data-sortable-initialized', 'true');
+        var gijeongddeokFieldsSortable = Sortable.create(gijeongddeokFieldsList, {
+          animation: 150,
+          handle: '.bi-grip-vertical',
+          ghostClass: 'sortable-ghost',
+          onEnd: function(evt) {
+            var positions = [];
+            var items = gijeongddeokFieldsList.querySelectorAll('.sortable-item');
+            items.forEach(function(item) {
+              positions.push(item.dataset.id);
+            });
 
-          // 서버에 순서 업데이트 요청
-          fetch('<%= update_gijeongddeok_field_positions_path %>', {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
-            },
-            body: JSON.stringify({ positions: positions })
-          })
-          .then(response => {
-            if (response.ok) {
-              console.log('기정떡 필드 순서가 업데이트되었습니다.');
-              if (window.toast) {
-                window.toast.success('순서가 변경되었습니다.', '기정떡 필드');
+            // 서버에 순서 업데이트 요청
+            fetch('<%= update_gijeongddeok_field_positions_path %>', {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+              },
+              body: JSON.stringify({ positions: positions })
+            })
+            .then(response => {
+              if (response.ok) {
+                console.log('기정떡 필드 순서가 업데이트되었습니다.');
+                if (window.toast) {
+                  window.toast.success('순서가 변경되었습니다.', '기정떡 필드');
+                }
               }
-            }
-          })
-          .catch(error => {
-            console.error('순서 업데이트 에러:', error);
-            if (window.toast) {
-              window.toast.error('순서 변경에 실패했습니다.', '오류');
-            }
-          });
+            })
+            .catch(error => {
+              console.error('순서 업데이트 에러:', error);
+              if (window.toast) {
+                window.toast.error('순서 변경에 실패했습니다.', '오류');
+              }
+            });
+          }
+        });
+      }
+    }
+
+    // 페이지 로드 시 초기화
+    initGijeongddeokSortable();
+
+    // 탭 전환 시에도 초기화
+    document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(function(tabButton) {
+      tabButton.addEventListener('shown.bs.tab', function(event) {
+        // 생산관리 탭이 활성화될 때 Sortable 초기화
+        if (event.target.id === 'production-tab') {
+          setTimeout(function() {
+            initGijeongddeokSortable();
+          }, 100);
         }
       });
-    }
+    });
   });
 </script>
 

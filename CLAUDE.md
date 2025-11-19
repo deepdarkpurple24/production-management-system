@@ -362,6 +362,63 @@ yarn build:css              # Both steps
 bin/kamal deploy
 ```
 
+### Post-Pull Environment Sync
+
+**CRITICAL**: After pulling changes from remote repository, always run these checks to ensure proper environment sync:
+
+#### Automatic Setup Script
+```bash
+# Run this script after git pull to sync everything
+bin/setup-after-pull
+```
+
+#### Manual Steps (if script not available)
+```bash
+# 1. Check for pending migrations
+bin/rails db:migrate:status | grep "down"
+
+# 2. Run pending migrations if any
+bin/rails db:migrate
+
+# 3. Update dependencies
+bundle install
+yarn install
+
+# 4. Rebuild CSS (critical if SCSS files changed)
+yarn build:css
+
+# 5. Restart server
+# Ctrl+C to stop, then:
+bin/dev
+```
+
+#### Common Issues After Pull
+
+**Problem**: UI changes not visible
+- **Cause**: CSS not rebuilt
+- **Solution**: `yarn build:css` then refresh browser with hard reload (Ctrl+Shift+R)
+
+**Problem**: Database errors (column not found, type mismatch)
+- **Cause**: Migrations not run
+- **Solution**: `bin/rails db:migrate`
+- **Check**: `bin/rails db:migrate:status` should show all migrations as "up"
+
+**Problem**: Missing dependencies
+- **Cause**: Gemfile or package.json changed
+- **Solution**: `bundle install && yarn install`
+
+**Problem**: Server behaving unexpectedly
+- **Cause**: Server not restarted after changes
+- **Solution**: Restart server (Ctrl+C then `bin/dev`)
+
+#### Quick Verification
+```bash
+# Verify everything is synced
+git log -1 --oneline                    # Check current commit
+bin/rails db:migrate:status | tail -5  # Check migration status
+ls -lh app/assets/builds/application.css # Check CSS build timestamp
+```
+
 
 ## Settings Management System
 

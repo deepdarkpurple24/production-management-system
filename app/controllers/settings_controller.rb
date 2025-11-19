@@ -329,12 +329,9 @@ class SettingsController < ApplicationController
   end
 
   def gijeongddeok_default_params
-    params.require(:gijeongddeok_default).permit(
-      :fermentation_room_temp, :refrigeration_room_temp,
-      :water_temp, :flour_temp, :porridge_temp, :dough_temp,
-      :yeast_amount, :steiva_amount, :salt_amount, :sugar_amount,
-      :water_amount, :dough_count, :makgeolli_consumption
-    )
+    # 동적으로 모든 필드명 허용 (사용자가 추가한 커스텀 필드 포함)
+    field_names = GijeongddeokFieldOrder.pluck(:field_name).map(&:to_sym)
+    params.require(:gijeongddeok_default).permit(*field_names)
   end
 
   def gijeongddeok_field_params

@@ -193,6 +193,23 @@ class SettingsController < ApplicationController
     head :ok
   end
 
+  def create_gijeongddeok_field
+    @field = GijeongddeokFieldOrder.new(gijeongddeok_field_params)
+    @field.position = GijeongddeokFieldOrder.maximum(:position).to_i + 1
+
+    if @field.save
+      redirect_to settings_system_path(tab: 'production'), notice: '필드가 추가되었습니다.'
+    else
+      redirect_to settings_system_path(tab: 'production'), alert: "필드 추가 실패: #{@field.errors.full_messages.join(', ')}"
+    end
+  end
+
+  def destroy_gijeongddeok_field
+    @field = GijeongddeokFieldOrder.find(params[:id])
+    @field.destroy
+    redirect_to settings_system_path(tab: 'production'), notice: '필드가 삭제되었습니다.'
+  end
+
   def create_item_category
     @item_category = ItemCategory.new(item_category_params)
 
@@ -290,6 +307,10 @@ class SettingsController < ApplicationController
       :yeast_amount, :steiva_amount, :salt_amount, :sugar_amount,
       :water_amount, :dough_count, :makgeolli_consumption
     )
+  end
+
+  def gijeongddeok_field_params
+    params.require(:gijeongddeok_field_order).permit(:field_name, :label, :category)
   end
 
   def item_category_params

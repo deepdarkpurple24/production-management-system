@@ -32,6 +32,8 @@ Rails.application.routes.draw do
   delete "settings/recipe_processes/:id", to: "settings#destroy_recipe_process", as: "destroy_recipe_process"
   patch "settings/recipe_processes/update_positions", to: "settings#update_recipe_process_positions", as: "update_recipe_process_positions"
   patch "settings/gijeongddeok_defaults", to: "settings#update_gijeongddeok_defaults", as: "update_gijeongddeok_defaults"
+  post "settings/gijeongddeok_fields", to: "settings#create_gijeongddeok_field", as: "create_gijeongddeok_field"
+  delete "settings/gijeongddeok_fields/:id", to: "settings#destroy_gijeongddeok_field", as: "destroy_gijeongddeok_field"
   patch "settings/gijeongddeok_fields/update_positions", to: "settings#update_gijeongddeok_field_positions", as: "update_gijeongddeok_field_positions"
   post "settings/item_categories", to: "settings#create_item_category", as: "create_item_category"
   delete "settings/item_categories/:id", to: "settings#destroy_item_category", as: "destroy_item_category"

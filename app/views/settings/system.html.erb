@@ -75,25 +75,33 @@
                         <i class="bi bi-grip-vertical me-2 text-muted"></i>
                         <span style="font-weight: 500;"><%= field.label %></span>
                       </div>
-                      <div class="input-group" style="width: auto; max-width: 250px;">
-                        <%= f.number_field field.field_name,
-                                          step: (field.field_name.ends_with?('_temp') || ['steiva_amount', 'water_amount', 'makgeolli_consumption'].include?(field.field_name)) ? 0.1 : 1,
-                                          class: "form-control",
-                                          placeholder: field.category == 'temperature' ? "예: 25.0" : (field.field_name == 'makgeolli_consumption' ? "예: 2500.0" : (field.field_name == 'water_amount' ? "예: 1.5" : (field.field_name == 'steiva_amount' ? "예: 10.5" : "예: 100"))) %>
-                        <span class="input-group-text">
-                          <%= case field.field_name
-                              when /temp$/
-                                '°C'
-                              when 'yeast_amount', 'salt_amount', 'sugar_amount', 'steiva_amount'
-                                'g'
-                              when 'water_amount'
-                                'L'
-                              when 'makgeolli_consumption'
-                                'mL'
-                              else
-                                ''
-                              end %>
-                        </span>
+                      <div class="d-flex align-items-center gap-2">
+                        <div class="input-group" style="width: auto; max-width: 250px;">
+                          <%= f.number_field field.field_name,
+                                            step: (field.field_name.ends_with?('_temp') || ['steiva_amount', 'water_amount', 'makgeolli_consumption'].include?(field.field_name)) ? 0.1 : 1,
+                                            class: "form-control",
+                                            placeholder: field.category == 'temperature' ? "예: 25.0" : (field.field_name == 'makgeolli_consumption' ? "예: 2500.0" : (field.field_name == 'water_amount' ? "예: 1.5" : (field.field_name == 'steiva_amount' ? "예: 10.5" : "예: 100"))) %>
+                          <span class="input-group-text">
+                            <%= case field.field_name
+                                when /temp$/
+                                  '°C'
+                                when 'yeast_amount', 'salt_amount', 'sugar_amount', 'steiva_amount'
+                                  'g'
+                                when 'water_amount'
+                                  'L'
+                                when 'makgeolli_consumption'
+                                  'mL'
+                                else
+                                  ''
+                                end %>
+                          </span>
+                        </div>
+                        <%= link_to destroy_gijeongddeok_field_path(field),
+                                    method: :delete,
+                                    data: { turbo_method: :delete, turbo_confirm: "이 필드를 삭제하시겠습니까?" },
+                                    class: "btn btn-sm btn-outline-danger" do %>
+                          <i class="bi bi-trash"></i>
+                        <% end %>
                       </div>
                     </div>
                   <% end %>
@@ -103,6 +111,40 @@
                   <%= f.submit "저장", class: "btn-modern btn-modern-primary" %>
                 </div>
               <% end %>
+
+              <!-- 새 필드 추가 -->
+              <div class="border-top mt-4 pt-4">
+                <h6 class="mb-3" style="font-weight: 600;">새 필드 추가</h6>
+                <%= form_with(url: create_gijeongddeok_field_path, method: :post, local: true) do |f| %>
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <%= f.label :field_name, "필드명 (영문)", class: "form-label" %>
+                      <%= f.text_field :field_name, class: "form-control", placeholder: "예: custom_field", required: true %>
+                      <small class="text-muted">영문 소문자와 언더스코어(_)만 사용</small>
+                    </div>
+                    <div class="col-md-4">
+                      <%= f.label :label, "표시 라벨", class: "form-label" %>
+                      <%= f.text_field :label, class: "form-control", placeholder: "예: 사용자 정의 필드", required: true %>
+                    </div>
+                    <div class="col-md-4">
+                      <%= f.label :category, "카테고리", class: "form-label" %>
+                      <%= f.select :category,
+                                   options_for_select([
+                                     ['온도', 'temperature'],
+                                     ['재료', 'ingredient'],
+                                     ['막걸리', 'makgeolli'],
+                                     ['기타', 'other']
+                                   ]),
+                                   { include_blank: "선택" },
+                                   class: "form-select",
+                                   required: true %>
+                    </div>
+                  </div>
+                  <div class="d-flex justify-content-end mt-3">
+                    <%= f.submit "필드 추가", class: "btn btn-sm btn-outline-primary" %>
+                  </div>
+                <% end %>
+              </div>
             </div>
           </div>
         </div>

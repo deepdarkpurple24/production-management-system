@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_18_154716) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_19_111301) do
   create_table "equipment", force: :cascade do |t|
     t.decimal "capacity", precision: 10, scale: 2
     t.string "capacity_unit"
@@ -88,6 +88,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_18_154716) do
     t.string "field_name", null: false
     t.string "label", null: false
     t.integer "position", null: false
+    t.string "unit"
     t.datetime "updated_at", null: false
     t.index ["field_name"], name: "index_gijeongddeok_field_orders_on_field_name", unique: true
     t.index ["position"], name: "index_gijeongddeok_field_orders_on_position"

@@ -197,6 +197,34 @@ class SettingsController < ApplicationController
     @field = GijeongddeokFieldOrder.new(gijeongddeok_field_params)
     @field.position = GijeongddeokFieldOrder.maximum(:position).to_i + 1
 
+    # 필드명이 비어있으면 라벨로부터 자동 생성
+    if @field.field_name.blank?
+      base_name = @field.label.downcase
+                              .gsub(/[^a-z0-9가-힣\s]/, '') # 특수문자 제거
+                              .gsub(/\s+/, '_')              # 공백을 언더스코어로
+
+      # 한글이 포함된 경우 간단한 영문 변환 (카테고리 기반)
+      if base_name =~ /[가-힣]/
+        prefix = case @field.category
+                 when 'temperature' then 'temp'
+                 when 'ingredient' then 'ingredient'
+                 when 'makgeolli' then 'makgeolli'
+                 else 'custom'
+                 end
+
+        # 유니크한 이름 생성
+        counter = 1
+        field_name = "#{prefix}_#{counter}"
+        while GijeongddeokFieldOrder.exists?(field_name: field_name)
+          counter += 1
+          field_name = "#{prefix}_#{counter}"
+        end
+        @field.field_name = field_name
+      else
+        @field.field_name = base_name
+      end
+    end
+
     if @field.save
       redirect_to settings_system_path(tab: 'production'), notice: '필드가 추가되었습니다.'
     else
@@ -310,7 +338,7 @@ class SettingsController < ApplicationController
   end
 
   def gijeongddeok_field_params
-    params.require(:gijeongddeok_field_order).permit(:field_name, :label, :category)
+    params.require(:gijeongddeok_field_order).permit(:field_name, :label, :category, :unit)
   end
 
   def item_category_params

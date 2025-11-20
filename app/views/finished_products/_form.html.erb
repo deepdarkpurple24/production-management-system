@@ -56,7 +56,7 @@
               </td>
               <td>
                 <%= recipe_fields.collection_select :recipe_id, @recipes, :id, :name,
-                    { include_blank: "레시피 선택" },
+                    {},
                     { class: "form-select form-select-sm", required: true } %>
                 <%= recipe_fields.hidden_field :position %>
               </td>
@@ -115,12 +115,19 @@ document.addEventListener('turbo:load', function() {
 
   let recipeIndex = <%= finished_product.finished_product_recipes.length %>;
 
+  // 레시피 데이터를 JSON으로 준비
+  const recipesData = <%= @recipes.map { |r| { id: r.id, name: r.name } }.to_json.html_safe %>;
+
   // 레시피 추가
   const addRecipeBtn = document.getElementById('add-recipe-btn');
   if (addRecipeBtn) {
     addRecipeBtn.addEventListener('click', function() {
       const tbody = document.getElementById('recipes-tbody');
-      const recipeOptions = '<%= @recipes.map { |recipe| "<option value=#{recipe.id}>#{recipe.name}</option>" }.join.html_safe %>';
+
+      // 레시피 옵션 생성
+      const recipeOptions = recipesData.map(recipe =>
+        `<option value="${recipe.id}">${recipe.name}</option>`
+      ).join('');
 
       const newRow = `
         <tr class="recipe-row">
@@ -129,7 +136,6 @@ document.addEventListener('turbo:load', function() {
           </td>
           <td>
             <select class="form-select form-select-sm" name="finished_product[finished_product_recipes_attributes][${recipeIndex}][recipe_id]" required>
-              <option value="">레시피 선택</option>
               ${recipeOptions}
             </select>
             <input type="hidden" name="finished_product[finished_product_recipes_attributes][${recipeIndex}][position]" value="${recipeIndex}">

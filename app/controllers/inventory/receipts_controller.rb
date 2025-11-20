@@ -30,7 +30,7 @@ class Inventory::ReceiptsController < ApplicationController
 
   def update
     if @receipt.update(receipt_params)
-      redirect_to inventory_receipt_path(@receipt), notice: '입고 정보가 수정되었습니다.'
+      redirect_to inventory_receipts_path, notice: '입고 정보가 수정되었습니다.'
     else
       @items = Item.all.order(:name)
       render :edit, status: :unprocessable_entity

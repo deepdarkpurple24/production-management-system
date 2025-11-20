@@ -4,7 +4,7 @@ class Production::LogsController < ApplicationController
   def index
     # 전체 반죽일지를 최근 날짜순으로 로드
     @production_logs = ProductionLog
-      .includes(:finished_product, :production_plan)
+      .includes(:finished_product, :production_plan, :recipe)
       .order(production_date: :desc, created_at: :desc)
   end
 
@@ -104,7 +104,7 @@ class Production::LogsController < ApplicationController
 
   def production_log_params
     params.require(:production_log).permit(
-      :production_plan_id, :finished_product_id, :production_date, :production_time, :notes,
+      :production_plan_id, :finished_product_id, :recipe_id, :production_date, :production_time, :notes,
       # 기정떡 전용 필드
       :dough_count, :fermentation_room_temp, :refrigeration_room_temp,
       :yeast_amount, :steiva_amount, :salt_amount, :sugar_amount,

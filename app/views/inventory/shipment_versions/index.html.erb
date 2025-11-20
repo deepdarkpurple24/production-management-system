@@ -1,0 +1,301 @@
+<%= render 'inventory/shared/sub_navigation' %>
+
+<div class="container mt-4">
+  <!-- 헤더 섹션 -->
+  <div class="mb-3">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><%= link_to "출고 관리", inventory_shipments_path %></li>
+        <li class="breadcrumb-item"><%= link_to "출고 ##{@shipment.id}", inventory_shipment_path(@shipment) %></li>
+        <li class="breadcrumb-item active" aria-current="page">수정내역</li>
+      </ol>
+    </nav>
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h4 class="mb-0" style="font-weight: 600; letter-spacing: -0.02em;">출고 #<%= @shipment.id %> - 수정내역</h4>
+        <p class="text-muted small mb-0">Shipment Version History</p>
+      </div>
+      <%= link_to inventory_shipments_path, class: "btn-modern btn-modern-outline" do %>
+        <i class="bi bi-arrow-left me-2"></i>목록으로 돌아가기
+      <% end %>
+    </div>
+  </div>
+
+  <!-- 수정내역 목록 -->
+  <div class="card-modern">
+    <div class="card-body p-0">
+      <% if @versions.any? %>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead style="background-color: #f5f5f7; border-bottom: 1px solid #d2d2d7;">
+              <tr>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">버전</th>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">품목</th>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">출고일</th>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">수량</th>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">수정일시</th>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">변경사항</th>
+                <th class="py-3 px-4 text-center" style="font-weight: 500; font-size: 0.875rem;">삭제</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- 현재 버전 표시 -->
+              <tr style="background-color: #f0f9ff; border-bottom: 1px solid #e8e8ed;">
+                <td class="py-3 px-4">
+                  <span class="badge bg-primary">현재</span>
+                </td>
+                <td class="py-3 px-4" style="font-weight: 500;"><%= @shipment.item.name %></td>
+                <td class="py-3 px-4">
+                  <% if @shipment.shipment_date.present? %>
+                    <%= @shipment.shipment_date.strftime("%Y-%m-%d %H:%M") %>
+                  <% else %>
+                    <span class="text-muted">-</span>
+                  <% end %>
+                </td>
+                <td class="py-3 px-4"><%= number_with_delimiter(@shipment.quantity) %></td>
+                <td class="py-3 px-4"><%= @shipment.updated_at.strftime("%Y년 %m월 %d일 %H:%M") %></td>
+                <td class="py-3 px-4 text-muted">-</td>
+                <td class="py-3 px-4 text-center">-</td>
+              </tr>
+
+              <!-- 이전 버전들 -->
+              <% @versions.each do |version| %>
+                <tr style="border-bottom: 1px solid #e8e8ed;" class="version-row" data-version="<%= version.version_number %>">
+                  <td class="py-3 px-4">
+                    <span class="badge bg-secondary">v<%= version.version_number %></span>
+                  </td>
+                  <td class="py-3 px-4"><%= version.item_name %></td>
+                  <td class="py-3 px-4">
+                    <% if version.shipment_date.present? %>
+                      <%= version.shipment_date.strftime("%Y-%m-%d %H:%M") %>
+                    <% else %>
+                      <span class="text-muted">-</span>
+                    <% end %>
+                  </td>
+                  <td class="py-3 px-4">
+                    <% if version.quantity.present? %>
+                      <%= number_with_delimiter(version.quantity) %>
+                    <% else %>
+                      <span class="text-muted">-</span>
+                    <% end %>
+                  </td>
+                  <td class="py-3 px-4"><%= version.changed_at.strftime("%Y년 %m월 %d일 %H:%M") %></td>
+                  <td class="py-3 px-4">
+                    <% if version.change_summary.present? %>
+                      <span class="text-info"><i class="bi bi-info-circle me-1"></i><%= version.change_summary %></span>
+                    <% else %>
+                      <span class="text-muted">변경사항 없음</span>
+                    <% end %>
+                  </td>
+                  <td class="py-3 px-4 text-center">
+                    <%= button_to inventory_shipment_shipment_version_path(@shipment, version),
+                                  method: :delete,
+                                  class: "btn btn-sm btn-outline-danger",
+                                  data: { turbo_confirm: "이 수정내역을 삭제하시겠습니까?" },
+                                  title: "삭제" do %>
+                      <i class="bi bi-trash"></i>
+                    <% end %>
+                  </td>
+                </tr>
+                <!-- 상세 정보 (토글 가능) -->
+                <tr class="version-detail" id="detail-<%= version.version_number %>" style="display: none; background-color: #fafafa;">
+                  <td colspan="7" class="p-4">
+                    <%
+                      # 다음 버전 (비교 대상) 찾기
+                      next_version_index = @versions.index(version) - 1
+                      next_version = next_version_index >= 0 ? @versions[next_version_index] : nil
+                      is_first_version = version == @versions.first
+
+                      # 필드 비교
+                      if is_first_version
+                        compared_quantity = @shipment.quantity.to_f
+                        compared_shipment_date = @shipment.shipment_date
+                        compared_purpose = @shipment.purpose
+                        compared_requester = @shipment.requester
+                      elsif next_version
+                        compared_quantity = next_version.quantity.to_f
+                        compared_shipment_date = next_version.shipment_date
+                        compared_purpose = next_version.purpose
+                        compared_requester = next_version.requester
+                      else
+                        compared_quantity = nil
+                        compared_shipment_date = nil
+                        compared_purpose = nil
+                        compared_requester = nil
+                      end
+
+                      current_quantity = version.quantity.to_f
+
+                      quantity_changed = (is_first_version || next_version) && (current_quantity != compared_quantity)
+                      shipment_date_changed = (is_first_version || next_version) && (version.shipment_date != compared_shipment_date)
+                      purpose_changed = (is_first_version || next_version) && (version.purpose != compared_purpose)
+                      requester_changed = (is_first_version || next_version) && (version.requester != compared_requester)
+                    %>
+
+                    <div class="row">
+                      <!-- 기본 정보 -->
+                      <div class="col-md-6 mb-3">
+                        <h6 class="mb-2" style="font-weight: 600;"><i class="bi bi-info-circle me-2"></i>기본 정보</h6>
+                        <table class="table table-sm table-bordered">
+                          <tbody>
+                            <tr>
+                              <th style="width: 30%;">품목</th>
+                              <td><%= version.item_name %></td>
+                            </tr>
+                            <tr <%= 'style="background-color: #fff3cd;"'.html_safe if shipment_date_changed %>>
+                              <th>출고일</th>
+                              <td>
+                                <% if version.shipment_date.present? %>
+                                  <%= version.shipment_date.strftime("%Y년 %m월 %d일 %H:%M") %>
+                                <% else %>
+                                  -
+                                <% end %>
+                                <% if shipment_date_changed %>
+                                  <br>
+                                  <small class="text-warning">
+                                    <i class="bi bi-arrow-right me-1"></i>
+                                    <%= version.shipment_date&.strftime("%Y년 %m월 %d일 %H:%M") || '-' %> → <%= compared_shipment_date&.strftime("%Y년 %m월 %d일 %H:%M") || '-' %>
+                                  </small>
+                                <% end %>
+                              </td>
+                            </tr>
+                            <tr <%= 'style="background-color: #fff3cd;"'.html_safe if quantity_changed %>>
+                              <th>수량</th>
+                              <td>
+                                <% if version.quantity.present? %>
+                                  <%= number_with_delimiter(version.quantity) %>
+                                <% else %>
+                                  -
+                                <% end %>
+                                <% if quantity_changed %>
+                                  <br>
+                                  <small class="text-warning">
+                                    <i class="bi bi-arrow-right me-1"></i>
+                                    <%= number_with_delimiter(current_quantity) %> → <%= number_with_delimiter(compared_quantity) %>
+                                  </small>
+                                <% end %>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <!-- 출고 상세 정보 -->
+                      <div class="col-md-6 mb-3">
+                        <h6 class="mb-2" style="font-weight: 600;"><i class="bi bi-box-arrow-right me-2"></i>출고 상세</h6>
+                        <table class="table table-sm table-bordered">
+                          <tbody>
+                            <tr <%= 'style="background-color: #fff3cd;"'.html_safe if purpose_changed %>>
+                              <th style="width: 30%;">목적</th>
+                              <td>
+                                <% if version.purpose.present? %>
+                                  <%= version.purpose %>
+                                <% else %>
+                                  -
+                                <% end %>
+                                <% if purpose_changed %>
+                                  <br>
+                                  <small class="text-warning">
+                                    <i class="bi bi-arrow-right me-1"></i>
+                                    <%= version.purpose || '-' %> → <%= compared_purpose || '-' %>
+                                  </small>
+                                <% end %>
+                              </td>
+                            </tr>
+                            <tr <%= 'style="background-color: #fff3cd;"'.html_safe if requester_changed %>>
+                              <th>요청자</th>
+                              <td>
+                                <% if version.requester.present? %>
+                                  <%= version.requester %>
+                                <% else %>
+                                  -
+                                <% end %>
+                                <% if requester_changed %>
+                                  <br>
+                                  <small class="text-warning">
+                                    <i class="bi bi-arrow-right me-1"></i>
+                                    <%= version.requester || '-' %> → <%= compared_requester || '-' %>
+                                  </small>
+                                <% end %>
+                              </td>
+                            </tr>
+                            <tr>
+                              <th>비고</th>
+                              <td>
+                                <% if version.notes.present? %>
+                                  <%= simple_format(version.notes) %>
+                                <% else %>
+                                  -
+                                <% end %>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="text-center py-5">
+          <i class="bi bi-clock-history" style="font-size: 3rem; color: #d2d2d7;"></i>
+          <p class="mt-3 text-muted">아직 수정 내역이 없습니다.</p>
+          <p class="text-muted small">출고 정보를 수정하면 자동으로 변경 내역이 기록됩니다.</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<style>
+  .version-row {
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  .version-row:hover {
+    background-color: #f5f5f7;
+  }
+</style>
+
+<script>
+function initializeVersionToggle() {
+  const versionRows = document.querySelectorAll('.version-row');
+
+  versionRows.forEach(row => {
+    const oldListener = row._versionClickListener;
+    if (oldListener) {
+      row.removeEventListener('click', oldListener);
+    }
+
+    const newListener = function(e) {
+      if (e.target.closest('form') || e.target.closest('button')) {
+        return;
+      }
+
+      const version = this.dataset.version;
+      const detailRow = document.getElementById('detail-' + version);
+
+      if (!detailRow) {
+        console.error('Detail row not found for version:', version);
+        return;
+      }
+
+      if (detailRow.style.display === '' || detailRow.style.display === 'none') {
+        detailRow.style.display = 'table-row';
+      } else {
+        detailRow.style.display = 'none';
+      }
+    };
+
+    row._versionClickListener = newListener;
+    row.addEventListener('click', newListener);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initializeVersionToggle);
+document.addEventListener('turbo:load', initializeVersionToggle);
+document.addEventListener('turbo:render', initializeVersionToggle);
+</script>

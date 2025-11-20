@@ -18,6 +18,9 @@
         <%= link_to edit_finished_product_path(@finished_product), class: "btn-modern btn-modern-outline" do %>
           <i class="bi bi-pencil me-2"></i>수정
         <% end %>
+        <%= link_to finished_product_finished_product_versions_path(@finished_product), class: "btn-modern btn-modern-outline" do %>
+          <i class="bi bi-clock-history me-2"></i>수정내역
+        <% end %>
         <%= button_to finished_product_path(@finished_product), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn-modern btn-modern-outline text-danger border-danger" do %>
           <i class="bi bi-trash me-2"></i>삭제
         <% end %>

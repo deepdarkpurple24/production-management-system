@@ -53,6 +53,12 @@
                       <%= link_to edit_inventory_receipt_path(receipt), class: "btn btn-sm btn-outline-primary", title: "수정" do %>
                         <i class="bi bi-pencil"></i>
                       <% end %>
+                      <%= link_to inventory_receipt_receipt_versions_path(receipt), class: "btn btn-sm btn-outline-info", title: "수정내역" do %>
+                        <i class="bi bi-clock-history"></i>
+                        <% if receipt.receipt_versions.any? %>
+                          <span class="badge bg-info rounded-pill"><%= receipt.receipt_versions.count %></span>
+                        <% end %>
+                      <% end %>
                       <%= button_to inventory_receipt_path(receipt), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn btn-sm btn-outline-danger", title: "삭제" do %>
                         <i class="bi bi-trash"></i>
                       <% end %>

@@ -19,6 +19,9 @@
         <%= link_to edit_inventory_receipt_path(@receipt), class: "btn-modern btn-modern-outline" do %>
           <i class="bi bi-pencil me-2"></i>수정
         <% end %>
+        <%= link_to inventory_receipt_receipt_versions_path(@receipt), class: "btn-modern btn-modern-outline" do %>
+          <i class="bi bi-clock-history me-2"></i>수정내역
+        <% end %>
         <%= button_to inventory_receipt_path(@receipt), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn-modern btn-modern-outline text-danger border-danger" do %>
           <i class="bi bi-trash me-2"></i>삭제
         <% end %>

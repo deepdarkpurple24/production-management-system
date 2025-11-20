@@ -36,7 +36,7 @@ class Inventory::ShipmentsController < ApplicationController
 
   def update
     if @shipment.update(shipment_params)
-      redirect_to inventory_shipment_path(@shipment), notice: '출고 정보가 수정되었습니다.'
+      redirect_to inventory_shipments_path, notice: '출고 정보가 수정되었습니다.'
     else
       @items = Item.all.order(:name)
       @shipment_purposes = ShipmentPurpose.all

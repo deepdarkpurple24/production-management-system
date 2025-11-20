@@ -758,6 +758,27 @@ bin/rails test:system            # Browser-based system tests
 
 ## Recent Development History
 
+### 2025-11-20: Version Tracking System Improvements
+- **Comprehensive Notes Field Support**:
+  - Added `notes` field to `item_versions` table for complete Item version tracking
+  - Recipe ingredients now track notes with change detection in version history
+  - Finished product recipes track notes per recipe with change highlighting
+  - Ingredient items track notes per item with comparison logic
+  - All version views display notes with yellow background when changed
+- **Version History UI Consistency**:
+  - Standardized "new/deleted" indicators across all version views (fixed reversed logic)
+  - Added unit change detection for ingredient items and production units
+  - Added text field change detection for name, description fields
+  - Fixed notes architecture: moved from model-level to item-level where appropriate
+- **Item Management UX**:
+  - Changed update redirect from detail page to list page for faster workflow
+  - Added notes display in item version history with change tracking
+- **Version Tracking Pattern**:
+  - All models with notes now save to version snapshots
+  - Comparison logic highlights changes in yellow (#fff3cd)
+  - Deleted items shown in red (#f8d7da), added items in blue (#d1ecf1)
+  - Change arrows show before → after values
+
 ### 2025-11-19: Production Log Restructuring & Auto-sync
 - **Production Logs UI Overhaul**:
   - Changed from daily form view to list-based table view showing all production logs
@@ -1060,9 +1081,9 @@ const itemOptions = itemsData.map(item => `<option value="${item.id}">${item.nam
 
 ---
 
-Document Version: 1.3
-Last Updated: 2025-11-19
-Schema Version: 20251118154716
+Document Version: 1.4
+Last Updated: 2025-11-20
+Schema Version: 20251120062428
 Rails Version: 8.1.1
 Ruby Version: 3.4.7
 Node Version: 24.11.1

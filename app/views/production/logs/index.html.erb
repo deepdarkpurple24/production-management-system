@@ -41,6 +41,12 @@
                   </td>
                   <td class="py-3 px-4" style="font-weight: 500;">
                     <%= log.finished_product.name %>
+                    <% if log.recipe.present? %>
+                      <br>
+                      <small class="text-muted">
+                        <i class="bi bi-arrow-return-right me-1"></i><%= log.recipe.name %>
+                      </small>
+                    <% end %>
                   </td>
                   <td class="py-3 px-4 text-center">
                     <% if log.dough_count.present? %>

@@ -1,6 +1,7 @@
 class ProductionLog < ApplicationRecord
   belongs_to :production_plan
   belongs_to :finished_product
+  belongs_to :recipe, optional: true
 
   validates :production_plan, presence: true
   validates :finished_product, presence: true

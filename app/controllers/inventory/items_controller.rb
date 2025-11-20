@@ -37,7 +37,7 @@ class Inventory::ItemsController < ApplicationController
 
   def update
     if @item.update(item_params)
-      redirect_to inventory_item_path(@item), notice: '품목이 성공적으로 수정되었습니다.'
+      redirect_to inventory_items_path, notice: '품목이 성공적으로 수정되었습니다.'
     else
       render :edit, status: :unprocessable_entity
     end

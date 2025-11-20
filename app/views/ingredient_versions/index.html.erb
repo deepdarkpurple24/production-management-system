@@ -1,0 +1,555 @@
+<%= render 'recipes/shared/sub_navigation' %>
+
+<div class="container mt-4">
+  <!-- 헤더 섹션 -->
+  <div class="mb-3">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><%= link_to "재료 관리", ingredients_path %></li>
+        <li class="breadcrumb-item"><%= link_to @ingredient.name, ingredient_path(@ingredient) %></li>
+        <li class="breadcrumb-item active" aria-current="page">수정내역</li>
+      </ol>
+    </nav>
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h4 class="mb-0" style="font-weight: 600; letter-spacing: -0.02em;"><%= @ingredient.name %> - 수정내역</h4>
+        <p class="text-muted small mb-0">Ingredient Version History</p>
+      </div>
+      <%= link_to ingredients_path, class: "btn-modern btn-modern-outline" do %>
+        <i class="bi bi-arrow-left me-2"></i>목록으로 돌아가기
+      <% end %>
+    </div>
+  </div>
+
+  <!-- 수정내역 목록 -->
+  <div class="card-modern">
+    <div class="card-body p-0">
+      <% if @versions.any? %>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead style="background-color: #f5f5f7; border-bottom: 1px solid #d2d2d7;">
+              <tr>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">버전</th>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">재료명</th>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">생산량</th>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">장비구분</th>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">수정일시</th>
+                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">변경사항</th>
+                <th class="py-3 px-4 text-center" style="font-weight: 500; font-size: 0.875rem;">삭제</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- 현재 버전 표시 -->
+              <tr style="background-color: #f0f9ff; border-bottom: 1px solid #e8e8ed;">
+                <td class="py-3 px-4">
+                  <span class="badge bg-primary">현재</span>
+                </td>
+                <td class="py-3 px-4" style="font-weight: 500;"><%= @ingredient.name %></td>
+                <td class="py-3 px-4">
+                  <% if @ingredient.production_quantity.present? %>
+                    <%= number_with_delimiter(@ingredient.production_quantity) %> <%= @ingredient.production_unit %>
+                  <% else %>
+                    <span class="text-muted">-</span>
+                  <% end %>
+                </td>
+                <td class="py-3 px-4">
+                  <% if @ingredient.equipment_type.present? %>
+                    <%= @ingredient.equipment_type.name %>
+                  <% else %>
+                    <span class="text-muted">-</span>
+                  <% end %>
+                </td>
+                <td class="py-3 px-4"><%= @ingredient.updated_at.strftime("%Y년 %m월 %d일 %H:%M") %></td>
+                <td class="py-3 px-4 text-muted">-</td>
+                <td class="py-3 px-4 text-center">-</td>
+              </tr>
+
+              <!-- 이전 버전들 -->
+              <% @versions.each do |version| %>
+                <tr style="border-bottom: 1px solid #e8e8ed;" class="version-row" data-version="<%= version.version_number %>">
+                  <td class="py-3 px-4">
+                    <span class="badge bg-secondary">v<%= version.version_number %></span>
+                  </td>
+                  <td class="py-3 px-4"><%= version.name %></td>
+                  <td class="py-3 px-4">
+                    <% if version.production_quantity.present? %>
+                      <%= number_with_delimiter(version.production_quantity) %> <%= version.production_unit %>
+                    <% else %>
+                      <span class="text-muted">-</span>
+                    <% end %>
+                  </td>
+                  <td class="py-3 px-4">
+                    <% if version.equipment_type_id.present? %>
+                      <%= EquipmentType.find_by(id: version.equipment_type_id)&.name || "-" %>
+                    <% else %>
+                      <span class="text-muted">-</span>
+                    <% end %>
+                  </td>
+                  <td class="py-3 px-4"><%= version.changed_at.strftime("%Y년 %m월 %d일 %H:%M") %></td>
+                  <td class="py-3 px-4">
+                    <% if version.change_summary.present? %>
+                      <span class="text-info"><i class="bi bi-info-circle me-1"></i><%= version.change_summary %></span>
+                    <% else %>
+                      <span class="text-muted">변경사항 없음</span>
+                    <% end %>
+                  </td>
+                  <td class="py-3 px-4 text-center">
+                    <%= button_to ingredient_ingredient_version_path(@ingredient, version),
+                                  method: :delete,
+                                  class: "btn btn-sm btn-outline-danger",
+                                  data: { turbo_confirm: "이 수정내역을 삭제하시겠습니까?" },
+                                  title: "삭제" do %>
+                      <i class="bi bi-trash"></i>
+                    <% end %>
+                  </td>
+                </tr>
+                <!-- 상세 정보 (토글 가능) -->
+                <tr class="version-detail" id="detail-<%= version.version_number %>" style="display: none; background-color: #fafafa;">
+                  <td colspan="7" class="p-4">
+                    <%
+                      # 다음 버전 (비교 대상) 찾기
+                      next_version_index = @versions.index(version) - 1
+                      next_version = next_version_index >= 0 ? @versions[next_version_index] : nil
+                      is_first_version = version == @versions.first
+
+                      # 비교 데이터 준비
+                      if is_first_version
+                        # 현재 재료와 비교
+                        compared_name = @ingredient.name
+                        compared_description = @ingredient.description
+                        compared_production_quantity = @ingredient.production_quantity.to_f
+                        compared_production_unit = @ingredient.production_unit
+                        compared_equipment_type = @ingredient.equipment_type&.name
+                        compared_equipment_mode = @ingredient.equipment_mode&.name
+                        compared_cooking_time = @ingredient.cooking_time
+                      elsif next_version
+                        # 다음 버전과 비교
+                        compared_name = next_version.name
+                        compared_description = next_version.description
+                        compared_production_quantity = next_version.production_quantity.to_f
+                        compared_production_unit = next_version.production_unit
+                        compared_equipment_type = next_version.equipment_type_id.present? ? EquipmentType.find_by(id: next_version.equipment_type_id)&.name : nil
+                        compared_equipment_mode = next_version.equipment_mode_id.present? ? EquipmentMode.find_by(id: next_version.equipment_mode_id)&.name : nil
+                        compared_cooking_time = next_version.cooking_time
+                      else
+                        compared_name = nil
+                        compared_description = nil
+                        compared_production_quantity = nil
+                        compared_production_unit = nil
+                        compared_equipment_type = nil
+                        compared_equipment_mode = nil
+                        compared_cooking_time = nil
+                      end
+
+                      # 변경 여부 확인
+                      name_changed = (is_first_version || next_version) && (version.name != compared_name)
+                      description_changed = (is_first_version || next_version) && (version.description.to_s != compared_description.to_s)
+                      current_production_quantity = version.production_quantity.to_f
+                      current_production_unit = version.production_unit
+                      current_equipment_type = version.equipment_type_id.present? ? EquipmentType.find_by(id: version.equipment_type_id)&.name : nil
+                      current_equipment_mode = version.equipment_mode_id.present? ? EquipmentMode.find_by(id: version.equipment_mode_id)&.name : nil
+
+                      # 타입을 통일해서 비교 (Integer로 변환)
+                      current_cooking_time = version.cooking_time.to_i
+                      compared_cooking_time_int = compared_cooking_time.to_i
+
+                      production_quantity_changed = (is_first_version || next_version) && (current_production_quantity != compared_production_quantity)
+                      production_unit_changed = (is_first_version || next_version) && (current_production_unit != compared_production_unit)
+                      production_changed = production_quantity_changed || production_unit_changed
+                      equipment_type_changed = (is_first_version || next_version) && (current_equipment_type != compared_equipment_type)
+                      equipment_mode_changed = (is_first_version || next_version) && (current_equipment_mode != compared_equipment_mode)
+                      cooking_time_changed = (is_first_version || next_version) && (current_cooking_time != compared_cooking_time_int)
+                    %>
+
+                    <div class="row">
+                      <!-- 기본 정보 -->
+                      <div class="col-md-6 mb-3">
+                        <h6 class="mb-2" style="font-weight: 600;"><i class="bi bi-info-circle me-2"></i>기본 정보</h6>
+                        <table class="table table-sm table-bordered">
+                          <tbody>
+                            <tr <%= 'style="background-color: #fff3cd;"'.html_safe if name_changed %>>
+                              <th style="width: 30%;">재료명</th>
+                              <td>
+                                <%= version.name %>
+                                <% if name_changed %>
+                                  <br>
+                                  <small class="text-warning">
+                                    <i class="bi bi-arrow-right me-1"></i>
+                                    <%= version.name %> → <%= compared_name %>
+                                  </small>
+                                <% end %>
+                              </td>
+                            </tr>
+                            <tr <%= 'style="background-color: #fff3cd;"'.html_safe if production_changed %>>
+                              <th>생산량</th>
+                              <td>
+                                <% if version.production_quantity.present? %>
+                                  <%= number_with_delimiter(version.production_quantity) %> <%= version.production_unit %>
+                                <% else %>
+                                  -
+                                <% end %>
+                                <% if production_changed %>
+                                  <br>
+                                  <small class="text-warning">
+                                    <i class="bi bi-arrow-right me-1"></i>
+                                    <%= number_with_delimiter(current_production_quantity) %> <%= current_production_unit %> → <%= number_with_delimiter(compared_production_quantity) %> <%= compared_production_unit %>
+                                  </small>
+                                <% end %>
+                              </td>
+                            </tr>
+                            <tr <%= 'style="background-color: #fff3cd;"'.html_safe if equipment_type_changed %>>
+                              <th>장비 구분</th>
+                              <td>
+                                <% if current_equipment_type.present? %>
+                                  <%= current_equipment_type %>
+                                <% else %>
+                                  -
+                                <% end %>
+                                <% if equipment_type_changed %>
+                                  <br>
+                                  <small class="text-warning">
+                                    <i class="bi bi-arrow-right me-1"></i>
+                                    <%= current_equipment_type || "없음" %> → <%= compared_equipment_type || "없음" %>
+                                  </small>
+                                <% end %>
+                              </td>
+                            </tr>
+                            <tr <%= 'style="background-color: #fff3cd;"'.html_safe if equipment_mode_changed %>>
+                              <th>장비 모드</th>
+                              <td>
+                                <% if current_equipment_mode.present? %>
+                                  <%= current_equipment_mode %>
+                                <% else %>
+                                  -
+                                <% end %>
+                                <% if equipment_mode_changed %>
+                                  <br>
+                                  <small class="text-warning">
+                                    <i class="bi bi-arrow-right me-1"></i>
+                                    <%= current_equipment_mode || "없음" %> → <%= compared_equipment_mode || "없음" %>
+                                  </small>
+                                <% end %>
+                              </td>
+                            </tr>
+                            <tr <%= 'style="background-color: #fff3cd;"'.html_safe if cooking_time_changed %>>
+                              <th>조리 시간</th>
+                              <td>
+                                <% if version.cooking_time.present? %>
+                                  <%= version.cooking_time %>분
+                                <% else %>
+                                  -
+                                <% end %>
+                                <% if cooking_time_changed %>
+                                  <br>
+                                  <small class="text-warning">
+                                    <i class="bi bi-arrow-right me-1"></i>
+                                    <%= version.cooking_time || "없음" %>분 → <%= compared_cooking_time || "없음" %>분
+                                  </small>
+                                <% end %>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <!-- 설명 -->
+                      <div class="col-md-6 mb-3">
+                        <h6 class="mb-2" style="font-weight: 600;"><i class="bi bi-file-text me-2"></i>설명</h6>
+                        <table class="table table-sm table-bordered">
+                          <tbody>
+                            <tr <%= 'style="background-color: #fff3cd;"'.html_safe if description_changed %>>
+                              <th style="width: 30%;">설명</th>
+                              <td>
+                                <% if version.description.present? %>
+                                  <%= simple_format(version.description) %>
+                                <% else %>
+                                  -
+                                <% end %>
+                                <% if description_changed %>
+                                  <br>
+                                  <small class="text-warning">
+                                    <i class="bi bi-arrow-right me-1"></i>
+                                    변경됨: "<%= (version.description || "없음").truncate(30) %>" → "<%= (compared_description || "없음").truncate(30) %>"
+                                  </small>
+                                <% end %>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <!-- 재료 구성 -->
+                      <div class="col-12">
+                        <h6 class="mb-2" style="font-weight: 600;"><i class="bi bi-box-seam me-2"></i>재료 구성</h6>
+                        <% if version.ingredient_items_data.any? %>
+                          <%
+                            # 재료 구성 비교 데이터 준비
+                            item_comparison_data = {}
+                            if is_first_version
+                              # 현재 재료와 비교
+                              @ingredient.ingredient_items.each do |ii|
+                                next if ii.row_type == 'subtotal'
+                                # 품목/재료명을 키로 사용
+                                item_name = case ii.source_type
+                                when 'item'
+                                  ii.item&.name
+                                when 'ingredient'
+                                  ii.referenced_ingredient&.name
+                                else
+                                  ii.custom_name
+                                end
+                                item_comparison_data[item_name] = {
+                                  'quantity' => ii.quantity.to_f,
+                                  'unit' => ii.unit,
+                                  'notes' => ii.notes
+                                }
+                              end
+                            elsif next_version
+                              # 다음 버전과 비교
+                              next_version.ingredient_items_data.each do |item|
+                                next if item['row_type'] == 'subtotal'
+                                item_name = case item['source_type']
+                                when 'item'
+                                  item['item_name']
+                                when 'ingredient'
+                                  item['referenced_ingredient_name']
+                                else
+                                  item['custom_name']
+                                end
+                                item_comparison_data[item_name] = {
+                                  'quantity' => item['quantity'].to_f,
+                                  'unit' => item['unit'],
+                                  'notes' => item['notes']
+                                }
+                              end
+                            end
+                          %>
+
+                          <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                              <thead style="background-color: #f5f5f7;">
+                                <tr>
+                                  <th>유형</th>
+                                  <th>품목/재료명</th>
+                                  <th style="width: 150px; text-align: right;">중량</th>
+                                  <th style="width: 100px;">단위</th>
+                                  <th>비고</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <% version.ingredient_items_data.each do |item_data| %>
+                                  <% if item_data["row_type"] == "subtotal" %>
+                                    <tr class="table-secondary">
+                                      <td colspan="2"><strong>소계</strong></td>
+                                      <td class="text-end"><strong>-</strong></td>
+                                      <td>-</td>
+                                      <td>-</td>
+                                    </tr>
+                                  <% else %>
+                                    <%
+                                      # 현재 항목명 추출
+                                      current_item_name = case item_data["source_type"]
+                                      when "item"
+                                        item_data["item_name"]
+                                      when "ingredient"
+                                        item_data["referenced_ingredient_name"]
+                                      else
+                                        item_data["custom_name"]
+                                      end
+
+                                      # 비교
+                                      compared_item = item_comparison_data[current_item_name]
+                                      current_quantity = item_data["quantity"].to_f
+                                      current_unit = item_data["unit"]
+                                      current_notes = item_data["notes"]
+                                      compared_quantity = compared_item ? compared_item['quantity'].to_f : nil
+                                      compared_unit = compared_item ? compared_item['unit'] : nil
+                                      compared_notes = compared_item ? compared_item['notes'] : nil
+                                      quantity_changed = compared_item && (current_quantity != compared_quantity)
+                                      unit_changed = compared_item && (current_unit != compared_unit)
+                                      notes_changed = compared_item && (current_notes.to_s != compared_notes.to_s)
+                                      value_changed = quantity_changed || unit_changed || notes_changed
+                                      will_be_deleted = compared_item.nil?
+                                    %>
+
+                                    <tr <%= 'style="background-color: #f8d7da;"'.html_safe if will_be_deleted %>
+                                        <%= 'style="background-color: #fff3cd;"'.html_safe if value_changed && !will_be_deleted %>>
+                                      <td>
+                                        <% case item_data["source_type"] %>
+                                        <% when "item" %>
+                                          <span class="badge bg-primary">품목</span>
+                                        <% when "ingredient" %>
+                                          <span class="badge bg-success">재료</span>
+                                        <% when "other" %>
+                                          <span class="badge bg-secondary">기타</span>
+                                        <% end %>
+                                      </td>
+                                      <td <%= 'style="text-decoration: line-through; opacity: 0.7;"'.html_safe if will_be_deleted %>>
+                                        <%= current_item_name %>
+                                        <% if will_be_deleted %>
+                                          <br>
+                                          <small class="text-danger">
+                                            <i class="bi bi-dash-circle me-1"></i>이후에 삭제됨
+                                          </small>
+                                        <% elsif value_changed %>
+                                          <br>
+                                          <small class="text-warning">
+                                            <i class="bi bi-arrow-right me-1"></i>
+                                            <%= number_with_delimiter(current_quantity) %><%= current_unit %> → <%= number_with_delimiter(compared_quantity) %><%= compared_unit %>
+                                          </small>
+                                        <% end %>
+                                      </td>
+                                      <td class="text-end"><%= number_with_delimiter(item_data["quantity"]) %></td>
+                                      <td <%= 'style="background-color: #fff3cd;"'.html_safe if unit_changed && !will_be_deleted %>>
+                                        <%= item_data["unit"] %>
+                                        <% if unit_changed %>
+                                          <br>
+                                          <small class="text-warning">
+                                            <i class="bi bi-arrow-right me-1"></i>
+                                            <%= current_unit %> → <%= compared_unit %>
+                                          </small>
+                                        <% end %>
+                                      </td>
+                                      <td <%= 'style="background-color: #fff3cd;"'.html_safe if notes_changed && !will_be_deleted %>>
+                                        <% if item_data["notes"].present? %>
+                                          <%= item_data["notes"] %>
+                                        <% else %>
+                                          <span class="text-muted">-</span>
+                                        <% end %>
+                                        <% if notes_changed %>
+                                          <br>
+                                          <small class="text-warning">
+                                            <i class="bi bi-arrow-right me-1"></i>
+                                            <%= current_notes || '-' %> → <%= compared_notes || '-' %>
+                                          </small>
+                                        <% end %>
+                                      </td>
+                                    </tr>
+                                  <% end %>
+                                <% end %>
+
+                                <%
+                                  # 이후에 추가된 항목 표시
+                                  if is_first_version || next_version
+                                    added_item_keys = item_comparison_data.keys - version.ingredient_items_data.reject { |item| item['row_type'] == 'subtotal' }.map { |item|
+                                      case item['source_type']
+                                      when 'item'
+                                        item['item_name']
+                                      when 'ingredient'
+                                        item['referenced_ingredient_name']
+                                      else
+                                        item['custom_name']
+                                      end
+                                    }
+
+                                    added_item_keys.each do |added_key|
+                                      added_item = item_comparison_data[added_key]
+                                %>
+                                      <tr style="background-color: #d1ecf1;">
+                                        <td>
+                                          <span class="badge bg-muted">-</span>
+                                        </td>
+                                        <td>
+                                          <%= added_key %>
+                                          <br>
+                                          <small class="text-info">
+                                            <i class="bi bi-plus-circle me-1"></i>이후에 추가됨
+                                          </small>
+                                        </td>
+                                        <td class="text-end"><%= number_with_delimiter(added_item['quantity']) %></td>
+                                        <td><%= added_item['unit'] %></td>
+                                        <td>
+                                          <% if added_item['notes'].present? %>
+                                            <%= added_item['notes'] %>
+                                          <% else %>
+                                            <span class="text-muted">-</span>
+                                          <% end %>
+                                        </td>
+                                      </tr>
+                                <%
+                                    end
+                                  end
+                                %>
+                              </tbody>
+                            </table>
+                          </div>
+                        <% else %>
+                          <p class="text-muted mb-0">등록된 재료 구성이 없습니다.</p>
+                        <% end %>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="text-center py-5">
+          <i class="bi bi-clock-history" style="font-size: 3rem; color: #d2d2d7;"></i>
+          <p class="mt-3 text-muted">아직 수정 내역이 없습니다.</p>
+          <p class="text-muted small">재료를 수정하면 자동으로 변경 내역이 기록됩니다.</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<style>
+  .version-row {
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  .version-row:hover {
+    background-color: #f5f5f7;
+  }
+</style>
+
+<script>
+function initializeVersionToggle() {
+  const versionRows = document.querySelectorAll('.version-row');
+
+  versionRows.forEach(row => {
+    // 기존 이벤트 리스너 제거 (중복 방지)
+    const oldListener = row._versionClickListener;
+    if (oldListener) {
+      row.removeEventListener('click', oldListener);
+    }
+
+    // 새 이벤트 리스너 생성 및 저장
+    const newListener = function(e) {
+      // 삭제 버튼 클릭 시에는 토글하지 않음
+      if (e.target.closest('form') || e.target.closest('button')) {
+        return;
+      }
+
+      const version = this.dataset.version;
+      const detailRow = document.getElementById('detail-' + version);
+
+      if (!detailRow) {
+        console.error('Detail row not found for version:', version);
+        return;
+      }
+
+      // display 값이 없거나 'none'이면 보이기, 아니면 숨기기
+      if (detailRow.style.display === '' || detailRow.style.display === 'none') {
+        detailRow.style.display = 'table-row';
+      } else {
+        detailRow.style.display = 'none';
+      }
+    };
+
+    row._versionClickListener = newListener;
+    row.addEventListener('click', newListener);
+  });
+}
+
+// 초기 페이지 로드 시
+document.addEventListener('DOMContentLoaded', initializeVersionToggle);
+
+// Turbo를 통한 페이지 로드 시
+document.addEventListener('turbo:load', initializeVersionToggle);
+
+// Turbo 렌더링 완료 시
+document.addEventListener('turbo:render', initializeVersionToggle);
+</script>

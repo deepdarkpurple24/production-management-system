@@ -53,7 +53,7 @@
         <%= form.number_field :quantity,
                               class: "form-control text-center",
                               min: 0.5,
-                              step: 1,
+                              step: 0.5,
                               id: "quantity_input",
                               required: true,
                               placeholder: "생산 수량 입력" %>
@@ -101,17 +101,21 @@
     var quantityUnit = document.getElementById('quantity_unit');
     var quantityDecrease = document.getElementById('quantity_decrease');
     var quantityIncrease = document.getElementById('quantity_increase');
-    var currentStep = 1;
-    var currentMin = 1;
+    var currentStep = 0.5;
+    var currentMin = 0.5;
 
     // 완제품 선택 시 단위 변경
     if (finishedProductSelect) {
       // 초기 로드 시 체크
       updateQuantitySettings();
 
-      finishedProductSelect.addEventListener('change', function() {
-        updateQuantitySettings();
-      });
+      // 이벤트 리스너 중복 방지
+      finishedProductSelect.removeEventListener('change', handleFinishedProductChange);
+      finishedProductSelect.addEventListener('change', handleFinishedProductChange);
+    }
+
+    function handleFinishedProductChange() {
+      updateQuantitySettings();
     }
 
     function updateQuantitySettings() {
@@ -132,9 +136,9 @@
         quantityInput.step = 0.5;
         quantityInput.min = 0.5;
 
-        // 현재 값이 0이거나 비어있으면 0.5로 설정
+        // 현재 값이 0이거나 비어있으면 1로 설정
         if (!quantityInput.value || parseFloat(quantityInput.value) === 0) {
-          quantityInput.value = 0.5;
+          quantityInput.value = 1;
         }
       } else {
         // 다른 제품: 개 단위, 1씩 증감
@@ -151,23 +155,30 @@
       }
     }
 
-    // +/- 버튼 기능
-    if (quantityDecrease) {
-      quantityDecrease.addEventListener('click', function() {
-        var currentValue = parseFloat(quantityInput.value) || currentMin;
-        var newValue = currentValue - currentStep;
-        if (newValue >= currentMin) {
-          quantityInput.value = newValue;
-        }
-      });
+    // +/- 버튼 기능 (이벤트 리스너 중복 방지)
+    function handleDecrease() {
+      var currentValue = parseFloat(quantityInput.value) || currentMin;
+      var newValue = currentValue - currentStep;
+      if (newValue >= currentMin) {
+        quantityInput.value = newValue.toFixed(1);
+      }
     }
 
-    if (quantityIncrease) {
-      quantityIncrease.addEventListener('click', function() {
-        var currentValue = parseFloat(quantityInput.value) || 0;
-        var newValue = currentValue + currentStep;
-        quantityInput.value = newValue;
-      });
+    function handleIncrease() {
+      var currentValue = parseFloat(quantityInput.value) || 0;
+      var newValue = currentValue + currentStep;
+      quantityInput.value = newValue.toFixed(1);
+    }
+
+    // 이벤트 리스너는 한 번만 등록 (data 속성으로 확인)
+    if (quantityDecrease && !quantityDecrease.dataset.initialized) {
+      quantityDecrease.addEventListener('click', handleDecrease);
+      quantityDecrease.dataset.initialized = 'true';
+    }
+
+    if (quantityIncrease && !quantityIncrease.dataset.initialized) {
+      quantityIncrease.addEventListener('click', handleIncrease);
+      quantityIncrease.dataset.initialized = 'true';
     }
   });
 </script>

@@ -34,6 +34,7 @@
                 <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">총중량</th>
                 <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">수정일시</th>
                 <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">변경사항</th>
+                <th class="py-3 px-4 text-center" style="font-weight: 500; font-size: 0.875rem;">삭제</th>
               </tr>
             </thead>
             <tbody>
@@ -46,6 +47,7 @@
                 <td class="py-3 px-4"><%= number_with_delimiter(@recipe.total_weight) %> g</td>
                 <td class="py-3 px-4"><%= @recipe.updated_at.strftime("%Y년 %m월 %d일 %H:%M") %></td>
                 <td class="py-3 px-4 text-muted">-</td>
+                <td class="py-3 px-4 text-center">-</td>
               </tr>
 
               <!-- 이전 버전들 -->
@@ -64,10 +66,19 @@
                       <span class="text-muted">변경사항 없음</span>
                     <% end %>
                   </td>
+                  <td class="py-3 px-4 text-center">
+                    <%= button_to recipe_recipe_version_path(@recipe, version),
+                                  method: :delete,
+                                  class: "btn btn-sm btn-outline-danger",
+                                  data: { turbo_confirm: "이 수정내역을 삭제하시겠습니까?" },
+                                  title: "삭제" do %>
+                      <i class="bi bi-trash"></i>
+                    <% end %>
+                  </td>
                 </tr>
                 <!-- 상세 정보 (토글 가능) -->
                 <tr class="version-detail" id="detail-<%= version.version_number %>" style="display: none; background-color: #fafafa;">
-                  <td colspan="5" class="p-4">
+                  <td colspan="6" class="p-4">
                     <div class="row">
                       <!-- 재료 목록 -->
                       <div class="col-md-6 mb-3">
@@ -79,21 +90,159 @@
                                 <th>재료명</th>
                                 <th class="text-end">중량(g)</th>
                                 <th>주재료</th>
+                                <th>비고</th>
                               </tr>
                             </thead>
                             <tbody>
+                              <%
+                                # 다음 버전 (비교 대상) 찾기
+                                # @versions는 내림차순이므로 index - 1이 다음(더 최신) 버전
+                                next_version_index = @versions.index(version) - 1
+                                next_version = next_version_index >= 0 ? @versions[next_version_index] : nil
+                                # 첫 번째 버전(가장 최신)이면 현재 레시피와 비교
+                                is_first_version = version == @versions.first
+
+                                # 비교 데이터 준비 (재료 이름을 키로 사용)
+                                comparison_data = {}
+                                if is_first_version
+                                  # 가장 최신 버전 - 현재 레시피와 비교
+                                  @recipe.recipe_ingredients.each do |ri|
+                                    next if ri.row_type == 'subtotal'
+                                    key = ri.display_name
+                                    comparison_data[key] = {
+                                      'display_name' => ri.display_name,
+                                      'weight' => ri.weight.to_f,
+                                      'is_main' => ri.is_main,
+                                      'row_type' => ri.row_type,
+                                      'notes' => ri.notes
+                                    }
+                                  end
+                                elsif next_version
+                                  # 다음 버전과 비교
+                                  next_version.ingredients_data.each do |ing|
+                                    next if ing['row_type'] == 'subtotal'
+                                    ing_name = ing['display_name'] || ing['item_name'] || ing['referenced_ingredient_name']
+                                    key = ing_name
+                                    comparison_data[key] = ing
+                                  end
+                                end
+                              %>
+
                               <% version.ingredients_data.each do |ing| %>
-                                <% next if ing['row_type'] == 'subtotal' %>
-                                <tr>
-                                  <td><%= ing['item_name'] %></td>
-                                  <td class="text-end"><%= number_with_delimiter(ing['weight']) %></td>
-                                  <td>
-                                    <% if ing['is_main'] %>
-                                      <i class="bi bi-check-circle-fill text-primary"></i>
-                                    <% end %>
-                                  </td>
-                                </tr>
+                                <%
+                                  is_subtotal = ing['row_type'] == 'subtotal'
+                                  ing_name = ing['display_name'] || ing['item_name'] || ing['referenced_ingredient_name']
+
+                                  # 비교 정보 (재료 이름으로 찾기)
+                                  unless is_subtotal
+                                    key = ing_name
+                                    compared = comparison_data[key]
+                                    # 타입을 Float로 통일해서 비교
+                                    current_weight = ing['weight'].to_f
+                                    current_notes = ing['notes']
+                                    compared_weight = compared ? compared['weight'].to_f : nil
+                                    compared_notes = compared ? compared['notes'] : nil
+                                    weight_changed = compared && (current_weight != compared_weight)
+                                    notes_changed = compared && (current_notes.to_s != compared_notes.to_s)
+
+                                    # 재료가 이후에 삭제되는지 확인
+                                    will_be_deleted = compared.nil?
+                                  else
+                                    weight_changed = false
+                                    notes_changed = false
+                                    will_be_deleted = false
+                                  end
+                                %>
+
+                                <% if is_subtotal %>
+                                  <!-- 소계 행 -->
+                                  <tr style="background-color: #f0f9ff; font-weight: 600;">
+                                    <td>
+                                      <i class="bi bi-calculator me-2"></i>소계
+                                    </td>
+                                    <td class="text-end"><%= number_with_delimiter(ing['weight']) %> g</td>
+                                    <td></td>
+                                    <td></td>
+                                  </tr>
+                                <% else %>
+                                  <!-- 일반 재료 행 -->
+                                  <tr <%= 'style="background-color: #f8d7da;"'.html_safe if will_be_deleted %>
+                                      <%= 'style="background-color: #fff3cd;"'.html_safe if weight_changed && !will_be_deleted %>>
+                                    <td <%= 'style="text-decoration: line-through; opacity: 0.7;"'.html_safe if will_be_deleted %>>
+                                      <%= ing_name %>
+                                      <% if will_be_deleted %>
+                                        <br>
+                                        <small class="text-danger">
+                                          <i class="bi bi-dash-circle me-1"></i>이후에 삭제됨
+                                        </small>
+                                      <% elsif weight_changed %>
+                                        <br>
+                                        <small class="text-warning">
+                                          <i class="bi bi-arrow-right me-1"></i>
+                                          <%= number_with_delimiter(current_weight) %>g → <%= number_with_delimiter(compared_weight) %>g
+                                        </small>
+                                      <% end %>
+                                    </td>
+                                    <td class="text-end"><%= number_with_delimiter(current_weight) %></td>
+                                    <td>
+                                      <% if ing['is_main'] %>
+                                        <i class="bi bi-check-circle-fill text-primary"></i>
+                                      <% end %>
+                                    </td>
+                                    <td <%= 'style="background-color: #fff3cd;"'.html_safe if notes_changed && !will_be_deleted %>>
+                                      <% if ing['notes'].present? %>
+                                        <%= ing['notes'] %>
+                                      <% else %>
+                                        <span class="text-muted">-</span>
+                                      <% end %>
+                                      <% if notes_changed %>
+                                        <br>
+                                        <small class="text-warning">
+                                          <i class="bi bi-arrow-right me-1"></i>
+                                          <%= current_notes || '-' %> → <%= compared_notes || '-' %>
+                                        </small>
+                                      <% end %>
+                                    </td>
+                                  </tr>
+                                <% end %>
                               <% end %>
+
+                              <%
+                                # 이후에 추가된 재료 표시
+                                if is_first_version || next_version
+                                  added_ingredient_keys = comparison_data.keys - version.ingredients_data.reject { |ing| ing['row_type'] == 'subtotal' }.map { |ing|
+                                    ing['display_name'] || ing['item_name'] || ing['referenced_ingredient_name']
+                                  }
+
+                                  added_ingredient_keys.each do |added_key|
+                                    added_ing = comparison_data[added_key]
+                              %>
+                                    <tr style="background-color: #d1ecf1;">
+                                      <td>
+                                        <%= added_ing['display_name'] %>
+                                        <br>
+                                        <small class="text-info">
+                                          <i class="bi bi-plus-circle me-1"></i>이후에 추가됨
+                                        </small>
+                                      </td>
+                                      <td class="text-end"><%= number_with_delimiter(added_ing['weight']) %></td>
+                                      <td>
+                                        <% if added_ing['is_main'] %>
+                                          <i class="bi bi-check-circle-fill text-info"></i>
+                                        <% end %>
+                                      </td>
+                                      <td>
+                                        <% if added_ing['notes'].present? %>
+                                          <%= added_ing['notes'] %>
+                                        <% else %>
+                                          <span class="text-muted">-</span>
+                                        <% end %>
+                                      </td>
+                                    </tr>
+                              <%
+                                  end
+                                end
+                              %>
                             </tbody>
                           </table>
                         </div>
@@ -111,18 +260,122 @@
                               </tr>
                             </thead>
                             <tbody>
+                              <%
+                                # 장비 비교 데이터 준비
+                                equipment_comparison_data = {}
+                                if is_first_version
+                                  # 현재 레시피와 비교
+                                  @recipe.recipe_equipments.each do |re|
+                                    key = if re.row_type == 'process'
+                                      "process_#{re.recipe_process&.name}"
+                                    else
+                                      "equipment_#{re.equipment&.name}"
+                                    end
+                                    equipment_comparison_data[key] = {
+                                      'equipment_name' => re.equipment&.name,
+                                      'process_name' => re.recipe_process&.name,
+                                      'work_capacity' => re.work_capacity.to_f,
+                                      'work_capacity_unit' => re.work_capacity_unit,
+                                      'row_type' => re.row_type
+                                    }
+                                  end
+                                elsif next_version
+                                  # 다음 버전과 비교
+                                  next_version.equipments_data.each do |eq|
+                                    key = if eq['row_type'] == 'process'
+                                      "process_#{eq['process_name']}"
+                                    else
+                                      "equipment_#{eq['equipment_name']}"
+                                    end
+                                    equipment_comparison_data[key] = eq
+                                  end
+                                end
+                              %>
+
                               <% version.equipments_data.each do |equip| %>
-                                <tr>
-                                  <td>
+                                <%
+                                  # 비교 키 생성
+                                  equip_key = if equip['row_type'] == 'process'
+                                    "process_#{equip['process_name']}"
+                                  else
+                                    "equipment_#{equip['equipment_name']}"
+                                  end
+
+                                  compared_equip = equipment_comparison_data[equip_key]
+
+                                  # 작업용량 비교
+                                  current_capacity = equip['work_capacity'].to_f
+                                  compared_capacity = compared_equip ? compared_equip['work_capacity'].to_f : nil
+                                  capacity_changed = compared_equip && (current_capacity != compared_capacity)
+
+                                  # 장비가 이후에 삭제되는지 확인
+                                  will_be_deleted = compared_equip.nil?
+                                %>
+
+                                <tr <%= 'style="background-color: #f8d7da;"'.html_safe if will_be_deleted %>
+                                    <%= 'style="background-color: #fff3cd;"'.html_safe if capacity_changed && !will_be_deleted %>>
+                                  <td <%= 'style="text-decoration: line-through; opacity: 0.7;"'.html_safe if will_be_deleted %>>
                                     <% if equip['row_type'] == 'process' %>
                                       <i class="bi bi-folder-fill text-primary me-2"></i><%= equip['process_name'] %>
                                     <% else %>
                                       <i class="bi bi-gear me-2"></i><%= equip['equipment_name'] %>
                                     <% end %>
+                                    <% if will_be_deleted %>
+                                      <br>
+                                      <small class="text-danger">
+                                        <i class="bi bi-dash-circle me-1"></i>이후에 삭제됨
+                                      </small>
+                                    <% end %>
                                   </td>
                                   <td>
                                     <% if equip['work_capacity'].present? %>
                                       <%= number_with_delimiter(equip['work_capacity']) %> <%= equip['work_capacity_unit'] %>
+                                      <% if capacity_changed %>
+                                        <br>
+                                        <small class="text-warning">
+                                          <i class="bi bi-arrow-right me-1"></i>
+                                          <%= number_with_delimiter(current_capacity) %> → <%= number_with_delimiter(compared_capacity) %>
+                                        </small>
+                                      <% end %>
+                                    <% else %>
+                                      -
+                                    <% end %>
+                                  </td>
+                                </tr>
+                              <% end %>
+
+                              <%
+                                # 이후에 추가된 장비 표시
+                                if is_first_version || next_version
+                                  added_equipment_keys = equipment_comparison_data.keys - version.equipments_data.map { |eq|
+                                    if eq['row_type'] == 'process'
+                                      "process_#{eq['process_name']}"
+                                    else
+                                      "equipment_#{eq['equipment_name']}"
+                                    end
+                                  }
+                                else
+                                  added_equipment_keys = []
+                                end
+
+                                added_equipment_keys.each do |added_key|
+                                  added_equip = equipment_comparison_data[added_key]
+                              %>
+                                <tr style="background-color: #d1ecf1;">
+                                  <td>
+                                    <% if added_equip['row_type'] == 'process' %>
+                                      <i class="bi bi-folder-fill text-info me-2"></i><%= added_equip['process_name'] %>
+                                    <% else %>
+                                      <i class="bi bi-gear text-info me-2"></i><%= added_equip['equipment_name'] %>
+                                    <% end %>
+                                    <br>
+                                    <small class="text-info">
+                                      <i class="bi bi-plus-circle me-1"></i>이후에 추가됨
+                                    </small>
+                                  </td>
+                                  <td>
+                                    <% if added_equip['work_capacity'].present? %>
+                                      <%= number_with_delimiter(added_equip['work_capacity']) %> <%= added_equip['work_capacity_unit'] %>
                                     <% else %>
                                       -
                                     <% end %>
@@ -175,20 +428,50 @@
 </style>
 
 <script>
-document.addEventListener('turbo:load', function() {
+function initializeVersionToggle() {
   const versionRows = document.querySelectorAll('.version-row');
 
   versionRows.forEach(row => {
-    row.addEventListener('click', function() {
+    // 기존 이벤트 리스너 제거 (중복 방지)
+    const oldListener = row._versionClickListener;
+    if (oldListener) {
+      row.removeEventListener('click', oldListener);
+    }
+
+    // 새 이벤트 리스너 생성 및 저장
+    const newListener = function(e) {
+      // 삭제 버튼 클릭 시에는 토글하지 않음
+      if (e.target.closest('form') || e.target.closest('button')) {
+        return;
+      }
+
       const version = this.dataset.version;
       const detailRow = document.getElementById('detail-' + version);
 
-      if (detailRow.style.display === 'none') {
+      if (!detailRow) {
+        console.error('Detail row not found for version:', version);
+        return;
+      }
+
+      // display 값이 없거나 'none'이면 보이기, 아니면 숨기기
+      if (detailRow.style.display === '' || detailRow.style.display === 'none') {
         detailRow.style.display = 'table-row';
       } else {
         detailRow.style.display = 'none';
       }
-    });
+    };
+
+    row._versionClickListener = newListener;
+    row.addEventListener('click', newListener);
   });
-});
+}
+
+// 초기 페이지 로드 시
+document.addEventListener('DOMContentLoaded', initializeVersionToggle);
+
+// Turbo를 통한 페이지 로드 시
+document.addEventListener('turbo:load', initializeVersionToggle);
+
+// Turbo 렌더링 완료 시
+document.addEventListener('turbo:render', initializeVersionToggle);
 </script>

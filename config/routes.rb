@@ -50,8 +50,12 @@ Rails.application.routes.draw do
 
   # 각 모듈별 라우트
   namespace :inventory do
-    resources :receipts
-    resources :shipments
+    resources :receipts do
+      resources :receipt_versions, only: [:index, :destroy]
+    end
+    resources :shipments do
+      resources :shipment_versions, only: [:index, :destroy]
+    end
     resources :items do
       collection do
         get :find_by_barcode
@@ -60,6 +64,7 @@ Rails.application.routes.draw do
         get :suppliers
         post :add_supplier
       end
+      resources :item_versions, only: [:index, :destroy]
     end
     resources :stocks, only: [:index]
     # resources :opened_items
@@ -75,17 +80,21 @@ Rails.application.routes.draw do
     member do
       patch :update_ingredient_positions
     end
-    resources :recipe_versions, only: [:index]
+    resources :recipe_versions, only: [:index, :destroy]
   end
 
   # 재료 관리
-  resources :ingredients
+  resources :ingredients do
+    resources :ingredient_versions, only: [:index, :destroy]
+  end
 
   # 장비 관리
   resources :equipments
 
   # 완제품 관리
-  resources :finished_products
+  resources :finished_products do
+    resources :finished_product_versions, only: [:index, :destroy]
+  end
 
   # namespace :equipment do
   #   resources :machines

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_19_112108) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_20_062428) do
   create_table "equipment", force: :cascade do |t|
     t.decimal "capacity", precision: 10, scale: 2
     t.string "capacity_unit"
@@ -52,6 +52,24 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_19_112108) do
     t.datetime "updated_at", null: false
     t.index ["finished_product_id"], name: "index_finished_product_recipes_on_finished_product_id"
     t.index ["recipe_id"], name: "index_finished_product_recipes_on_recipe_id"
+  end
+
+  create_table "finished_product_versions", force: :cascade do |t|
+    t.text "change_summary"
+    t.datetime "changed_at"
+    t.string "changed_by"
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.json "finished_product_data"
+    t.integer "finished_product_id", null: false
+    t.string "name"
+    t.text "notes"
+    t.datetime "updated_at", null: false
+    t.integer "version_number"
+    t.decimal "weight"
+    t.string "weight_unit"
+    t.index ["finished_product_id", "version_number"], name: "idx_on_finished_product_id_version_number_cb4c6baeb8"
+    t.index ["finished_product_id"], name: "index_finished_product_versions_on_finished_product_id"
   end
 
   create_table "finished_products", force: :cascade do |t|
@@ -113,6 +131,27 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_19_112108) do
     t.index ["position"], name: "index_ingredient_items_on_position"
   end
 
+  create_table "ingredient_versions", force: :cascade do |t|
+    t.text "change_summary"
+    t.datetime "changed_at"
+    t.string "changed_by"
+    t.integer "cooking_time"
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.integer "equipment_mode_id"
+    t.integer "equipment_type_id"
+    t.json "ingredient_data"
+    t.integer "ingredient_id", null: false
+    t.string "name"
+    t.text "notes"
+    t.decimal "production_quantity"
+    t.string "production_unit"
+    t.datetime "updated_at", null: false
+    t.integer "version_number"
+    t.index ["ingredient_id", "version_number"], name: "index_ingredient_versions_on_ingredient_id_and_version_number"
+    t.index ["ingredient_id"], name: "index_ingredient_versions_on_ingredient_id"
+  end
+
   create_table "ingredients", force: :cascade do |t|
     t.string "cooking_time"
     t.datetime "created_at", null: false
@@ -133,6 +172,29 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_19_112108) do
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_item_categories_on_name", unique: true
     t.index ["position"], name: "index_item_categories_on_position"
+  end
+
+  create_table "item_versions", force: :cascade do |t|
+    t.string "barcode"
+    t.string "category"
+    t.text "change_summary"
+    t.datetime "changed_at"
+    t.string "changed_by"
+    t.datetime "created_at", null: false
+    t.string "item_code"
+    t.json "item_data"
+    t.integer "item_id", null: false
+    t.decimal "minimum_stock"
+    t.string "name"
+    t.text "notes"
+    t.decimal "optimal_stock"
+    t.string "stock_unit"
+    t.string "storage_location"
+    t.datetime "updated_at", null: false
+    t.integer "version_number"
+    t.decimal "weight"
+    t.index ["item_id", "version_number"], name: "index_item_versions_on_item_id_and_version_number"
+    t.index ["item_id"], name: "index_item_versions_on_item_id"
   end
 
   create_table "items", force: :cascade do |t|
@@ -168,6 +230,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_19_112108) do
     t.date "production_date"
     t.integer "production_plan_id", null: false
     t.time "production_time"
+    t.integer "recipe_id"
     t.decimal "refrigeration_room_temp", precision: 10, scale: 1
     t.integer "salt_amount"
     t.decimal "steiva_amount", precision: 10, scale: 1
@@ -178,6 +241,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_19_112108) do
     t.integer "yeast_amount"
     t.index ["finished_product_id"], name: "index_production_logs_on_finished_product_id"
     t.index ["production_plan_id"], name: "index_production_logs_on_production_plan_id"
+    t.index ["recipe_id"], name: "index_production_logs_on_recipe_id"
   end
 
   create_table "production_plans", force: :cascade do |t|
@@ -188,6 +252,29 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_19_112108) do
     t.decimal "quantity", precision: 10, scale: 2
     t.datetime "updated_at", null: false
     t.index ["finished_product_id"], name: "index_production_plans_on_finished_product_id"
+  end
+
+  create_table "receipt_versions", force: :cascade do |t|
+    t.text "change_summary"
+    t.datetime "changed_at"
+    t.string "changed_by"
+    t.datetime "created_at", null: false
+    t.date "expiration_date"
+    t.integer "item_id"
+    t.date "manufacturing_date"
+    t.text "notes"
+    t.decimal "quantity", precision: 10, scale: 2
+    t.json "receipt_data"
+    t.date "receipt_date"
+    t.integer "receipt_id", null: false
+    t.string "supplier"
+    t.decimal "unit_price", precision: 10, scale: 2
+    t.decimal "unit_weight", precision: 10, scale: 2
+    t.string "unit_weight_unit"
+    t.datetime "updated_at", null: false
+    t.integer "version_number"
+    t.index ["receipt_id", "version_number"], name: "index_receipt_versions_on_receipt_id_and_version_number"
+    t.index ["receipt_id"], name: "index_receipt_versions_on_receipt_id"
   end
 
   create_table "receipts", force: :cascade do |t|
@@ -288,6 +375,25 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_19_112108) do
     t.index ["position"], name: "index_shipment_requesters_on_position"
   end
 
+  create_table "shipment_versions", force: :cascade do |t|
+    t.text "change_summary"
+    t.datetime "changed_at"
+    t.string "changed_by"
+    t.datetime "created_at", null: false
+    t.integer "item_id"
+    t.text "notes"
+    t.string "purpose"
+    t.decimal "quantity", precision: 10, scale: 2
+    t.string "requester"
+    t.json "shipment_data"
+    t.datetime "shipment_date"
+    t.integer "shipment_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "version_number"
+    t.index ["shipment_id", "version_number"], name: "index_shipment_versions_on_shipment_id_and_version_number"
+    t.index ["shipment_id"], name: "index_shipment_versions_on_shipment_id"
+  end
+
   create_table "shipments", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "item_id", null: false
@@ -313,11 +419,16 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_19_112108) do
   add_foreign_key "equipment_modes", "equipment_types"
   add_foreign_key "finished_product_recipes", "finished_products"
   add_foreign_key "finished_product_recipes", "recipes", on_delete: :cascade
+  add_foreign_key "finished_product_versions", "finished_products"
   add_foreign_key "ingredient_items", "ingredients"
   add_foreign_key "ingredient_items", "items"
+  add_foreign_key "ingredient_versions", "ingredients"
+  add_foreign_key "item_versions", "items"
   add_foreign_key "production_logs", "finished_products"
   add_foreign_key "production_logs", "production_plans"
+  add_foreign_key "production_logs", "recipes"
   add_foreign_key "production_plans", "finished_products"
+  add_foreign_key "receipt_versions", "receipts"
   add_foreign_key "receipts", "items"
   add_foreign_key "recipe_equipments", "equipment"
   add_foreign_key "recipe_equipments", "recipes", on_delete: :cascade
@@ -325,5 +436,6 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_19_112108) do
   add_foreign_key "recipe_ingredients", "items"
   add_foreign_key "recipe_ingredients", "recipes", on_delete: :cascade
   add_foreign_key "recipe_versions", "recipes", on_delete: :cascade
+  add_foreign_key "shipment_versions", "shipments"
   add_foreign_key "shipments", "items"
 end

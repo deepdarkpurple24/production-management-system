@@ -16,74 +16,112 @@
   <div class="card-modern">
     <div class="card-body p-0">
       <% if @production_logs.any? %>
-        <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead style="background-color: #f5f5f7; border-bottom: 1px solid #d2d2d7;">
-              <tr>
-                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem; width: 15%;">날짜</th>
-                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem; width: 10%;">반죽 시간</th>
-                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem; width: 30%;">제품명</th>
-                <th class="py-3 px-4 text-center" style="font-weight: 500; font-size: 0.875rem; width: 15%;">생산 수량</th>
-                <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem; width: 20%;">비고</th>
-                <th class="py-3 px-4 text-center" style="font-weight: 500; font-size: 0.875rem; width: 10%;">관리</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% @production_logs.each do |log| %>
-                <tr style="border-bottom: 1px solid #e8e8ed;">
-                  <td class="py-3 px-4">
-                    <%= log.production_date.strftime('%Y-%m-%d') %>
-                    <br>
-                    <small class="text-muted"><%= log.production_date.strftime('(%a)') %></small>
-                  </td>
-                  <td class="py-3 px-4">
-                    <%= log.production_time&.strftime('%H:%M') || '-' %>
-                  </td>
-                  <td class="py-3 px-4" style="font-weight: 500;">
-                    <%= log.finished_product.name %>
-                    <% if log.recipe.present? %>
-                      <br>
-                      <small class="text-muted">
-                        <i class="bi bi-arrow-return-right me-1"></i><%= log.recipe.name %>
-                      </small>
-                    <% end %>
-                  </td>
-                  <td class="py-3 px-4 text-center">
-                    <% if log.dough_count.present? %>
-                      <span class="badge bg-primary">
-                        <%= number_with_delimiter(log.dough_count) %>통
-                      </span>
-                    <% else %>
-                      <span class="text-muted">-</span>
-                    <% end %>
-                  </td>
-                  <td class="py-3 px-4">
-                    <% if log.notes.present? %>
-                      <%= truncate(log.notes, length: 50) %>
-                    <% else %>
-                      <span class="text-muted">-</span>
-                    <% end %>
-                  </td>
-                  <td class="py-3 px-4 text-center">
-                    <div class="btn-group btn-group-sm" role="group">
-                      <%= link_to edit_production_log_path(log),
-                                  class: "btn btn-sm btn-outline-primary",
-                                  title: "수정" do %>
-                        <i class="bi bi-pencil"></i>
+        <!-- 완제품별 탭 -->
+        <ul class="nav nav-tabs" id="productTabs" role="tablist" style="border-bottom: 2px solid #d2d2d7; padding: 0 1rem;">
+          <% @finished_products.each_with_index do |product, index| %>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link <%= 'active' if index == 0 %>"
+                      id="product-<%= product.id %>-tab"
+                      data-bs-toggle="tab"
+                      data-bs-target="#product-<%= product.id %>"
+                      type="button"
+                      role="tab"
+                      aria-controls="product-<%= product.id %>"
+                      aria-selected="<%= index == 0 %>"
+                      style="font-weight: 500; color: #1d1d1f; padding: 1rem 1.5rem;">
+                <%= product.name %>
+                <span class="badge bg-secondary ms-2"><%= @logs_by_product[product]&.count || 0 %></span>
+              </button>
+            </li>
+          <% end %>
+        </ul>
+
+        <!-- 탭 콘텐츠 -->
+        <div class="tab-content" id="productTabsContent">
+          <% @finished_products.each_with_index do |product, index| %>
+            <div class="tab-pane fade <%= 'show active' if index == 0 %>"
+                 id="product-<%= product.id %>"
+                 role="tabpanel"
+                 aria-labelledby="product-<%= product.id %>-tab">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead style="background-color: #f5f5f7; border-bottom: 1px solid #d2d2d7;">
+                    <tr>
+                      <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem; width: 15%;">날짜</th>
+                      <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem; width: 10%;">반죽 시간</th>
+                      <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem; width: 25%;">레시피</th>
+                      <th class="py-3 px-4 text-center" style="font-weight: 500; font-size: 0.875rem; width: 15%;">생산 수량</th>
+                      <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem; width: 25%;">비고</th>
+                      <th class="py-3 px-4 text-center" style="font-weight: 500; font-size: 0.875rem; width: 10%;">관리</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% logs = @logs_by_product[product] || [] %>
+                    <% if logs.any? %>
+                      <% logs.each do |log| %>
+                        <tr style="border-bottom: 1px solid #e8e8ed;">
+                          <td class="py-3 px-4">
+                            <%= log.production_date.strftime('%Y-%m-%d') %>
+                            <br>
+                            <small class="text-muted"><%= log.production_date.strftime('(%a)') %></small>
+                          </td>
+                          <td class="py-3 px-4">
+                            <%= log.production_time&.strftime('%H:%M') || '-' %>
+                          </td>
+                          <td class="py-3 px-4">
+                            <% if log.recipe.present? %>
+                              <span style="font-weight: 500;"><%= log.recipe.name %></span>
+                            <% else %>
+                              <span class="text-muted">-</span>
+                            <% end %>
+                          </td>
+                          <td class="py-3 px-4 text-center">
+                            <% if log.dough_count.present? %>
+                              <span class="badge bg-primary">
+                                <%= number_with_delimiter(log.dough_count) %>통
+                              </span>
+                            <% else %>
+                              <span class="text-muted">-</span>
+                            <% end %>
+                          </td>
+                          <td class="py-3 px-4">
+                            <% if log.notes.present? %>
+                              <%= truncate(log.notes, length: 50) %>
+                            <% else %>
+                              <span class="text-muted">-</span>
+                            <% end %>
+                          </td>
+                          <td class="py-3 px-4 text-center">
+                            <div class="btn-group btn-group-sm" role="group">
+                              <%= link_to edit_production_log_path(log),
+                                          class: "btn btn-sm btn-outline-primary",
+                                          title: "수정" do %>
+                                <i class="bi bi-pencil"></i>
+                              <% end %>
+                              <%= button_to production_log_path(log),
+                                            method: :delete,
+                                            class: "btn btn-sm btn-outline-danger",
+                                            title: "삭제",
+                                            data: { turbo_confirm: "정말 삭제하시겠습니까?" } do %>
+                                <i class="bi bi-trash"></i>
+                              <% end %>
+                            </div>
+                          </td>
+                        </tr>
                       <% end %>
-                      <%= button_to production_log_path(log),
-                                    method: :delete,
-                                    class: "btn btn-sm btn-outline-danger",
-                                    title: "삭제",
-                                    data: { turbo_confirm: "정말 삭제하시겠습니까?" } do %>
-                        <i class="bi bi-trash"></i>
-                      <% end %>
-                    </div>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
+                    <% else %>
+                      <tr>
+                        <td colspan="6" class="text-center py-5">
+                          <i class="bi bi-journal-x" style="font-size: 3rem; color: #d2d2d7;"></i>
+                          <p class="mt-3 mb-0 text-muted">등록된 반죽일지가 없습니다</p>
+                        </td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          <% end %>
         </div>
       <% else %>
         <div class="text-center py-5">
@@ -95,3 +133,30 @@
     </div>
   </div>
 </div>
+
+<script>
+  // URL 파라미터로 탭 상태 유지
+  document.addEventListener('turbo:load', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('product');
+
+    if (productId) {
+      const tab = document.getElementById(`product-${productId}-tab`);
+      if (tab) {
+        const bsTab = new bootstrap.Tab(tab);
+        bsTab.show();
+      }
+    }
+
+    // 탭 클릭 시 URL 업데이트
+    const tabButtons = document.querySelectorAll('#productTabs button[data-bs-toggle="tab"]');
+    tabButtons.forEach(button => {
+      button.addEventListener('shown.bs.tab', (event) => {
+        const productId = event.target.id.match(/product-(\d+)-tab/)[1];
+        const url = new URL(window.location);
+        url.searchParams.set('product', productId);
+        window.history.pushState({}, '', url);
+      });
+    });
+  });
+</script>

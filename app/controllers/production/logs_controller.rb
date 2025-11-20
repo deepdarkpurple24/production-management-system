@@ -6,6 +6,15 @@ class Production::LogsController < ApplicationController
     @production_logs = ProductionLog
       .includes(:finished_product, :production_plan, :recipe)
       .order(production_date: :desc, created_at: :desc)
+
+    # 완제품 목록 로드 (반죽일지가 있는 완제품만)
+    @finished_products = FinishedProduct
+      .joins(:production_logs)
+      .distinct
+      .order(:name)
+
+    # 완제품별로 그룹화
+    @logs_by_product = @production_logs.group_by(&:finished_product)
   end
 
   def new

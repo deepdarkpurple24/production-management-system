@@ -28,22 +28,48 @@
     <!-- 생산 계획 탭 -->
     <div class="card-modern">
       <div class="card-body p-0">
+        <%
+          # 탭 데이터 구성: (plan, recipe) 조합 생성
+          tab_items = []
+          @production_plans.each do |plan|
+            recipes = plan.finished_product.recipes
+            if recipes.any?
+              # 레시피가 있으면 각 레시피별 탭 생성
+              recipes.each do |recipe|
+                tab_items << { plan: plan, recipe: recipe }
+              end
+            else
+              # 레시피가 없으면 완제품 자체로 탭 생성
+              tab_items << { plan: plan, recipe: nil }
+            end
+          end
+        %>
+
         <!-- 탭 네비게이션 -->
         <ul class="nav nav-tabs border-bottom-0" id="productionTabs" role="tablist" style="padding: 1rem 1rem 0 1rem;">
-          <% @production_plans.each_with_index do |plan, index| %>
+          <% tab_items.each_with_index do |item, index| %>
+            <% plan = item[:plan] %>
+            <% recipe = item[:recipe] %>
+            <% tab_id = "plan-#{plan.id}-recipe-#{recipe&.id || 'none'}" %>
+            <%
+              # 해당 레시피의 일지가 있는지 확인
+              has_log = plan.production_logs.exists?(recipe_id: recipe&.id)
+              # 탭 표시명: 레시피가 있으면 "완제품명 (레시피명)", 없으면 "완제품명"
+              tab_label = recipe ? "#{recipe.name}" : plan.finished_product.name
+            %>
             <li class="nav-item" role="presentation">
               <button class="nav-tab-modern <%= 'active' if index == 0 %>"
-                      id="plan-<%= plan.id %>-tab"
+                      id="<%= tab_id %>-tab"
                       data-bs-toggle="tab"
-                      data-bs-target="#plan-<%= plan.id %>"
+                      data-bs-target="#<%= tab_id %>"
                       type="button"
                       role="tab">
                 <div class="d-flex align-items-center gap-2">
-                  <strong><%= plan.finished_product.name %></strong>
+                  <strong><%= tab_label %></strong>
                   <span class="badge bg-secondary" style="font-size: 0.7rem;">
-                    <%= number_with_delimiter(plan.quantity) %><%= plan.finished_product.name == '기정떡' ? '통' : '개' %>
+                    <%= number_with_delimiter(plan.quantity) %><%= plan.finished_product.name.include?('기정떡') ? '통' : '개' %>
                   </span>
-                  <% if plan.production_logs.any? %>
+                  <% if has_log %>
                     <i class="bi bi-check-circle-fill text-success" style="font-size: 0.9rem;"></i>
                   <% end %>
                 </div>
@@ -54,43 +80,27 @@
 
         <!-- 탭 내용 -->
         <div class="tab-content" id="productionTabsContent">
-          <% @production_plans.each_with_index do |plan, index| %>
+          <% tab_items.each_with_index do |item, index| %>
+            <% plan = item[:plan] %>
+            <% recipe = item[:recipe] %>
+            <% tab_id = "plan-#{plan.id}-recipe-#{recipe&.id || 'none'}" %>
+
             <div class="tab-pane fade <%= 'show active' if index == 0 %>"
-                 id="plan-<%= plan.id %>"
+                 id="<%= tab_id %>"
                  role="tabpanel">
               <div class="p-4">
                 <%
-                  # 완제품의 레시피 목록 가져오기
-                  recipes = plan.finished_product.recipes
-
-                  # 레시피가 없으면 완제품 자체에 대한 일지 작성
-                  if recipes.empty?
-                    recipes = [nil]  # nil로 표시하여 완제품에 대한 기본 폼 생성
-                  end
+                  # 이미 등록된 일지가 있는지 확인 (recipe_id로 구분)
+                  existing_log = plan.production_logs.find_by(recipe_id: recipe&.id)
+                  log = existing_log || ProductionLog.new(
+                    production_plan: plan,
+                    finished_product: plan.finished_product,
+                    recipe: recipe,
+                    production_date: plan.production_date
+                  )
+                  form_url = existing_log ? production_log_path(existing_log) : production_logs_path
+                  form_method = existing_log ? :patch : :post
                 %>
-
-                <% recipes.each do |recipe| %>
-                  <% if recipes.count > 1 %>
-                    <!-- 여러 레시피인 경우 레시피명 표시 -->
-                    <div class="alert alert-info mb-3" style="background-color: #e3f2fd; border: none;">
-                      <h6 class="mb-0" style="color: #1976d2; font-weight: 600;">
-                        <i class="bi bi-journal-text me-2"></i><%= recipe&.name || plan.finished_product.name %> 반죽일지
-                      </h6>
-                    </div>
-                  <% end %>
-
-                  <%
-                    # 이미 등록된 일지가 있는지 확인 (recipe_id로 구분)
-                    existing_log = plan.production_logs.find_by(recipe_id: recipe&.id)
-                    log = existing_log || ProductionLog.new(
-                      production_plan: plan,
-                      finished_product: plan.finished_product,
-                      recipe: recipe,
-                      production_date: plan.production_date
-                    )
-                    form_url = existing_log ? production_log_path(existing_log) : production_logs_path
-                    form_method = existing_log ? :patch : :post
-                  %>
 
                 <!-- 반죽일지 폼 -->
                 <%= form_with(model: log, url: form_url, method: form_method, local: true) do |form| %>
@@ -133,7 +143,7 @@
                   </div>
 
                   <!-- 기정떡 전용 필드 섹션 -->
-                  <div id="gijeongddeok-fields-<%= plan.id %>" style="<%= plan.finished_product.name.include?('기정떡') ? '' : 'display: none;' %>">
+                  <div id="gijeongddeok-fields-<%= tab_id %>" style="<%= plan.finished_product.name.include?('기정떡') ? '' : 'display: none;' %>">
                     <hr class="my-4">
                     <h5 class="mb-3" style="color: #1d1d1f; font-weight: 600;">
                       <i class="bi bi-clipboard-data me-2"></i>기정떡 생산 상세 정보
@@ -152,7 +162,7 @@
                               <%= form.label field.field_name, field.label, class: "form-label" %>
                               <div class="input-group">
                                 <% if field.field_name == 'dough_count' %>
-                                  <button type="button" class="btn btn-outline-secondary" onclick="adjustValue('production_log_<%= plan.id %>_<%= field.field_name %>', -0.5)">
+                                  <button type="button" class="btn btn-outline-secondary" onclick="adjustValue('production_log_<%= tab_id %>_<%= field.field_name %>', -0.5)">
                                     <i class="bi bi-dash"></i>
                                   </button>
                                 <% end %>
@@ -160,10 +170,10 @@
                                                       step: field.field_name == 'dough_count' ? 0.5 : ((field.field_name.ends_with?('_temp') || field.field_name.ends_with?('_amount') && field.field_name != 'yeast_amount' && field.field_name != 'salt_amount' && field.field_name != 'sugar_amount') ? 0.1 : nil),
                                                       value: field.field_name == 'dough_count' ? (log.dough_count || plan.quantity) : (log.persisted? ? log.send(field.field_name) : @gijeongddeok_default.send(field.field_name)),
                                                       class: "form-control",
-                                                      id: "production_log_#{plan.id}_#{field.field_name}",
+                                                      id: "production_log_#{tab_id}_#{field.field_name}",
                                                       placeholder: field.category == 'temperature' ? "예: 25.0" : (field.field_name == 'water_amount' ? "예: 1.5" : "예: 100") %>
                                 <% if field.field_name == 'dough_count' %>
-                                  <button type="button" class="btn btn-outline-secondary" onclick="adjustValue('production_log_<%= plan.id %>_<%= field.field_name %>', 0.5)">
+                                  <button type="button" class="btn btn-outline-secondary" onclick="adjustValue('production_log_<%= tab_id %>_<%= field.field_name %>', 0.5)">
                                     <i class="bi bi-plus"></i>
                                   </button>
                                   <span class="input-group-text">통</span>
@@ -202,7 +212,7 @@
                                                     step: 0.1,
                                                     value: log.persisted? ? log.makgeolli_consumption : @gijeongddeok_default.makgeolli_consumption,
                                                     class: "form-control",
-                                                    id: "production_log_#{plan.id}_makgeolli_consumption",
+                                                    id: "production_log_#{tab_id}_makgeolli_consumption",
                                                     placeholder: "예: 2500" %>
                               <span class="input-group-text">mL</span>
                             </div>
@@ -235,12 +245,6 @@
                                 class: "btn-modern btn-modern-outline" %>
                   </div>
                 <% end %>
-
-                <% if recipes.count > 1 && recipe != recipes.last %>
-                  <!-- 레시피 간 구분선 -->
-                  <hr class="my-4" style="border-top: 2px dashed #d2d2d7;">
-                <% end %>
-              <% end %> <!-- recipes.each 종료 -->
               </div>
             </div>
           <% end %>
@@ -273,15 +277,33 @@
     };
 
     // 각 탭의 폼을 확인하고 기본값 적용
-    <% @production_plans.each do |plan| %>
+    <%
+      # tab_items 재구성 (위와 동일한 로직)
+      tab_items_js = []
+      @production_plans.each do |plan|
+        recipes = plan.finished_product.recipes
+        if recipes.any?
+          recipes.each do |recipe|
+            tab_items_js << { plan: plan, recipe: recipe }
+          end
+        else
+          tab_items_js << { plan: plan, recipe: nil }
+        end
+      end
+    %>
+
+    <% tab_items_js.each do |item| %>
+      <% plan = item[:plan] %>
+      <% recipe = item[:recipe] %>
+      <% tab_id = "plan-#{plan.id}-recipe-#{recipe&.id || 'none'}" %>
       <% if plan.finished_product.name.include?('기정떡') %>
-        <% log = plan.production_logs.first || ProductionLog.new %>
-        <% if log.new_record? %>
+        <% existing_log = plan.production_logs.find_by(recipe_id: recipe&.id) %>
+        <% if existing_log.nil? %>
           // 새 레코드인 경우에만 기본값 적용
           <% @gijeongddeok_fields.each do |field| %>
-            const field_<%= plan.id %>_<%= field.field_name %> = document.querySelector(`#production_log_<%= plan.id %>_<%= field.field_name %>`);
-            if (field_<%= plan.id %>_<%= field.field_name %> && field_<%= plan.id %>_<%= field.field_name %>.value === '') {
-              field_<%= plan.id %>_<%= field.field_name %>.value = defaults.<%= field.field_name %> || '';
+            const field_<%= tab_id.gsub('-', '_') %>_<%= field.field_name %> = document.querySelector(`#production_log_<%= tab_id %>_<%= field.field_name %>`);
+            if (field_<%= tab_id.gsub('-', '_') %>_<%= field.field_name %> && field_<%= tab_id.gsub('-', '_') %>_<%= field.field_name %>.value === '') {
+              field_<%= tab_id.gsub('-', '_') %>_<%= field.field_name %>.value = defaults.<%= field.field_name %> || '';
             }
           <% end %>
         <% end %>

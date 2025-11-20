@@ -758,6 +758,19 @@ bin/rails test:system            # Browser-based system tests
 
 ## Recent Development History
 
+### 2025-11-21: Production Log Tab Structure - Recipe-Based Tabs
+- **Tab Structure Refactoring**:
+  - Changed production log creation from plan-based tabs to recipe-based tabs
+  - Multi-recipe finished products (e.g., 백미보름떡) now display separate tabs for each recipe (백미크림, 보름떡)
+  - Each recipe gets its own independent form instead of stacking forms vertically
+  - Tab ID format: `plan-{plan_id}-recipe-{recipe_id || 'none'}`
+  - Tab labels show recipe name directly for better clarity
+- **JavaScript Updates**:
+  - Updated gijeongddeok default value loading to work with new tab ID structure
+  - Fixed field ID generation to use tab_id instead of plan.id
+  - Maintained +/- button functionality for dough_count fields
+- **Pattern**: When a finished product has multiple recipes, iterate through `plan.finished_product.recipes` to create tab_items array with `{plan: plan, recipe: recipe}` pairs
+
 ### 2025-11-20: Version Tracking System Improvements
 - **Comprehensive Notes Field Support**:
   - Added `notes` field to `item_versions` table for complete Item version tracking
@@ -1081,8 +1094,8 @@ const itemOptions = itemsData.map(item => `<option value="${item.id}">${item.nam
 
 ---
 
-Document Version: 1.4
-Last Updated: 2025-11-20
+Document Version: 1.5
+Last Updated: 2025-11-21
 Schema Version: 20251120062428
 Rails Version: 8.1.1
 Ruby Version: 3.4.7

@@ -1,0 +1,114 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0" style="font-weight: 600; color: #1d1d1f;">
+      <i class="bi bi-box-seam-fill me-2" style="color: #0071e3;"></i>
+      개봉품 관리
+    </h2>
+  </div>
+
+  <!-- 품목별 통계 카드 -->
+  <% if @items_summary.any? %>
+    <div class="row g-3 mb-4">
+      <% @items_summary.each do |summary| %>
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100" style="border: 1px solid #e8e8ed; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+            <div class="card-body">
+              <h5 class="card-title mb-3" style="font-weight: 600; color: #1d1d1f;">
+                <%= summary.item_name %>
+              </h5>
+              <div class="d-flex justify-content-between mb-2">
+                <span style="color: #6e6e73;">개봉품 수량:</span>
+                <strong style="color: #0071e3;"><%= summary.opened_count %>개</strong>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span style="color: #6e6e73;">총 잔여 중량:</span>
+                <strong style="color: #34c759;"><%= number_with_delimiter(summary.total_weight.to_f.round(0)) %>g</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- 개봉품 상세 목록 -->
+  <div class="card" style="border: 1px solid #e8e8ed; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+    <div class="card-header" style="background-color: #f5f5f7; border-bottom: 1px solid #e8e8ed; padding: 1rem 1.5rem;">
+      <h5 class="mb-0" style="font-weight: 600; color: #1d1d1f;">개봉품 상세 목록</h5>
+    </div>
+    <div class="card-body p-0">
+      <% if @opened_items.any? %>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0" style="font-size: 0.95rem;">
+            <thead style="background-color: #f5f5f7; border-bottom: 2px solid #e8e8ed;">
+              <tr>
+                <th style="padding: 1rem; font-weight: 600; color: #1d1d1f;">품목명</th>
+                <th class="text-end" style="padding: 1rem; font-weight: 600; color: #1d1d1f;">잔여 중량</th>
+                <th class="text-center" style="padding: 1rem; font-weight: 600; color: #1d1d1f;">유통기한</th>
+                <th class="text-center" style="padding: 1rem; font-weight: 600; color: #1d1d1f;">개봉일시</th>
+                <th class="text-center" style="padding: 1rem; font-weight: 600; color: #1d1d1f;">입고일자</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @opened_items.each do |opened_item| %>
+                <%
+                  # 유통기한까지 남은 일수 계산
+                  days_until_expiry = opened_item.expiration_date ? (opened_item.expiration_date - Date.today).to_i : nil
+                  expiry_color = if days_until_expiry && days_until_expiry < 0
+                    '#ff3b30' # 빨강 (만료됨)
+                  elsif days_until_expiry && days_until_expiry <= 7
+                    '#ff9500' # 주황 (일주일 이내)
+                  elsif days_until_expiry && days_until_expiry <= 14
+                    '#ffcc00' # 노랑 (2주 이내)
+                  else
+                    '#34c759' # 초록 (충분)
+                  end
+                %>
+                <tr>
+                  <td style="padding: 1rem; color: #1d1d1f; font-weight: 500;">
+                    <%= opened_item.item.name %>
+                  </td>
+                  <td class="text-end" style="padding: 1rem; color: #0071e3; font-weight: 600;">
+                    <%= number_with_delimiter(opened_item.remaining_weight.to_f.round(0)) %>g
+                  </td>
+                  <td class="text-center" style="padding: 1rem;">
+                    <% if opened_item.expiration_date %>
+                      <span style="color: <%= expiry_color %>; font-weight: 500;">
+                        <%= opened_item.expiration_date.strftime('%Y-%m-%d') %>
+                      </span>
+                      <% if days_until_expiry %>
+                        <br>
+                        <small style="color: #6e6e73;">
+                          <% if days_until_expiry < 0 %>
+                            (만료됨)
+                          <% elsif days_until_expiry == 0 %>
+                            (오늘 만료)
+                          <% else %>
+                            (D-<%= days_until_expiry %>)
+                          <% end %>
+                        </small>
+                      <% end %>
+                    <% else %>
+                      <span style="color: #c7c7cc;">-</span>
+                    <% end %>
+                  </td>
+                  <td class="text-center" style="padding: 1rem; color: #6e6e73;">
+                    <%= opened_item.opened_at.strftime('%Y-%m-%d %H:%M') %>
+                  </td>
+                  <td class="text-center" style="padding: 1rem; color: #6e6e73;">
+                    <%= opened_item.receipt.receipt_date.strftime('%Y-%m-%d') %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="text-center py-5">
+          <i class="bi bi-inbox" style="font-size: 3rem; color: #c7c7cc;"></i>
+          <p class="mt-3 mb-0" style="color: #6e6e73;">개봉된 품목이 없습니다.</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

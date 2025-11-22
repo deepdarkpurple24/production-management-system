@@ -1,4 +1,4 @@
-<div class="container-fluid px-4 py-4">
+<div class="container-fluid px-4 py-4" data-turbo-cache="false">
   <!-- 헤더 -->
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 style="font-weight: 600; color: #1d1d1f;">
@@ -35,6 +35,7 @@
         <%= form.hidden_field :production_plan_id %>
         <%= form.hidden_field :finished_product_id %>
         <%= form.hidden_field :recipe_id %>
+        <%= hidden_field_tag :from_status, @from_status %>
 
         <!-- 기본 정보 표시 -->
         <div class="row mb-3">
@@ -59,19 +60,6 @@
                 <span class="text-muted">-</span>
               <% end %>
             </div>
-          </div>
-        </div>
-
-        <!-- 생산 일시 -->
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <%= form.label :production_date, "생산 날짜", class: "form-label", style: "font-weight: 500;" %>
-            <span class="text-danger">*</span>
-            <%= form.date_field :production_date, class: "form-control", required: true %>
-          </div>
-          <div class="col-md-6">
-            <%= form.label :production_time, "생산 시간", class: "form-label", style: "font-weight: 500;" %>
-            <%= form.time_field :production_time, class: "form-control" %>
           </div>
         </div>
 
@@ -108,17 +96,44 @@
                 <div class="card-body p-0">
                   <table class="table table-sm mb-0" style="font-size: 0.9rem;">
                     <thead>
+                      <%
+                        batch_completion_time = @production_log.batch_completion_times&.dig(batch_index.to_s)
+                        if batch_completion_time
+                          completion_datetime = Time.parse(batch_completion_time)
+                          display_text = "#{completion_datetime.strftime('%m-%d')} #{completion_datetime.strftime('%H:%M')}"
+                        else
+                          display_text = "-- --:--"
+                        end
+                      %>
                       <tr>
                         <th style="padding: 0.6rem 1rem; font-weight: 600; color: #1d1d1f; background-color: #d6d8db;">
-                          <%= recipe.name %>
-                          <% if batch_count > 1 %>
-                            <span class="badge bg-secondary ms-2" style="font-size: 0.75rem;">
-                              <%= batch_index + 1 %>/<%= batch_count %>
+                          <div class="d-flex justify-content-between align-items-center">
+                            <span>
+                              <%= recipe.name %>
+                              <% if batch_count > 1 %>
+                                <span class="badge bg-secondary ms-2" style="font-size: 0.75rem;">
+                                  <%= batch_index + 1 %>/<%= batch_count %>
+                                </span>
+                              <% end %>
                             </span>
-                          <% end %>
+                            <span class="production-datetime-header"
+                                  data-production-log-id="<%= @production_log.id %>"
+                                  data-batch-index="<%= batch_index %>"
+                                  style="cursor: pointer; font-weight: 500; color: #6e6e73; margin-left: 1rem;"
+                                  title="클릭하여 수정">
+                              <span class="datetime-display">
+                                <%= display_text %>
+                              </span>
+                              <input type="date" class="datetime-edit datetime-edit-date" style="display: none; width: 100px; font-size: 0.875rem;">
+                              <input type="time" class="datetime-edit datetime-edit-time" style="display: none; width: 80px; font-size: 0.875rem;">
+                            </span>
+                          </div>
                         </th>
-                        <th class="text-end" style="padding: 0.6rem 1rem; font-weight: 500; color: #6e6e73; background-color: #d6d8db;">
-                          <%= @production_log.production_date.strftime('%m-%d') %> <%= @production_log.production_time&.strftime('%H:%M') || '' %>
+                        <th class="text-end" style="padding: 0.6rem 1rem; font-weight: 600; color: #1d1d1f; background-color: #d6d8db;">
+                          중량
+                        </th>
+                        <th class="text-center" style="padding: 0.6rem 1rem; font-weight: 600; color: #1d1d1f; background-color: #d6d8db; min-width: 90px;">
+                          유통기한
                         </th>
                       </tr>
                     </thead>
@@ -132,6 +147,7 @@
                             <td class="text-end" style="padding: 0.5rem 1rem; font-weight: 600; color: #0071e3; background-color: #d6d8db;">
                               <%= number_with_delimiter(scaled_subtotal.round(0)) %>
                             </td>
+                            <td style="padding: 0.5rem 1rem; background-color: #d6d8db;"></td>
                           </tr>
                           <% running_subtotal = 0.0 %>
                         <% else %>
@@ -142,13 +158,31 @@
                             saved_weights = @production_log.ingredient_weights || {}
                             display_weight = saved_weights[field_key].present? ? saved_weights[field_key].to_i : scaled_weight.round(0)
                           %>
-                          <tr class="ingredient-row" style="cursor: pointer; user-select: none;">
-                            <td style="padding: 0.5rem 1rem; color: #1d1d1f;"><%= ri.display_name %></td>
-                            <td class="text-end" style="padding: 0.5rem 1rem; color: #1d1d1f; font-weight: 500;">
-                              <input type="number" name="production_log[ingredient_weights][<%= field_key %>]"
-                                     class="ingredient-weight-input"
-                                     value="<%= display_weight %>"
-                                     style="width: 80px; text-align: right; border: none; background: transparent; font-weight: 500; color: #1d1d1f; user-select: text;">
+                          <%
+                            checked_ing = @production_log.checked_ingredients.find_by(recipe_id: recipe.id, ingredient_index: ri.position, batch_index: batch_index)
+                            is_checked = checked_ing.present?
+                            expiration_date = checked_ing&.expiration_date
+                          %>
+                          <tr class="ingredient-row"
+                              data-recipe-id="<%= recipe.id %>"
+                              data-ingredient-index="<%= ri.position %>"
+                              data-batch-index="<%= batch_index %>"
+                              data-checked="<%= is_checked %>"
+                              style="cursor: pointer; user-select: none; <%= is_checked ? 'background-color: #c8e6c9;' : '' %>">
+                            <td style="padding: 0.5rem 1rem; color: #1d1d1f; <%= is_checked ? 'background-color: #c8e6c9;' : '' %>">
+                              <%= ri.display_name %>
+                            </td>
+                            <td class="text-end" style="padding: 0.5rem 1rem; color: #1d1d1f; font-weight: 500; <%= is_checked ? 'background-color: #c8e6c9;' : '' %>">
+                              <%= number_with_delimiter(display_weight) %>
+                              <input type="hidden" name="production_log[ingredient_weights][<%= field_key %>]"
+                                     value="<%= display_weight %>">
+                            </td>
+                            <td class="text-center expiration-date-cell" style="padding: 0.5rem 1rem; color: #6e6e73; font-size: 0.85rem; <%= is_checked ? 'background-color: #c8e6c9;' : '' %>">
+                              <% if expiration_date %>
+                                <%= expiration_date.strftime('%y.%m.%d') %>
+                              <% else %>
+                                <span style="color: #c7c7cc;">-</span>
+                              <% end %>
                             </td>
                           </tr>
                         <% end %>
@@ -162,9 +196,24 @@
                         <td class="text-end" style="padding: 0.6rem 1rem; color: #0071e3; font-weight: 700; font-size: 1rem; background-color: #d6d8db; border-top: 1px solid #ced4da;">
                           <%= number_with_delimiter((total_scaled / batch_count).round(0)) %>
                         </td>
+                        <td style="padding: 0.6rem 1rem; background-color: #d6d8db; border-top: 1px solid #ced4da;"></td>
                       </tr>
                     </tfoot>
                   </table>
+                </div>
+                <!-- 작업완료 버튼 (각 테이블마다) -->
+                <%
+                  is_batch_completed = @production_log.batch_completion_times&.key?(batch_index.to_s)
+                %>
+                <div class="d-flex justify-content-end mt-2 px-3 pb-3">
+                  <button type="button"
+                          class="btn btn-sm <%= is_batch_completed ? 'btn-secondary' : 'btn-success' %> btn-complete-work"
+                          data-production-log-id="<%= @production_log.id %>"
+                          data-batch-index="<%= batch_index %>"
+                          style="font-weight: 500;"
+                          <%= 'disabled' if is_batch_completed %>>
+                    <i class="bi bi-<%= is_batch_completed ? 'check-circle-fill' : 'check-circle' %> me-2"></i><%= is_batch_completed ? '작업완료됨' : '작업완료' %>
+                  </button>
                 </div>
               </div>
             <% end %>
@@ -257,7 +306,7 @@
 
         <div class="d-flex justify-content-end gap-2 mt-4">
           <%= form.submit "수정", class: "btn-modern btn-modern-primary" %>
-          <%= link_to "취소", production_logs_path, class: "btn-modern btn-modern-outline" %>
+          <%= link_to "취소", production_logs_path(status: @from_status, date: @production_log.production_date), class: "btn-modern btn-modern-outline" %>
         </div>
       <% end %>
     </div>
@@ -278,23 +327,63 @@
   // 재료 행 더블클릭/더블탭 - 재료 투입 완료 표시 (이벤트 위임 사용)
   (function() {
     const CHECKED_COLOR = '#c8e6c9';
+    const productionLogId = <%= @production_log.id %>;
     let lastTapTime = 0;
     let lastTapTarget = null;
 
-    function toggleRowColor(row) {
-      const cells = row.querySelectorAll('td');
+    async function toggleRowColor(row) {
       const isChecked = row.dataset.checked === 'true';
+      const recipeId = row.dataset.recipeId;
+      const ingredientIndex = row.dataset.ingredientIndex;
+      const batchIndex = row.dataset.batchIndex;
 
-      if (isChecked) {
-        cells.forEach(cell => {
-          cell.style.backgroundColor = '';
+      // 토글할 새 상태
+      const newCheckedState = !isChecked;
+
+      try {
+        // 서버에 체크 상태 저장
+        const response = await fetch(`/production/logs/${productionLogId}/update_ingredient_check`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+          },
+          body: JSON.stringify({
+            recipe_id: recipeId,
+            ingredient_index: ingredientIndex,
+            batch_index: batchIndex,
+            checked: newCheckedState
+          })
         });
-        row.dataset.checked = 'false';
-      } else {
-        cells.forEach(cell => {
-          cell.style.backgroundColor = CHECKED_COLOR;
-        });
-        row.dataset.checked = 'true';
+
+        const data = await response.json();
+
+        if (data.success) {
+          // 현재 클릭한 행만 업데이트 (특정 배치만)
+          const cells = row.querySelectorAll('td');
+          if (newCheckedState) {
+            cells.forEach(cell => {
+              cell.style.backgroundColor = CHECKED_COLOR;
+            });
+            row.dataset.checked = 'true';
+          } else {
+            cells.forEach(cell => {
+              cell.style.backgroundColor = '';
+            });
+            row.dataset.checked = 'false';
+          }
+
+          // 상태 변경 시 알림 (선택사항)
+          if (data.status === 'completed') {
+            console.log('모든 재료 체크 완료 - 작업완료로 이동되었습니다');
+          } else if (data.status === 'in_progress') {
+            console.log('작업중 상태로 변경되었습니다');
+          }
+        } else {
+          console.error('체크 상태 저장 실패');
+        }
+      } catch (error) {
+        console.error('서버 통신 오류:', error);
       }
     }
 
@@ -323,5 +412,143 @@
       lastTapTime = currentTime;
       lastTapTarget = row;
     });
+
+    // 페이지 로드 시 체크 상태는 서버 렌더링으로 이미 설정되어 있음
+    // data-checked 속성과 인라인 스타일이 서버에서 올바르게 렌더링되므로
+    // 별도의 복원 로직이 필요하지 않음
   })();
+
+  // 작업완료 버튼 핸들러
+  document.addEventListener('click', async function(e) {
+    if (e.target.closest('.btn-complete-work')) {
+      const button = e.target.closest('.btn-complete-work');
+      const productionLogId = button.dataset.productionLogId;
+      const batchIndex = button.dataset.batchIndex;
+
+      if (!productionLogId || button.disabled) return;
+
+      // 해당 배치의 모든 재료가 체크되었는지 확인
+      const ingredientRows = document.querySelectorAll(`.ingredient-row[data-batch-index="${batchIndex}"]`);
+      const uncheckedRows = Array.from(ingredientRows).filter(row => {
+        return row.dataset.checked !== 'true';
+      });
+
+      if (uncheckedRows.length > 0) {
+        alert(`체크되지 않은 재료가 ${uncheckedRows.length}개 있습니다.\n모든 재료를 체크한 후 작업완료를 진행해주세요.`);
+        return;
+      }
+
+      // 작업완료 처리
+      try {
+        const response = await fetch(`/production/logs/${productionLogId}/complete_work`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+          },
+          body: JSON.stringify({
+            batch_index: batchIndex
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // 해당 배치의 헤더만 찾아서 날짜/시간 업데이트
+          const targetHeader = document.querySelector(`.production-datetime-header[data-batch-index="${batchIndex}"]`);
+          if (targetHeader) {
+            const display = targetHeader.querySelector('.datetime-display');
+            if (display) {
+              display.textContent = data.completion_time;
+            }
+          }
+
+          // 버튼 비활성화
+          button.disabled = true;
+          button.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>작업완료됨';
+          button.classList.remove('btn-success');
+          button.classList.add('btn-secondary');
+        } else {
+          alert('작업완료 처리 실패: ' + (data.errors || ['알 수 없는 오류']).join(', '));
+        }
+      } catch (error) {
+        console.error('서버 통신 오류:', error);
+        alert('서버 통신 오류가 발생했습니다.');
+      }
+    }
+  });
+
+  // 날짜/시간 편집 기능
+  document.addEventListener('click', function(e) {
+    const header = e.target.closest('.production-datetime-header');
+    if (!header) return;
+
+    const display = header.querySelector('.datetime-display');
+    const dateInput = header.querySelector('.datetime-edit-date');
+    const timeInput = header.querySelector('.datetime-edit-time');
+
+    // 편집 모드로 전환
+    if (display.style.display !== 'none') {
+      const currentText = display.textContent.trim();
+      const parts = currentText.split(' ');
+      const currentDate = parts[0] !== '--' ? `2025-${parts[0]}` : new Date().toISOString().split('T')[0];
+      const currentTime = parts[1] !== '--:--' ? parts[1] : new Date().toTimeString().slice(0, 5);
+
+      dateInput.value = currentDate;
+      timeInput.value = currentTime;
+
+      display.style.display = 'none';
+      dateInput.style.display = 'inline-block';
+      timeInput.style.display = 'inline-block';
+      dateInput.focus();
+    }
+  });
+
+  // 날짜/시간 입력 필드에서 포커스 잃을 때 저장
+  document.addEventListener('blur', async function(e) {
+    if (e.target.classList.contains('datetime-edit')) {
+      const header = e.target.closest('.production-datetime-header');
+      const display = header.querySelector('.datetime-display');
+      const dateInput = header.querySelector('.datetime-edit-date');
+      const timeInput = header.querySelector('.datetime-edit-time');
+
+      // 약간의 지연을 두어 다른 입력 필드로 포커스 이동 허용
+      setTimeout(async () => {
+        if (document.activeElement !== dateInput && document.activeElement !== timeInput) {
+          const productionLogId = header.dataset.productionLogId;
+
+          if (productionLogId) {
+            // 서버에 저장
+            const formData = new FormData();
+            formData.append('production_log[production_date]', dateInput.value);
+            formData.append('production_log[production_time]', timeInput.value);
+
+            try {
+              const response = await fetch(`/production/logs/${productionLogId}`, {
+                method: 'PATCH',
+                headers: {
+                  'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+                },
+                body: formData
+              });
+
+              if (response.ok) {
+                // 표시 업데이트
+                const date = new Date(dateInput.value);
+                const displayDate = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                display.textContent = `${displayDate} ${timeInput.value}`;
+              }
+            } catch (error) {
+              console.error('날짜/시간 저장 오류:', error);
+            }
+          }
+
+          // 표시 모드로 복귀
+          display.style.display = 'inline';
+          dateInput.style.display = 'none';
+          timeInput.style.display = 'none';
+        }
+      }, 200);
+    }
+  }, true);
 </script>

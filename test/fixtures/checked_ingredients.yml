@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  production_log: one
+  recipe: one
+  ingredient_index: 1
+
+two:
+  production_log: two
+  recipe: two
+  ingredient_index: 1

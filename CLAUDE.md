@@ -64,6 +64,9 @@ production-management-system/
 │   │   ├── application.js    # Main JS entry point
 │   │   └── interactions.js   # Custom interaction helpers
 │   ├── models/               # ActiveRecord models
+│   ├── services/             # Business logic services
+│   │   ├── ingredient_inventory_service.rb  # FIFO inventory management
+│   │   └── production_log_initializer.rb    # Auto-create production logs
 │   └── views/                # ERB view templates
 │       ├── inventory/
 │       ├── production/
@@ -112,6 +115,19 @@ production-management-system/
 
 - **ShipmentPurpose** / **ShipmentRequester**: 출고 목적 및 요청자 설정
   - Position-based ordering (drag & drop)
+
+- **OpenedItem** (`opened_items`): 개봉품 관리
+  - Tracks partially used inventory items with remaining weight
+  - FIFO (First-In-First-Out) based on expiration dates
+  - Links to receipt and item
+  - Scopes: `available` (remaining_weight > 0), `by_expiration` (sorted by expiration date)
+  - Methods: `deduct_weight`, `restore_weight`, `depleted?`
+
+- **CheckedIngredient** (`checked_ingredients`): 체크된 재료
+  - Records ingredient usage in production logs
+  - Stores used_weight, expiration_date, receipt_id, opened_item_id
+  - Links production log to inventory consumption
+  - Part of automatic inventory deduction system
 
 ### 2. Recipe Management (레시피 관리)
 - **Recipe** (`recipes`): 레시피
@@ -221,6 +237,7 @@ namespace :inventory do
     GET :suppliers
     POST :add_supplier
   resources :stocks, only: [:index]  # 재고 현황
+  resources :opened_items, only: [:index]  # 개봉품 관리
 end
 ```
 
@@ -712,6 +729,52 @@ end
 - User creates production log with 3 units actual production
 - Production plan quantity automatically updates to 3 units
 
+### 13. FIFO Inventory Management System
+**CRITICAL**: Ingredient checking in production logs triggers automatic inventory deduction using FIFO (First-In-First-Out) logic.
+
+**Workflow** (`IngredientInventoryService`):
+1. **Find Item**: Get item from RecipeIngredient
+2. **FIFO Selection**: Query receipts ordered by `expiration_date ASC, receipt_date ASC`
+3. **Find/Create OpenedItem**:
+   - Check existing opened items with sufficient remaining_weight
+   - If none found, open new receipt (creates OpenedItem with unit_weight as remaining_weight)
+4. **Deduct Weight**: Call `opened_item.deduct_weight(used_weight)`
+5. **Create CheckedIngredient**: Record with used_weight, expiration_date, receipt_id, opened_item_id
+6. **Auto Shipment**: If `opened_item.depleted?`, create Shipment with purpose "생산 사용"
+
+**Uncheck Behavior**:
+- Restore weight to OpenedItem only (shipment remains intact - item already opened)
+- Delete CheckedIngredient record
+
+**Service Pattern**:
+```ruby
+# Controller calls service
+result = IngredientInventoryService.check_ingredient(
+  production_log, recipe_ingredient, batch_index, used_weight
+)
+
+if result[:success]
+  checked_ingredient = result[:checked_ingredient]
+  # Display expiration_date in UI
+else
+  # Show errors: result[:errors]
+end
+```
+
+**Key Requirements**:
+- Receipts MUST have `expiration_date` to be used in FIFO
+- OpenedItem tracks `remaining_weight` (initially = receipt.unit_weight)
+- Unit conversion handled by `convert_to_grams(weight, unit)`
+- Expiration dates displayed in production log tables as `yy.mm.dd`
+
+**Table Structure**:
+```
+Production Log Ingredient Table:
+| Recipe Name + Datetime | Weight  | Expiration Date |
+|------------------------|---------|-----------------|
+| 재료명                  | 1000g   | 25.11.29        |
+```
+
 ## Configuration Notes
 
 ### Time Zone
@@ -757,6 +820,35 @@ bin/rails test:system            # Browser-based system tests
 ```
 
 ## Recent Development History
+
+### 2025-11-23: FIFO Inventory Management System
+- **Automatic Inventory Deduction**:
+  - Ingredient checking in production logs now triggers automatic inventory management
+  - FIFO (First-In-First-Out) based on expiration dates
+  - OpenedItem model tracks partially used inventory with remaining weight
+  - CheckedIngredient model records ingredient usage with expiration date tracking
+- **IngredientInventoryService**:
+  - Core business logic for FIFO inventory selection and deduction
+  - Automatic shipment creation when items depleted (purpose: "생산 사용")
+  - Uncheck restores weight to opened items but keeps shipment intact
+  - Comprehensive error handling and logging
+- **ProductionLogInitializer Service**:
+  - Auto-creates production logs when production plans created
+  - Pre-calculates ingredient_weights based on batch count and equipment capacity
+  - Eliminates need for on-demand log creation during first ingredient check
+- **Opened Items Management Page**:
+  - New route: `/inventory/opened_items`
+  - Displays all opened items with remaining weight
+  - Shows expiration dates with color-coded D-day indicators (red/orange/yellow/green)
+  - Groups by item with summary statistics
+- **Production Log UI Improvements**:
+  - Added "중량" and "유통기한" column headers in ingredient tables
+  - Recipe name and completion datetime combined in first column
+  - Expiration dates display in `yy.mm.dd` format
+  - Table structure: Recipe+Time | Weight | Expiration Date
+- **Database Migrations**:
+  - `create_opened_items`: Tracks opened inventory items with remaining_weight
+  - `add_inventory_fields_to_checked_ingredients`: Links checked ingredients to receipts and opened items
 
 ### 2025-11-21: Production Log Tab Structure - Recipe-Based Tabs
 - **Tab Structure Refactoring**:
@@ -1042,7 +1134,9 @@ Common Paths:
 - / - Home dashboard
 - /inventory/items - Item management
 - /inventory/receipts - Receiving records
+- /inventory/opened_items - Opened items management
 - /inventory/shipments - Shipping records
+- /inventory/stocks - Stock status
 - /recipes - Recipe management
 - /finished_products - Finished product management
 - /production/plans - Production planning
@@ -1094,9 +1188,9 @@ const itemOptions = itemsData.map(item => `<option value="${item.id}">${item.nam
 
 ---
 
-Document Version: 1.5
-Last Updated: 2025-11-21
-Schema Version: 20251120062428
+Document Version: 1.6
+Last Updated: 2025-11-23
+Schema Version: 20251122151007
 Rails Version: 8.1.1
 Ruby Version: 3.4.7
 Node Version: 24.11.1

@@ -67,12 +67,20 @@ Rails.application.routes.draw do
       resources :item_versions, only: [:index, :destroy]
     end
     resources :stocks, only: [:index]
-    # resources :opened_items
+    resources :opened_items, only: [:index]
   end
 
   namespace :production do
     resources :plans
-    resources :logs
+    resources :logs do
+      collection do
+        post :create_draft
+      end
+      member do
+        patch :update_ingredient_check
+        patch :complete_work
+      end
+    end
   end
 
   # 레시피 관리

@@ -1,6 +1,8 @@
 class Receipt < ApplicationRecord
   belongs_to :item
   has_many :receipt_versions, -> { order(version_number: :desc) }, dependent: :destroy
+  has_many :opened_items, dependent: :destroy
+  has_many :checked_ingredients, dependent: :nullify
 
   validates :receipt_date, presence: true
   validates :quantity, presence: true, numericality: { greater_than: 0 }

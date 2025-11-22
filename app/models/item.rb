@@ -3,6 +3,7 @@ class Item < ApplicationRecord
   has_many :receipts, dependent: :restrict_with_error
   has_many :shipments, dependent: :restrict_with_error
   has_many :item_versions, -> { order(version_number: :desc) }, dependent: :destroy
+  has_many :opened_items, dependent: :destroy
 
   # 공급업체 배열 직렬화
   serialize :suppliers, coder: JSON, type: Array

@@ -10,7 +10,25 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_21_072430) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_22_151007) do
+  create_table "checked_ingredients", force: :cascade do |t|
+    t.integer "batch_index", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.date "expiration_date"
+    t.integer "ingredient_index", null: false
+    t.integer "opened_item_id"
+    t.integer "production_log_id", null: false
+    t.integer "receipt_id"
+    t.integer "recipe_id", null: false
+    t.datetime "updated_at", null: false
+    t.decimal "used_weight", precision: 10, scale: 2
+    t.index ["opened_item_id"], name: "index_checked_ingredients_on_opened_item_id"
+    t.index ["production_log_id", "recipe_id", "ingredient_index", "batch_index"], name: "index_checked_ingredients_uniqueness", unique: true
+    t.index ["production_log_id"], name: "index_checked_ingredients_on_production_log_id"
+    t.index ["receipt_id"], name: "index_checked_ingredients_on_receipt_id"
+    t.index ["recipe_id"], name: "index_checked_ingredients_on_recipe_id"
+  end
+
   create_table "equipment", force: :cascade do |t|
     t.decimal "capacity", precision: 10, scale: 2
     t.string "capacity_unit"
@@ -216,7 +234,22 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_21_072430) do
     t.index ["item_code"], name: "index_items_on_item_code", unique: true
   end
 
+  create_table "opened_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "expiration_date"
+    t.integer "item_id", null: false
+    t.datetime "opened_at", null: false
+    t.integer "receipt_id", null: false
+    t.decimal "remaining_weight", precision: 10, scale: 2, default: "0.0", null: false
+    t.datetime "updated_at", null: false
+    t.index ["expiration_date"], name: "index_opened_items_on_expiration_date"
+    t.index ["item_id", "receipt_id"], name: "index_opened_items_on_item_id_and_receipt_id"
+    t.index ["item_id"], name: "index_opened_items_on_item_id"
+    t.index ["receipt_id"], name: "index_opened_items_on_receipt_id"
+  end
+
   create_table "production_logs", force: :cascade do |t|
+    t.json "batch_completion_times"
     t.datetime "created_at", null: false
     t.decimal "dough_count", precision: 10, scale: 1
     t.decimal "dough_temp", precision: 10, scale: 1
@@ -234,6 +267,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_21_072430) do
     t.integer "recipe_id"
     t.decimal "refrigeration_room_temp", precision: 10, scale: 1
     t.integer "salt_amount"
+    t.string "status", default: "pending"
     t.decimal "steiva_amount", precision: 10, scale: 1
     t.integer "sugar_amount"
     t.datetime "updated_at", null: false
@@ -417,6 +451,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_21_072430) do
     t.index ["position"], name: "index_storage_locations_on_position"
   end
 
+  add_foreign_key "checked_ingredients", "opened_items"
+  add_foreign_key "checked_ingredients", "production_logs"
+  add_foreign_key "checked_ingredients", "receipts"
+  add_foreign_key "checked_ingredients", "recipes"
   add_foreign_key "equipment_modes", "equipment_types"
   add_foreign_key "finished_product_recipes", "finished_products"
   add_foreign_key "finished_product_recipes", "recipes", on_delete: :cascade
@@ -425,6 +463,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_21_072430) do
   add_foreign_key "ingredient_items", "items"
   add_foreign_key "ingredient_versions", "ingredients"
   add_foreign_key "item_versions", "items"
+  add_foreign_key "opened_items", "items"
+  add_foreign_key "opened_items", "receipts"
   add_foreign_key "production_logs", "finished_products"
   add_foreign_key "production_logs", "production_plans"
   add_foreign_key "production_logs", "recipes"

@@ -36,6 +36,9 @@ class Production::PlansController < ApplicationController
     @production_plan = ProductionPlan.new(production_plan_params)
 
     if @production_plan.save
+      # 생산계획 생성 시 반죽일지 자동 생성
+      ProductionLogInitializer.create_logs_for_plan(@production_plan)
+
       redirect_to production_plans_path(date: @production_plan.production_date, view: params[:view] || 'monthly'),
                   notice: '생산 계획이 성공적으로 등록되었습니다.'
     else
@@ -49,7 +52,17 @@ class Production::PlansController < ApplicationController
   end
 
   def update
+    old_quantity = @production_plan.quantity
+    old_finished_product_id = @production_plan.finished_product_id
+
     if @production_plan.update(production_plan_params)
+      # 수량이나 완제품이 변경되었으면 반죽일지 ingredient_weights 재계산
+      if old_quantity != @production_plan.quantity || old_finished_product_id != @production_plan.finished_product_id
+        # 기존 반죽일지 삭제 후 재생성
+        @production_plan.production_logs.destroy_all
+        ProductionLogInitializer.create_logs_for_plan(@production_plan)
+      end
+
       redirect_to production_plans_path(date: @production_plan.production_date, view: params[:view] || 'monthly'),
                   notice: '생산 계획이 성공적으로 수정되었습니다.'
     else

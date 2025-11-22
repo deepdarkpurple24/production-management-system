@@ -60,7 +60,7 @@
               </a>
               <ul class="dropdown-menu dropdown-menu-end">
                 <li><%= link_to inventory_receipts_path, class: "dropdown-item" do %><i class="bi bi-box-arrow-in-down me-2"></i>입고<% end %></li>
-                <li><a class="dropdown-item" href="#"><i class="bi bi-box-seam me-2"></i>개봉품관리</a></li>
+                <li><%= link_to inventory_opened_items_path, class: "dropdown-item" do %><i class="bi bi-box-seam me-2"></i>개봉품관리<% end %></li>
                 <li><%= link_to inventory_shipments_path, class: "dropdown-item" do %><i class="bi bi-box-arrow-up me-2"></i>출고<% end %></li>
                 <li><%= link_to inventory_stocks_path, class: "dropdown-item" do %><i class="bi bi-clipboard-data me-2"></i>재고현황<% end %></li>
                 <li><%= link_to inventory_items_path, class: "dropdown-item" do %><i class="bi bi-tags me-2"></i>품목관리<% end %></li>

@@ -1,417 +1,317 @@
-<div class="container-fluid px-4 py-4">
-  <!-- 날짜 네비게이션 -->
-  <div class="card-modern mb-3">
-    <div class="card-body py-2 px-3">
-      <div class="d-flex justify-content-between align-items-center">
-        <%= link_to new_production_log_path(date: @production_log.production_date - 1.day),
-                    class: "btn btn-sm btn-outline-secondary" do %>
-          <i class="bi bi-chevron-left"></i>
-        <% end %>
-
-        <div class="text-center">
-          <h5 class="mb-0" style="font-weight: 600;">
-            <%= @production_log.production_date.strftime('%Y년 %m월 %d일 (%a)') %>
-          </h5>
-          <%= link_to "오늘", new_production_log_path(date: Date.today),
-                      class: "btn btn-sm btn-link text-muted" %>
-        </div>
-
-        <%= link_to new_production_log_path(date: @production_log.production_date + 1.day),
-                    class: "btn btn-sm btn-outline-secondary" do %>
-          <i class="bi bi-chevron-right"></i>
-        <% end %>
-      </div>
-    </div>
+<div class="container-fluid px-4 py-4" data-turbo-cache="false">
+  <!-- 헤더 -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 style="font-weight: 600; color: #1d1d1f;">
+      <i class="bi bi-plus-circle me-2"></i>반죽일지 등록
+    </h4>
+    <span class="badge bg-secondary" style="font-size: 0.9rem;">
+      <%= @production_log.production_date.strftime('%Y년 %m월 %d일 (%a)') %>
+    </span>
   </div>
 
-  <% if @production_plans.any? %>
-    <!-- 생산 계획 탭 -->
-    <div class="card-modern">
-      <div class="card-body p-0">
-        <%
-          # 탭 데이터 구성: (plan, recipe) 조합 생성
-          tab_items = []
-          @production_plans.each do |plan|
-            recipes = plan.finished_product.recipes
-            if recipes.any?
-              # 레시피가 있으면 각 레시피별 탭 생성
-              recipes.each do |recipe|
-                tab_items << { plan: plan, recipe: recipe }
-              end
-            else
-              # 레시피가 없으면 완제품 자체로 탭 생성
-              tab_items << { plan: plan, recipe: nil }
-            end
-          end
-        %>
+  <div class="card-modern">
+    <div class="card-body p-4">
+      <%
+        recipe = @production_log.recipe
+        plan = @production_log.production_plan
+        checked_color = '#c8e6c9'
 
-        <!-- 탭 네비게이션 -->
-        <ul class="nav nav-tabs border-bottom-0" id="productionTabs" role="tablist" style="padding: 1rem 1rem 0 1rem;">
-          <% tab_items.each_with_index do |item, index| %>
-            <% plan = item[:plan] %>
-            <% recipe = item[:recipe] %>
-            <% tab_id = "plan-#{plan.id}-recipe-#{recipe&.id || 'none'}" %>
+        # 체크된 재료 목록 가져오기 (기존 반죽일지가 있는 경우)
+        if recipe.present? && @production_log.persisted?
+          checked_items = @production_log.checked_ingredients.where(recipe_id: recipe.id).pluck(:ingredient_index, :batch_index)
+        else
+          checked_items = []
+        end
+      %>
+
+      <%= form_with(model: @production_log, url: production_logs_path, method: :post, local: true) do |form| %>
+        <% if @production_log.errors.any? %>
+          <div class="alert alert-danger mb-4" role="alert">
+            <h5 class="alert-heading mb-3">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              <%= pluralize(@production_log.errors.count, "error") %> prohibited this production log from being saved:
+            </h5>
+            <ul class="mb-0">
+              <% @production_log.errors.each do |error| %>
+                <li><%= error.full_message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <%= form.hidden_field :production_plan_id %>
+        <%= form.hidden_field :finished_product_id %>
+        <%= form.hidden_field :recipe_id %>
+
+        <!-- 기본 정보 표시 -->
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <label class="form-label" style="font-weight: 500;">완제품</label>
+            <div class="form-control-plaintext" style="font-weight: 600; color: #0071e3;">
+              <%= @production_log.finished_product&.name || '-' %>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" style="font-weight: 500;">레시피</label>
+            <div class="form-control-plaintext" style="font-weight: 600;">
+              <%= recipe&.name || '-' %>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" style="font-weight: 500;">생산 계획</label>
+            <div class="form-control-plaintext">
+              <% if plan %>
+                <%= number_with_delimiter(plan.quantity) %>개
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <% if recipe.present? && plan.present? %>
+          <%
+            # 레시피 배율 계산
+            fpr = @production_log.finished_product.finished_product_recipes.find_by(recipe_id: recipe.id)
+            weight_per_unit = fpr&.quantity || 0
+            is_gijeongddeok = @production_log.finished_product.name.include?('기정떡')
+            show_recipe_ingredients = weight_per_unit > 0 && !is_gijeongddeok
+          %>
+          <% if show_recipe_ingredients %>
             <%
-              # 해당 레시피의 일지가 있는지 확인
-              has_log = plan.production_logs.exists?(recipe_id: recipe&.id)
-              # 탭 표시명: 레시피가 있으면 "완제품명 (레시피명)", 없으면 "완제품명"
-              tab_label = recipe ? "#{recipe.name}" : plan.finished_product.name
+              recipe_total = recipe.recipe_ingredients.where(row_type: ['ingredient', nil]).sum(:weight)
+              recipe_total = recipe_total.zero? ? 1 : recipe_total
+              multiplier = (plan.quantity.to_f * weight_per_unit) / recipe_total
+              total_scaled = recipe_total * multiplier
+
+              # 장비 최대 작업 중량 확인
+              max_work_capacity = recipe.recipe_equipments.where.not(work_capacity: [nil, 0]).maximum(:work_capacity)
+              max_work_capacity_g = max_work_capacity ? max_work_capacity * 1000 : nil
+
+              if max_work_capacity_g && max_work_capacity_g > 0 && total_scaled > max_work_capacity_g
+                batch_count = (total_scaled / max_work_capacity_g).ceil
+              else
+                batch_count = 1
+              end
             %>
-            <li class="nav-item" role="presentation">
-              <button class="nav-tab-modern <%= 'active' if index == 0 %>"
-                      id="<%= tab_id %>-tab"
-                      data-bs-toggle="tab"
-                      data-bs-target="#<%= tab_id %>"
-                      type="button"
-                      role="tab">
-                <div class="d-flex align-items-center gap-2">
-                  <strong><%= tab_label %></strong>
-                  <span class="badge bg-secondary" style="font-size: 0.7rem;">
-                    <%= number_with_delimiter(plan.quantity) %><%= plan.finished_product.name.include?('기정떡') ? '통' : '개' %>
-                  </span>
-                  <% if has_log %>
-                    <i class="bi bi-check-circle-fill text-success" style="font-size: 0.9rem;"></i>
-                  <% end %>
-                </div>
-              </button>
-            </li>
-          <% end %>
-        </ul>
 
-        <!-- 탭 내용 -->
-        <div class="tab-content" id="productionTabsContent">
-          <% tab_items.each_with_index do |item, index| %>
-            <% plan = item[:plan] %>
-            <% recipe = item[:recipe] %>
-            <% tab_id = "plan-#{plan.id}-recipe-#{recipe&.id || 'none'}" %>
-
-            <div class="tab-pane fade <%= 'show active' if index == 0 %>"
-                 id="<%= tab_id %>"
-                 role="tabpanel">
-              <div class="p-4">
-                <%
-                  # 이미 등록된 일지가 있는지 확인 (recipe_id로 구분)
-                  existing_log = plan.production_logs.find_by(recipe_id: recipe&.id)
-                  log = existing_log || ProductionLog.new(
-                    production_plan: plan,
-                    finished_product: plan.finished_product,
-                    recipe: recipe,
-                    production_date: plan.production_date
-                  )
-                  form_url = existing_log ? production_log_path(existing_log) : production_logs_path
-                  form_method = existing_log ? :patch : :post
-                %>
-
-                <!-- 반죽일지 폼 -->
-                <%= form_with(model: log, url: form_url, method: form_method, local: true) do |form| %>
-                  <%= form.hidden_field :production_plan_id, value: plan.id %>
-                  <%= form.hidden_field :finished_product_id, value: plan.finished_product_id %>
-                  <%= form.hidden_field :recipe_id, value: recipe&.id %>
-
-                  <% if log.errors.any? %>
-                    <div class="alert alert-danger mb-4" role="alert">
-                      <h5 class="alert-heading mb-3">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
-                        <%= pluralize(log.errors.count, "error") %> prohibited this production log from being saved:
-                      </h5>
-                      <ul class="mb-0">
-                        <% log.errors.each do |error| %>
-                          <li><%= error.full_message %></li>
-                        <% end %>
-                      </ul>
-                    </div>
-                  <% end %>
-
-                  <!-- 생산 일시 -->
-                  <div class="row mb-3">
-                    <div class="col-md-6">
-                      <%= form.label :production_date, "생산 날짜", class: "form-label", style: "font-weight: 500;" %>
-                      <span class="text-danger">*</span>
-                      <%= form.date_field :production_date,
-                                          class: "form-control",
-                                          required: true %>
-                      <small class="form-text text-muted">생산 날짜를 입력하세요.</small>
-                    </div>
-                    <div class="col-md-6">
-                      <%= form.label :production_time, "생산 시간", class: "form-label", style: "font-weight: 500;" %>
-                      <%= form.time_field :production_time,
-                                          value: log.production_time || Time.current.strftime('%H:%M'),
-                                          class: "form-control",
-                                          placeholder: "예: 09:00" %>
-                      <small class="form-text text-muted">생산 시작 시간을 입력하세요.</small>
-                    </div>
-                  </div>
-
-                  <%
-                    # 레시피 배율 계산 (개당 중량이 설정된 경우에만, 기정떡 제외)
-                    fpr = recipe.present? ? plan.finished_product.finished_product_recipes.find_by(recipe_id: recipe.id) : nil
-                    weight_per_unit = fpr&.quantity || 0
-                    is_gijeongddeok = plan.finished_product.name.include?('기정떡')
-                    show_recipe_ingredients = recipe.present? && weight_per_unit > 0 && !is_gijeongddeok
-                  %>
-                  <% if show_recipe_ingredients %>
-                    <%
-                      # 배율 = (생산계획 수량 × 개당 중량) / 레시피 1배지 총합
-                      recipe_total = recipe.recipe_ingredients.where(row_type: ['ingredient', nil]).sum(:weight)
-                      recipe_total = recipe_total.zero? ? 1 : recipe_total
-                      multiplier = (plan.quantity.to_f * weight_per_unit) / recipe_total
-                      total_scaled = recipe_total * multiplier
-
-                      # 장비 최대 작업 중량 확인 (g 단위로 변환)
-                      max_work_capacity = recipe.recipe_equipments.where.not(work_capacity: [nil, 0]).maximum(:work_capacity)
-                      max_work_capacity_g = max_work_capacity ? max_work_capacity * 1000 : nil  # kg → g 변환
-
-                      # 작업 횟수 계산
-                      if max_work_capacity_g && max_work_capacity_g > 0 && total_scaled > max_work_capacity_g
-                        batch_count = (total_scaled / max_work_capacity_g).ceil
-                      else
-                        batch_count = 1
-                      end
-                    %>
-
-                    <!-- 레시피 재료 (생산 분량 적용) - 작업 횟수만큼 테이블 생성 -->
-                    <div class="d-flex gap-3 mb-3 flex-wrap">
-                    <% batch_count.times do |batch_index| %>
-                      <div class="card recipe-ingredients-card" style="flex: 1; min-width: 250px;">
-                        <div class="card-body p-0">
-                          <table class="table table-sm mb-0" style="font-size: 0.9rem;">
-                            <thead>
-                              <tr>
-                                <th style="padding: 0.6rem 1rem; font-weight: 600; color: #1d1d1f; background-color: #d6d8db;">
-                                  <%= recipe.name %>
-                                  <% if batch_count > 1 %>
-                                    <span class="badge bg-secondary ms-2" style="font-size: 0.75rem;">
-                                      <%= batch_index + 1 %>/<%= batch_count %>
-                                    </span>
-                                  <% end %>
-                                </th>
-                                <th class="text-end" style="padding: 0.6rem 1rem; font-weight: 500; color: #6e6e73; background-color: #d6d8db;">
-                                  <%= log.production_date&.strftime('%m-%d') || Date.today.strftime('%m-%d') %> <%= log.production_time || Time.current.strftime('%H:%M') %>
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <% running_subtotal = 0.0 %>
-                              <% recipe.recipe_ingredients.order(:position).each do |ri| %>
-                                <% if ri.row_type == 'subtotal' %>
-                                  <% scaled_subtotal = (running_subtotal * multiplier) / batch_count %>
-                                  <tr>
-                                    <td style="padding: 0.5rem 1rem; font-weight: 600; color: #1d1d1f; background-color: #d6d8db;">소계</td>
-                                    <td class="text-end" style="padding: 0.5rem 1rem; font-weight: 600; color: #0071e3; background-color: #d6d8db;">
-                                      <%= number_with_delimiter(scaled_subtotal.round(0)) %>
-                                    </td>
-                                  </tr>
-                                  <% running_subtotal = 0.0 %>
-                                <% else %>
-                                  <% running_subtotal += ri.weight.to_f %>
-                                  <%
-                                    scaled_weight = (ri.weight.to_f * multiplier) / batch_count
-                                    field_key = "batch_#{batch_index}_ri_#{ri.id}"
-                                    saved_weights = log.ingredient_weights || {}
-                                    display_weight = saved_weights[field_key].present? ? saved_weights[field_key].to_i : scaled_weight.round(0)
-                                  %>
-                                  <tr class="ingredient-row" style="cursor: pointer; user-select: none;">
-                                    <td style="padding: 0.5rem 1rem; color: #1d1d1f;"><%= ri.display_name %></td>
-                                    <td class="text-end" style="padding: 0.5rem 1rem; color: #1d1d1f; font-weight: 500;">
-                                      <input type="number" name="production_log[ingredient_weights][<%= field_key %>]"
-                                             class="ingredient-weight-input"
-                                             value="<%= display_weight %>"
-                                             style="width: 80px; text-align: right; border: none; background: transparent; font-weight: 500; color: #1d1d1f; user-select: text;">
-                                    </td>
-                                  </tr>
-                                <% end %>
+            <!-- 레시피 재료 테이블 -->
+            <div class="d-flex gap-3 mb-3 flex-wrap">
+            <% batch_count.times do |batch_index| %>
+              <div class="card recipe-ingredients-card" style="flex: 1; min-width: 250px;">
+                <div class="card-body p-0">
+                  <table class="table table-sm mb-0" style="font-size: 0.9rem;">
+                    <thead>
+                      <%
+                        batch_completion_time = @production_log.batch_completion_times&.dig(batch_index.to_s)
+                        if batch_completion_time
+                          completion_datetime = Time.parse(batch_completion_time)
+                          display_text = "#{completion_datetime.strftime('%m-%d')} #{completion_datetime.strftime('%H:%M')}"
+                        else
+                          display_text = "-- --:--"
+                        end
+                      %>
+                      <tr>
+                        <th style="padding: 0.6rem 1rem; font-weight: 600; color: #1d1d1f; background-color: #d6d8db;">
+                          <div class="d-flex justify-content-between align-items-center">
+                            <span>
+                              <%= recipe.name %>
+                              <% if batch_count > 1 %>
+                                <span class="badge bg-secondary ms-2" style="font-size: 0.75rem;">
+                                  <%= batch_index + 1 %>/<%= batch_count %>
+                                </span>
                               <% end %>
-                            </tbody>
-                            <tfoot>
-                              <tr>
-                                <td style="padding: 0.6rem 1rem; font-weight: 700; color: #1d1d1f; background-color: #d6d8db; border-top: 1px solid #ced4da;">
-                                  <%= recipe.name %>무게
-                                </td>
-                                <td class="text-end" style="padding: 0.6rem 1rem; color: #0071e3; font-weight: 700; font-size: 1rem; background-color: #d6d8db; border-top: 1px solid #ced4da;">
-                                  <%= number_with_delimiter((total_scaled / batch_count).round(0)) %>
-                                </td>
-                              </tr>
-                            </tfoot>
-                          </table>
-                        </div>
-                      </div>
-                    <% end %>
-                    </div>
-                  <% end %>
-
-                  <!-- 기정떡 전용 필드 섹션 -->
-                  <div id="gijeongddeok-fields-<%= tab_id %>" style="<%= plan.finished_product.name.include?('기정떡') ? '' : 'display: none;' %>">
-                    <hr class="my-4">
-                    <h5 class="mb-3" style="color: #1d1d1f; font-weight: 600;">
-                      <i class="bi bi-clipboard-data me-2"></i>기정떡 생산 상세 정보
-                    </h5>
-
-                    <!-- 설정된 순서대로 필드 렌더링 -->
-                    <div class="card mb-3">
-                      <div class="card-header" style="background-color: #f5f5f7;">
-                        <h6 class="mb-0" style="font-weight: 500;">📝 생산 정보</h6>
-                      </div>
-                      <div class="card-body">
-                        <div class="row g-3">
-                          <% @gijeongddeok_fields.each do |field| %>
-                            <% next if field.field_name == 'makgeolli_consumption' %>
-                            <div class="col-md-4">
-                              <%= form.label field.field_name, field.label, class: "form-label" %>
-                              <div class="input-group">
-                                <% if field.field_name == 'dough_count' %>
-                                  <button type="button" class="btn btn-outline-secondary" onclick="adjustValue('production_log_<%= tab_id %>_<%= field.field_name %>', -0.5)">
-                                    <i class="bi bi-dash"></i>
-                                  </button>
-                                <% end %>
-                                <%= form.number_field field.field_name,
-                                                      step: field.field_name == 'dough_count' ? 0.5 : ((field.field_name.ends_with?('_temp') || field.field_name.ends_with?('_amount') && field.field_name != 'yeast_amount' && field.field_name != 'salt_amount' && field.field_name != 'sugar_amount') ? 0.1 : nil),
-                                                      value: field.field_name == 'dough_count' ? (log.dough_count || plan.quantity) : (log.persisted? ? log.send(field.field_name) : @gijeongddeok_default.send(field.field_name)),
-                                                      class: "form-control",
-                                                      id: "production_log_#{tab_id}_#{field.field_name}",
-                                                      placeholder: field.category == 'temperature' ? "예: 25.0" : (field.field_name == 'water_amount' ? "예: 1.5" : "예: 100") %>
-                                <% if field.field_name == 'dough_count' %>
-                                  <button type="button" class="btn btn-outline-secondary" onclick="adjustValue('production_log_<%= tab_id %>_<%= field.field_name %>', 0.5)">
-                                    <i class="bi bi-plus"></i>
-                                  </button>
-                                  <span class="input-group-text">통</span>
-                                <% else %>
-                                  <span class="input-group-text">
-                                    <%= case field.field_name
-                                        when /temp$/
-                                          '°C'
-                                        when 'yeast_amount', 'salt_amount', 'sugar_amount', 'steiva_amount'
-                                          'g'
-                                        when 'water_amount'
-                                          'L'
-                                        else
-                                          ''
-                                        end %>
-                                  </span>
-                                <% end %>
-                              </div>
-                            </div>
-                          <% end %>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- 막걸리 관리 -->
-                    <div class="card mb-3">
-                      <div class="card-header" style="background-color: #f5f5f7;">
-                        <h6 class="mb-0" style="font-weight: 500;">🍶 막걸리 관리</h6>
-                      </div>
-                      <div class="card-body">
-                        <div class="row g-3">
-                          <div class="col-md-6">
-                            <%= form.label :makgeolli_consumption, "막걸리 소비량", class: "form-label" %>
-                            <div class="input-group">
-                              <%= form.number_field :makgeolli_consumption,
-                                                    step: 0.1,
-                                                    value: log.persisted? ? log.makgeolli_consumption : @gijeongddeok_default.makgeolli_consumption,
-                                                    class: "form-control",
-                                                    id: "production_log_#{tab_id}_makgeolli_consumption",
-                                                    placeholder: "예: 2500" %>
-                              <span class="input-group-text">mL</span>
-                            </div>
-                            <small class="form-text text-muted">입력 시 자동으로 재고 출고 처리됩니다.</small>
+                            </span>
+                            <span class="production-datetime-header"
+                                  data-production-log-id="<%= @production_log.persisted? ? @production_log.id : '' %>"
+                                  data-batch-index="<%= batch_index %>"
+                                  style="cursor: pointer; font-weight: 500; color: #6e6e73; margin-left: 1rem;"
+                                  title="클릭하여 수정">
+                              <span class="datetime-display">
+                                <%= display_text %>
+                              </span>
+                              <input type="date" class="datetime-edit datetime-edit-date" style="display: none; width: 100px; font-size: 0.875rem;">
+                              <input type="time" class="datetime-edit datetime-edit-time" style="display: none; width: 80px; font-size: 0.875rem;">
+                            </span>
                           </div>
+                        </th>
+                        <th class="text-end" style="padding: 0.6rem 1rem; font-weight: 600; color: #1d1d1f; background-color: #d6d8db;">
+                          중량
+                        </th>
+                        <th class="text-center" style="padding: 0.6rem 1rem; font-weight: 600; color: #1d1d1f; background-color: #d6d8db; min-width: 90px;">
+                          유통기한
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% running_subtotal = 0.0 %>
+                      <% recipe.recipe_ingredients.order(:position).each do |ri| %>
+                        <% if ri.row_type == 'subtotal' %>
+                          <% scaled_subtotal = (running_subtotal * multiplier) / batch_count %>
+                          <tr>
+                            <td style="padding: 0.5rem 1rem; font-weight: 600; color: #1d1d1f; background-color: #d6d8db;">소계</td>
+                            <td class="text-end" style="padding: 0.5rem 1rem; font-weight: 600; color: #0071e3; background-color: #d6d8db;">
+                              <%= number_with_delimiter(scaled_subtotal.round(0)) %>
+                            </td>
+                            <td style="padding: 0.5rem 1rem; background-color: #d6d8db;"></td>
+                          </tr>
+                          <% running_subtotal = 0.0 %>
+                        <% else %>
+                          <% running_subtotal += ri.weight.to_f %>
+                          <%
+                            scaled_weight = (ri.weight.to_f * multiplier) / batch_count
+                            field_key = "batch_#{batch_index}_ri_#{ri.id}"
+                            display_weight = scaled_weight.round(0)
+                            is_checked = checked_items.include?([ri.position, batch_index])
+                          %>
+                          <tr class="ingredient-row"
+                              data-recipe-id="<%= recipe.id %>"
+                              data-ingredient-index="<%= ri.position %>"
+                              data-batch-index="<%= batch_index %>"
+                              data-checked="<%= is_checked %>"
+                              style="<%= is_checked ? "background-color: #{checked_color}; cursor: pointer; user-select: none;" : "cursor: pointer; user-select: none;" %>">
+                            <td style="padding: 0.5rem 1rem; color: #1d1d1f;">
+                              <%= ri.display_name %>
+                            </td>
+                            <td class="text-end" style="padding: 0.5rem 1rem; color: #1d1d1f; font-weight: 500;">
+                              <%= number_with_delimiter(display_weight) %>
+                              <input type="hidden" name="production_log[ingredient_weights][<%= field_key %>]"
+                                     value="<%= display_weight %>">
+                            </td>
+                            <td class="text-center expiration-date-cell" style="padding: 0.5rem 1rem; color: #c7c7cc; font-size: 0.85rem;">
+                              -
+                            </td>
+                          </tr>
+                        <% end %>
+                      <% end %>
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td style="padding: 0.6rem 1rem; font-weight: 700; color: #1d1d1f; background-color: #d6d8db; border-top: 1px solid #ced4da;">
+                          <%= recipe.name %>무게
+                        </td>
+                        <td class="text-end" style="padding: 0.6rem 1rem; color: #0071e3; font-weight: 700; font-size: 1rem; background-color: #d6d8db; border-top: 1px solid #ced4da;">
+                          <%= number_with_delimiter((total_scaled / batch_count).round(0)) %>
+                        </td>
+                        <td style="padding: 0.6rem 1rem; background-color: #d6d8db; border-top: 1px solid #ced4da;"></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+                <!-- 작업완료 버튼 (각 테이블마다) -->
+                <%
+                  is_batch_completed = @production_log.batch_completion_times&.key?(batch_index.to_s)
+                %>
+                <div class="d-flex justify-content-end mt-2 px-3 pb-3">
+                  <button type="button"
+                          class="btn btn-sm <%= is_batch_completed ? 'btn-secondary' : 'btn-success' %> btn-complete-work"
+                          data-production-log-id="<%= @production_log.persisted? ? @production_log.id : '' %>"
+                          data-batch-index="<%= batch_index %>"
+                          style="font-weight: 500;"
+                          <%= 'disabled' if is_batch_completed %>>
+                    <i class="bi bi-<%= is_batch_completed ? 'check-circle-fill' : 'check-circle' %> me-2"></i><%= is_batch_completed ? '작업완료됨' : '작업완료' %>
+                  </button>
+                </div>
+              </div>
+            <% end %>
+            </div>
+          <% end %>
+        <% end %>
 
-                          <div class="col-md-6">
-                            <%= form.label :makgeolli_expiry_date, "막걸리 유효기간", class: "form-label" %>
-                            <%= form.date_field :makgeolli_expiry_date,
-                                                class: "form-control" %>
-                          </div>
-                        </div>
-                      </div>
+        <!-- 기정떡 전용 필드 섹션 -->
+        <% if @production_log.finished_product&.name&.include?('기정떡') %>
+          <hr class="my-4">
+          <h5 class="mb-3" style="color: #1d1d1f; font-weight: 600;">
+            <i class="bi bi-clipboard-data me-2"></i>기정떡 생산 상세 정보
+          </h5>
+
+          <div class="card mb-3">
+            <div class="card-header" style="background-color: #f5f5f7;">
+              <h6 class="mb-0" style="font-weight: 500;">📝 생산 정보</h6>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <% @gijeongddeok_fields.each do |field| %>
+                  <% next if field.field_name == 'makgeolli_consumption' %>
+                  <div class="col-md-4">
+                    <%= form.label field.field_name, field.label, class: "form-label" %>
+                    <div class="input-group">
+                      <% if field.field_name == 'dough_count' %>
+                        <button type="button" class="btn btn-outline-secondary" onclick="adjustValue('production_log_<%= field.field_name %>', -0.5)">
+                          <i class="bi bi-dash"></i>
+                        </button>
+                      <% end %>
+                      <%= form.number_field field.field_name,
+                                            step: field.field_name == 'dough_count' ? 0.5 : 0.1,
+                                            class: "form-control",
+                                            id: "production_log_#{field.field_name}",
+                                            value: @gijeongddeok_default.send(field.field_name) %>
+                      <% if field.field_name == 'dough_count' %>
+                        <button type="button" class="btn btn-outline-secondary" onclick="adjustValue('production_log_<%= field.field_name %>', 0.5)">
+                          <i class="bi bi-plus"></i>
+                        </button>
+                        <span class="input-group-text">통</span>
+                      <% else %>
+                        <span class="input-group-text">
+                          <%= case field.field_name
+                              when /temp$/
+                                '°C'
+                              when 'yeast_amount', 'salt_amount', 'sugar_amount', 'steiva_amount'
+                                'g'
+                              when 'water_amount'
+                                'L'
+                              else
+                                ''
+                              end %>
+                        </span>
+                      <% end %>
                     </div>
-                  </div>
-
-                  <!-- 기본 비고 -->
-                  <div class="mb-3">
-                    <%= form.label :notes, "비고", class: "form-label", style: "font-weight: 500;" %>
-                    <%= form.text_area :notes,
-                                       class: "form-control",
-                                       rows: 3,
-                                       placeholder: "생산 과정 중 특이사항이나 메모를 입력하세요 (선택사항)" %>
-                  </div>
-
-                  <div class="d-flex justify-content-end gap-2 mt-4">
-                    <%= form.submit existing_log ? "수정" : "등록",
-                                    class: "btn-modern btn-modern-primary" %>
-                    <%= link_to "취소", production_logs_path,
-                                class: "btn-modern btn-modern-outline" %>
                   </div>
                 <% end %>
               </div>
             </div>
-          <% end %>
-        </div>
-      </div>
-    </div>
-  <% else %>
-    <!-- 생산 계획 없음 -->
-    <div class="card-modern">
-      <div class="card-body text-center py-5">
-        <i class="bi bi-calendar-x" style="font-size: 3rem; color: #d2d2d7;"></i>
-        <p class="text-muted mt-3 mb-0">오늘(<%= Date.today.strftime('%Y년 %m월 %d일') %>)에 등록된 생산 계획이 없습니다.</p>
-        <%= link_to production_plans_path(date: Date.today),
-                    class: "btn-modern btn-modern-primary mt-3" do %>
-          <i class="bi bi-calendar-plus me-2"></i>생산 계획 등록
+          </div>
+
+          <!-- 막걸리 관리 -->
+          <div class="card mb-3">
+            <div class="card-header" style="background-color: #f5f5f7;">
+              <h6 class="mb-0" style="font-weight: 500;">🍶 막걸리 관리</h6>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <%= form.label :makgeolli_consumption, "막걸리 소비량", class: "form-label" %>
+                  <div class="input-group">
+                    <%= form.number_field :makgeolli_consumption, step: 0.1, class: "form-control", value: @gijeongddeok_default.makgeolli_consumption %>
+                    <span class="input-group-text">mL</span>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <%= form.label :makgeolli_expiry_date, "막걸리 유효기간", class: "form-label" %>
+                  <%= form.date_field :makgeolli_expiry_date, class: "form-control" %>
+                </div>
+              </div>
+            </div>
+          </div>
         <% end %>
-      </div>
+
+        <!-- 비고 -->
+        <div class="mb-3">
+          <%= form.label :notes, "비고", class: "form-label", style: "font-weight: 500;" %>
+          <%= form.text_area :notes, class: "form-control", rows: 3,
+                             placeholder: "생산 과정 중 특이사항이나 메모를 입력하세요 (선택사항)" %>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <%= form.submit "등록", class: "btn-modern btn-modern-primary" %>
+          <%= link_to "취소", production_logs_path, class: "btn-modern btn-modern-outline" %>
+        </div>
+      <% end %>
     </div>
-  <% end %>
+  </div>
 </div>
 
 <script>
-  // 기본값 로드 함수
-  function loadGijeongddeokDefaults() {
-    // 기정떡 기본값 데이터
-    const defaults = {
-      <% @gijeongddeok_fields.each do |field| %>
-        <%= field.field_name %>: <%= @gijeongddeok_default.send(field.field_name).to_f %>,
-      <% end %>
-    };
-
-    // 각 탭의 폼을 확인하고 기본값 적용
-    <%
-      # tab_items 재구성 (위와 동일한 로직)
-      tab_items_js = []
-      @production_plans.each do |plan|
-        recipes = plan.finished_product.recipes
-        if recipes.any?
-          recipes.each do |recipe|
-            tab_items_js << { plan: plan, recipe: recipe }
-          end
-        else
-          tab_items_js << { plan: plan, recipe: nil }
-        end
-      end
-    %>
-
-    <% tab_items_js.each do |item| %>
-      <% plan = item[:plan] %>
-      <% recipe = item[:recipe] %>
-      <% tab_id = "plan-#{plan.id}-recipe-#{recipe&.id || 'none'}" %>
-      <% if plan.finished_product.name.include?('기정떡') %>
-        <% existing_log = plan.production_logs.find_by(recipe_id: recipe&.id) %>
-        <% if existing_log.nil? %>
-          // 새 레코드인 경우에만 기본값 적용
-          <% @gijeongddeok_fields.each do |field| %>
-            const field_<%= tab_id.gsub('-', '_') %>_<%= field.field_name %> = document.querySelector(`#production_log_<%= tab_id %>_<%= field.field_name %>`);
-            if (field_<%= tab_id.gsub('-', '_') %>_<%= field.field_name %> && field_<%= tab_id.gsub('-', '_') %>_<%= field.field_name %>.value === '') {
-              field_<%= tab_id.gsub('-', '_') %>_<%= field.field_name %>.value = defaults.<%= field.field_name %> || '';
-            }
-          <% end %>
-        <% end %>
-      <% end %>
-    <% end %>
-  }
-
-  // DOMContentLoaded와 turbo:load 모두에서 실행
-  document.addEventListener('DOMContentLoaded', loadGijeongddeokDefaults);
-  document.addEventListener('turbo:load', loadGijeongddeokDefaults);
-
   // 반죽 통수 +/- 버튼 핸들러
   function adjustValue(fieldId, delta) {
     const field = document.getElementById(fieldId);
@@ -422,34 +322,102 @@
     }
   }
 
-  // 재료 행 더블클릭/더블탭 - 재료 투입 완료 표시 (이벤트 위임 사용)
+  // 재료 행 더블클릭/더블탭 - DB에 즉시 저장
   (function() {
-    const CHECKED_COLOR = '#c8e6c9';  // 연한 초록색
+    const CHECKED_COLOR = '#c8e6c9';
+    let productionLogId = <%= @production_log.persisted? ? @production_log.id : 'null' %>; // 기존 반죽일지 ID (있는 경우)
     let lastTapTime = 0;
     let lastTapTarget = null;
 
-    function toggleRowColor(row) {
-      const cells = row.querySelectorAll('td');
+    async function toggleRowColor(row) {
       const isChecked = row.dataset.checked === 'true';
+      const recipeId = row.dataset.recipeId;
+      const ingredientIndex = row.dataset.ingredientIndex;
+      const batchIndex = row.dataset.batchIndex;
 
-      if (isChecked) {
-        cells.forEach(cell => {
-          cell.style.backgroundColor = '';
+      // production_log가 아직 생성되지 않았으면 먼저 생성
+      if (!productionLogId) {
+        console.log('첫 더블클릭 - 반죽일지 자동 생성 중...');
+        try {
+          const formData = new FormData(document.querySelector('form'));
+          const createResponse = await fetch('/production/logs/create_draft', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+              production_plan_id: formData.get('production_log[production_plan_id]'),
+              finished_product_id: formData.get('production_log[finished_product_id]'),
+              recipe_id: formData.get('production_log[recipe_id]'),
+              production_date: formData.get('production_log[production_date]')
+            })
+          });
+
+          const createData = await createResponse.json();
+          if (createData.success) {
+            productionLogId = createData.production_log_id;
+            console.log('반죽일지 생성 완료, ID:', productionLogId);
+
+            // 기존 반죽일지가 있었으면 edit 페이지로 리다이렉트
+            if (createData.status !== 'pending') {
+              console.log('기존 반죽일지 사용:', productionLogId);
+            }
+          } else {
+            console.error('반죽일지 생성 실패:', createData.errors);
+            alert('반죽일지 생성 실패: ' + createData.errors.join(', '));
+            return;
+          }
+        } catch (error) {
+          console.error('서버 통신 오류:', error);
+          alert('서버 통신 오류가 발생했습니다.');
+          return;
+        }
+      }
+
+      // 토글할 새 상태
+      const newCheckedState = !isChecked;
+
+      try {
+        // 서버에 체크 상태 저장
+        const response = await fetch(`/production/logs/${productionLogId}/update_ingredient_check`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+          },
+          body: JSON.stringify({
+            recipe_id: recipeId,
+            ingredient_index: ingredientIndex,
+            batch_index: batchIndex,
+            checked: newCheckedState
+          })
         });
-        row.dataset.checked = 'false';
-      } else {
-        cells.forEach(cell => {
-          cell.style.backgroundColor = CHECKED_COLOR;
-        });
-        row.dataset.checked = 'true';
+
+        const data = await response.json();
+
+        if (data.success) {
+          // 현재 클릭한 행만 업데이트
+          const cells = row.querySelectorAll('td');
+          if (newCheckedState) {
+            cells.forEach(cell => cell.style.backgroundColor = CHECKED_COLOR);
+            row.dataset.checked = 'true';
+          } else {
+            cells.forEach(cell => cell.style.backgroundColor = '');
+            row.dataset.checked = 'false';
+          }
+
+          console.log('체크 상태 저장 완료 (status:', data.status + ')');
+        } else {
+          console.error('체크 상태 저장 실패');
+        }
+      } catch (error) {
+        console.error('서버 통신 오류:', error);
       }
     }
 
-    // PC: 더블클릭 (이벤트 위임) - input 제외
     document.addEventListener('dblclick', function(e) {
-      // input 필드는 더블클릭 무시
       if (e.target.tagName === 'INPUT') return;
-
       const row = e.target.closest('.ingredient-row');
       if (row) {
         e.preventDefault();
@@ -457,11 +425,8 @@
       }
     });
 
-    // 모바일: 더블탭 (이벤트 위임) - input 제외
     document.addEventListener('touchend', function(e) {
-      // input 필드는 더블탭 무시
       if (e.target.tagName === 'INPUT') return;
-
       const row = e.target.closest('.ingredient-row');
       if (!row) return;
 
@@ -477,31 +442,172 @@
       lastTapTarget = row;
     });
   })();
+
+  // 작업완료 버튼 핸들러
+  document.addEventListener('click', async function(e) {
+    if (e.target.closest('.btn-complete-work')) {
+      const button = e.target.closest('.btn-complete-work');
+      let productionLogId = button.dataset.productionLogId;
+      const batchIndex = button.dataset.batchIndex;
+
+      // 해당 배치의 모든 재료가 체크되었는지 확인
+      const ingredientRows = document.querySelectorAll(`.ingredient-row[data-batch-index="${batchIndex}"]`);
+      const uncheckedRows = Array.from(ingredientRows).filter(row => {
+        return row.dataset.checked !== 'true';
+      });
+
+      if (uncheckedRows.length > 0) {
+        alert(`체크되지 않은 재료가 ${uncheckedRows.length}개 있습니다.\n모든 재료를 체크한 후 작업완료를 진행해주세요.`);
+        return;
+      }
+
+      // production_log가 아직 없으면 먼저 생성
+      if (!productionLogId) {
+        const formData = new FormData(document.querySelector('form'));
+        const createResponse = await fetch('/production/logs/create_draft', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+          },
+          body: JSON.stringify({
+            production_plan_id: formData.get('production_log[production_plan_id]'),
+            finished_product_id: formData.get('production_log[finished_product_id]'),
+            recipe_id: formData.get('production_log[recipe_id]'),
+            production_date: new Date().toISOString().split('T')[0]
+          })
+        });
+
+        const createData = await createResponse.json();
+        if (createData.success) {
+          productionLogId = createData.production_log_id;
+          button.dataset.productionLogId = productionLogId;
+          // 모든 배치 버튼의 productionLogId 업데이트
+          document.querySelectorAll('.btn-complete-work').forEach(btn => {
+            btn.dataset.productionLogId = productionLogId;
+          });
+        } else {
+          alert('반죽일지 생성 실패: ' + createData.errors.join(', '));
+          return;
+        }
+      }
+
+      // 작업완료 처리
+      try {
+        const response = await fetch(`/production/logs/${productionLogId}/complete_work`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+          },
+          body: JSON.stringify({
+            batch_index: batchIndex
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // 해당 배치의 헤더만 찾아서 날짜/시간 업데이트
+          const targetHeader = document.querySelector(`.production-datetime-header[data-batch-index="${batchIndex}"]`);
+          if (targetHeader) {
+            const display = targetHeader.querySelector('.datetime-display');
+            if (display) {
+              display.textContent = data.completion_time;
+            }
+          }
+
+          // 버튼 비활성화
+          button.disabled = true;
+          button.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>작업완료됨';
+          button.classList.remove('btn-success');
+          button.classList.add('btn-secondary');
+        } else {
+          alert('작업완료 처리 실패: ' + (data.errors || ['알 수 없는 오류']).join(', '));
+        }
+      } catch (error) {
+        console.error('서버 통신 오류:', error);
+        alert('서버 통신 오류가 발생했습니다.');
+      }
+    }
+  });
+
+  // 날짜/시간 편집 기능
+  document.addEventListener('click', function(e) {
+    const header = e.target.closest('.production-datetime-header');
+    if (!header) return;
+
+    const display = header.querySelector('.datetime-display');
+    const dateInput = header.querySelector('.datetime-edit-date');
+    const timeInput = header.querySelector('.datetime-edit-time');
+
+    // 편집 모드로 전환
+    if (display.style.display !== 'none') {
+      const currentText = display.textContent.trim();
+      const parts = currentText.split(' ');
+      const currentDate = parts[0] !== '--' ? `2025-${parts[0]}` : new Date().toISOString().split('T')[0];
+      const currentTime = parts[1] !== '--:--' ? parts[1] : new Date().toTimeString().slice(0, 5);
+
+      dateInput.value = currentDate;
+      timeInput.value = currentTime;
+
+      display.style.display = 'none';
+      dateInput.style.display = 'inline-block';
+      timeInput.style.display = 'inline-block';
+      dateInput.focus();
+    }
+  });
+
+  // 날짜/시간 입력 필드에서 포커스 잃을 때 저장
+  document.addEventListener('blur', async function(e) {
+    if (e.target.classList.contains('datetime-edit')) {
+      const header = e.target.closest('.production-datetime-header');
+      const display = header.querySelector('.datetime-display');
+      const dateInput = header.querySelector('.datetime-edit-date');
+      const timeInput = header.querySelector('.datetime-edit-time');
+
+      // 약간의 지연을 두어 다른 입력 필드로 포커스 이동 허용
+      setTimeout(async () => {
+        if (document.activeElement !== dateInput && document.activeElement !== timeInput) {
+          const productionLogId = header.dataset.productionLogId;
+
+          if (productionLogId) {
+            // 서버에 저장
+            const formData = new FormData();
+            formData.append('production_log[production_date]', dateInput.value);
+            formData.append('production_log[production_time]', timeInput.value);
+
+            try {
+              const response = await fetch(`/production/logs/${productionLogId}`, {
+                method: 'PATCH',
+                headers: {
+                  'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+                },
+                body: formData
+              });
+
+              if (response.ok) {
+                // 표시 업데이트
+                const date = new Date(dateInput.value);
+                const displayDate = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                display.textContent = `${displayDate} ${timeInput.value}`;
+              }
+            } catch (error) {
+              console.error('날짜/시간 저장 오류:', error);
+            }
+          } else {
+            // production_log가 없으면 그냥 표시만 업데이트
+            const date = new Date(dateInput.value);
+            const displayDate = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            display.textContent = `${displayDate} ${timeInput.value}`;
+          }
+
+          // 표시 모드로 복귀
+          display.style.display = 'inline';
+          dateInput.style.display = 'none';
+          timeInput.style.display = 'none';
+        }
+      }, 200);
+    }
+  }, true);
 </script>
-
-<style>
-  .nav-tab-modern {
-    background: none;
-    border: none;
-    border-bottom: 3px solid transparent;
-    color: #1d1d1f;
-    font-weight: 500;
-    padding: 0.75rem 1.5rem;
-    transition: all 0.2s ease;
-    cursor: pointer;
-  }
-
-  .nav-tab-modern:hover:not(.active) {
-    color: #0071e3;
-    border-bottom-color: #d2d2d7;
-  }
-
-  .nav-tab-modern.active {
-    color: #0071e3;
-    border-bottom-color: #0071e3;
-  }
-
-  .tab-content > .tab-pane {
-    background-color: white;
-  }
-</style>

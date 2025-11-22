@@ -142,6 +142,103 @@
                     </div>
                   </div>
 
+                  <%
+                    # 레시피 배율 계산 (개당 중량이 설정된 경우에만, 기정떡 제외)
+                    fpr = recipe.present? ? plan.finished_product.finished_product_recipes.find_by(recipe_id: recipe.id) : nil
+                    weight_per_unit = fpr&.quantity || 0
+                    is_gijeongddeok = plan.finished_product.name.include?('기정떡')
+                    show_recipe_ingredients = recipe.present? && weight_per_unit > 0 && !is_gijeongddeok
+                  %>
+                  <% if show_recipe_ingredients %>
+                    <%
+                      # 배율 = (생산계획 수량 × 개당 중량) / 레시피 1배지 총합
+                      recipe_total = recipe.recipe_ingredients.where(row_type: ['ingredient', nil]).sum(:weight)
+                      recipe_total = recipe_total.zero? ? 1 : recipe_total
+                      multiplier = (plan.quantity.to_f * weight_per_unit) / recipe_total
+                      total_scaled = recipe_total * multiplier
+
+                      # 장비 최대 작업 중량 확인 (g 단위로 변환)
+                      max_work_capacity = recipe.recipe_equipments.where.not(work_capacity: [nil, 0]).maximum(:work_capacity)
+                      max_work_capacity_g = max_work_capacity ? max_work_capacity * 1000 : nil  # kg → g 변환
+
+                      # 작업 횟수 계산
+                      if max_work_capacity_g && max_work_capacity_g > 0 && total_scaled > max_work_capacity_g
+                        batch_count = (total_scaled / max_work_capacity_g).ceil
+                      else
+                        batch_count = 1
+                      end
+                    %>
+
+                    <!-- 레시피 재료 (생산 분량 적용) - 작업 횟수만큼 테이블 생성 -->
+                    <div class="d-flex gap-3 mb-3 flex-wrap">
+                    <% batch_count.times do |batch_index| %>
+                      <div class="card recipe-ingredients-card" style="flex: 1; min-width: 250px;">
+                        <div class="card-body p-0">
+                          <table class="table table-sm mb-0" style="font-size: 0.9rem;">
+                            <thead>
+                              <tr>
+                                <th style="padding: 0.6rem 1rem; font-weight: 600; color: #1d1d1f; background-color: #d6d8db;">
+                                  <%= recipe.name %>
+                                  <% if batch_count > 1 %>
+                                    <span class="badge bg-secondary ms-2" style="font-size: 0.75rem;">
+                                      <%= batch_index + 1 %>/<%= batch_count %>
+                                    </span>
+                                  <% end %>
+                                </th>
+                                <th class="text-end" style="padding: 0.6rem 1rem; font-weight: 500; color: #6e6e73; background-color: #d6d8db;">
+                                  <%= log.production_date&.strftime('%m-%d') || Date.today.strftime('%m-%d') %> <%= log.production_time || Time.current.strftime('%H:%M') %>
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <% running_subtotal = 0.0 %>
+                              <% recipe.recipe_ingredients.order(:position).each do |ri| %>
+                                <% if ri.row_type == 'subtotal' %>
+                                  <% scaled_subtotal = (running_subtotal * multiplier) / batch_count %>
+                                  <tr>
+                                    <td style="padding: 0.5rem 1rem; font-weight: 600; color: #1d1d1f; background-color: #d6d8db;">소계</td>
+                                    <td class="text-end" style="padding: 0.5rem 1rem; font-weight: 600; color: #0071e3; background-color: #d6d8db;">
+                                      <%= number_with_delimiter(scaled_subtotal.round(0)) %>
+                                    </td>
+                                  </tr>
+                                  <% running_subtotal = 0.0 %>
+                                <% else %>
+                                  <% running_subtotal += ri.weight.to_f %>
+                                  <%
+                                    scaled_weight = (ri.weight.to_f * multiplier) / batch_count
+                                    field_key = "batch_#{batch_index}_ri_#{ri.id}"
+                                    saved_weights = log.ingredient_weights || {}
+                                    display_weight = saved_weights[field_key].present? ? saved_weights[field_key].to_i : scaled_weight.round(0)
+                                  %>
+                                  <tr class="ingredient-row" style="cursor: pointer; user-select: none;">
+                                    <td style="padding: 0.5rem 1rem; color: #1d1d1f;"><%= ri.display_name %></td>
+                                    <td class="text-end" style="padding: 0.5rem 1rem; color: #1d1d1f; font-weight: 500;">
+                                      <input type="number" name="production_log[ingredient_weights][<%= field_key %>]"
+                                             class="ingredient-weight-input"
+                                             value="<%= display_weight %>"
+                                             style="width: 80px; text-align: right; border: none; background: transparent; font-weight: 500; color: #1d1d1f; user-select: text;">
+                                    </td>
+                                  </tr>
+                                <% end %>
+                              <% end %>
+                            </tbody>
+                            <tfoot>
+                              <tr>
+                                <td style="padding: 0.6rem 1rem; font-weight: 700; color: #1d1d1f; background-color: #d6d8db; border-top: 1px solid #ced4da;">
+                                  <%= recipe.name %>무게
+                                </td>
+                                <td class="text-end" style="padding: 0.6rem 1rem; color: #0071e3; font-weight: 700; font-size: 1rem; background-color: #d6d8db; border-top: 1px solid #ced4da;">
+                                  <%= number_with_delimiter((total_scaled / batch_count).round(0)) %>
+                                </td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                      </div>
+                    <% end %>
+                    </div>
+                  <% end %>
+
                   <!-- 기정떡 전용 필드 섹션 -->
                   <div id="gijeongddeok-fields-<%= tab_id %>" style="<%= plan.finished_product.name.include?('기정떡') ? '' : 'display: none;' %>">
                     <hr class="my-4">
@@ -324,6 +421,62 @@
       field.value = Math.max(0, newValue).toFixed(1);
     }
   }
+
+  // 재료 행 더블클릭/더블탭 - 재료 투입 완료 표시 (이벤트 위임 사용)
+  (function() {
+    const CHECKED_COLOR = '#c8e6c9';  // 연한 초록색
+    let lastTapTime = 0;
+    let lastTapTarget = null;
+
+    function toggleRowColor(row) {
+      const cells = row.querySelectorAll('td');
+      const isChecked = row.dataset.checked === 'true';
+
+      if (isChecked) {
+        cells.forEach(cell => {
+          cell.style.backgroundColor = '';
+        });
+        row.dataset.checked = 'false';
+      } else {
+        cells.forEach(cell => {
+          cell.style.backgroundColor = CHECKED_COLOR;
+        });
+        row.dataset.checked = 'true';
+      }
+    }
+
+    // PC: 더블클릭 (이벤트 위임) - input 제외
+    document.addEventListener('dblclick', function(e) {
+      // input 필드는 더블클릭 무시
+      if (e.target.tagName === 'INPUT') return;
+
+      const row = e.target.closest('.ingredient-row');
+      if (row) {
+        e.preventDefault();
+        toggleRowColor(row);
+      }
+    });
+
+    // 모바일: 더블탭 (이벤트 위임) - input 제외
+    document.addEventListener('touchend', function(e) {
+      // input 필드는 더블탭 무시
+      if (e.target.tagName === 'INPUT') return;
+
+      const row = e.target.closest('.ingredient-row');
+      if (!row) return;
+
+      const currentTime = new Date().getTime();
+      const tapLength = currentTime - lastTapTime;
+
+      if (tapLength < 300 && tapLength > 0 && lastTapTarget === row) {
+        e.preventDefault();
+        toggleRowColor(row);
+      }
+
+      lastTapTime = currentTime;
+      lastTapTarget = row;
+    });
+  })();
 </script>
 
 <style>

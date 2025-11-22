@@ -118,7 +118,9 @@ class Production::LogsController < ApplicationController
       :dough_count, :fermentation_room_temp, :refrigeration_room_temp,
       :yeast_amount, :steiva_amount, :salt_amount, :sugar_amount,
       :water_amount, :water_temp, :flour_temp, :porridge_temp, :dough_temp,
-      :makgeolli_consumption, :makgeolli_expiry_date
+      :makgeolli_consumption, :makgeolli_expiry_date,
+      # 재료 중량 저장
+      ingredient_weights: {}
     )
   end
 

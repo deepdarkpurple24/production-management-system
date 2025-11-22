@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_20_062428) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_21_072430) do
   create_table "equipment", force: :cascade do |t|
     t.decimal "capacity", precision: 10, scale: 2
     t.string "capacity_unit"
@@ -223,6 +223,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_20_062428) do
     t.decimal "fermentation_room_temp", precision: 10, scale: 1
     t.integer "finished_product_id", null: false
     t.decimal "flour_temp", precision: 10, scale: 1
+    t.json "ingredient_weights"
     t.decimal "makgeolli_consumption", precision: 10, scale: 1
     t.date "makgeolli_expiry_date"
     t.text "notes"

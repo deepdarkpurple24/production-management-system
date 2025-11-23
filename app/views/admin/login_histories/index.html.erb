@@ -1,0 +1,194 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0" style="font-weight: 600; color: #1d1d1f;">
+      <i class="bi bi-clock-history me-2" style="color: #0071e3;"></i>
+      로그인 이력
+    </h2>
+  </div>
+
+  <!-- 통계 카드 -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card" style="border: 1px solid #e8e8ed; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+        <div class="card-body">
+          <h6 class="text-muted mb-2" style="font-size: 0.85rem;">전체 시도</h6>
+          <h3 class="mb-0" style="color: #0071e3; font-weight: 600;"><%= number_with_delimiter(@total_attempts) %></h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card" style="border: 1px solid #e8e8ed; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+        <div class="card-body">
+          <h6 class="text-muted mb-2" style="font-size: 0.85rem;">성공</h6>
+          <h3 class="mb-0" style="color: #34c759; font-weight: 600;">
+            <%= number_with_delimiter(@successful_attempts) %>
+            <small style="font-size: 0.7rem; color: #6e6e73;">
+              (<%= @total_attempts > 0 ? (@successful_attempts.to_f / @total_attempts * 100).round(1) : 0 %>%)
+            </small>
+          </h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card" style="border: 1px solid #e8e8ed; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+        <div class="card-body">
+          <h6 class="text-muted mb-2" style="font-size: 0.85rem;">실패</h6>
+          <h3 class="mb-0" style="color: #ff3b30; font-weight: 600;">
+            <%= number_with_delimiter(@failed_attempts) %>
+            <small style="font-size: 0.7rem; color: #6e6e73;">
+              (<%= @total_attempts > 0 ? (@failed_attempts.to_f / @total_attempts * 100).round(1) : 0 %>%)
+            </small>
+          </h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card" style="border: 1px solid #e8e8ed; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+        <div class="card-body">
+          <h6 class="text-muted mb-2" style="font-size: 0.85rem;">오늘</h6>
+          <h3 class="mb-0" style="color: #ff9500; font-weight: 600;"><%= number_with_delimiter(@today_attempts) %></h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 필터 버튼 -->
+  <div class="card mb-3" style="border: 1px solid #e8e8ed; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+    <div class="card-body">
+      <div class="btn-group" role="group" aria-label="Filter">
+        <%= link_to "전체", admin_login_histories_path(filter: 'all'), class: "btn btn-sm #{@filter == 'all' ? 'btn-primary' : 'btn-outline-secondary'}" %>
+        <%= link_to "성공만", admin_login_histories_path(filter: 'successful'), class: "btn btn-sm #{@filter == 'successful' ? 'btn-success' : 'btn-outline-success'}" %>
+        <%= link_to "실패만", admin_login_histories_path(filter: 'failed'), class: "btn btn-sm #{@filter == 'failed' ? 'btn-danger' : 'btn-outline-danger'}" %>
+        <%= link_to "오늘", admin_login_histories_path(filter: 'today'), class: "btn btn-sm #{@filter == 'today' ? 'btn-warning' : 'btn-outline-warning'}" %>
+        <%= link_to "이번주", admin_login_histories_path(filter: 'this_week'), class: "btn btn-sm #{@filter == 'this_week' ? 'btn-info' : 'btn-outline-info'}" %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 로그인 이력 목록 -->
+  <div class="card" style="border: 1px solid #e8e8ed; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+    <div class="card-header" style="background-color: #f5f5f7; border-bottom: 1px solid #e8e8ed; padding: 1rem 1.5rem;">
+      <h5 class="mb-0" style="font-weight: 600; color: #1d1d1f;">
+        로그인 시도 내역
+        <% if @filter != 'all' %>
+          <span class="badge bg-secondary" style="font-size: 0.7rem;">
+            <%= case @filter
+                when 'successful' then '성공만'
+                when 'failed' then '실패만'
+                when 'today' then '오늘'
+                when 'this_week' then '이번주'
+                end %>
+          </span>
+        <% end %>
+      </h5>
+    </div>
+    <div class="card-body p-0">
+      <% if @login_histories.any? %>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0" style="font-size: 0.95rem;">
+            <thead style="background-color: #f5f5f7; border-bottom: 2px solid #e8e8ed;">
+              <tr>
+                <th class="text-center" style="padding: 1rem; font-weight: 600; color: #1d1d1f;">상태</th>
+                <th style="padding: 1rem; font-weight: 600; color: #1d1d1f;">사용자</th>
+                <th style="padding: 1rem; font-weight: 600; color: #1d1d1f;">시도 시각</th>
+                <th style="padding: 1rem; font-weight: 600; color: #1d1d1f;">IP 주소</th>
+                <th style="padding: 1rem; font-weight: 600; color: #1d1d1f;">디바이스</th>
+                <th style="padding: 1rem; font-weight: 600; color: #1d1d1f;">브라우저</th>
+                <th style="padding: 1rem; font-weight: 600; color: #1d1d1f;">OS</th>
+                <th style="padding: 1rem; font-weight: 600; color: #1d1d1f;">실패 사유</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @login_histories.each do |history| %>
+                <tr>
+                  <td class="text-center" style="padding: 1rem;">
+                    <% if history.success? %>
+                      <span class="badge" style="background-color: #34c759;">
+                        <i class="bi bi-check-circle me-1"></i>성공
+                      </span>
+                    <% else %>
+                      <span class="badge" style="background-color: #ff3b30;">
+                        <i class="bi bi-x-circle me-1"></i>실패
+                      </span>
+                    <% end %>
+                  </td>
+                  <td style="padding: 1rem;">
+                    <% if history.user.present? %>
+                      <%= link_to admin_user_path(history.user), style: "color: #0071e3; text-decoration: none; font-weight: 500;" do %>
+                        <%= history.user.name %>
+                        <% if history.user.admin? %>
+                          <i class="bi bi-shield-check ms-1" style="color: #34c759;"></i>
+                        <% end %>
+                      <% end %>
+                      <br>
+                      <small style="color: #86868b;"><%= history.user.email %></small>
+                    <% else %>
+                      <span style="color: #c7c7cc;">알 수 없음</span>
+                    <% end %>
+                  </td>
+                  <td style="padding: 1rem; color: #1d1d1f;">
+                    <%= history.attempted_at.strftime('%Y-%m-%d') %>
+                    <br>
+                    <small style="color: #6e6e73;"><%= history.attempted_at.strftime('%H:%M:%S') %></small>
+                  </td>
+                  <td style="padding: 1rem; color: #6e6e73;">
+                    <i class="bi bi-geo-alt me-1"></i>
+                    <%= history.ip_address %>
+                  </td>
+                  <td style="padding: 1rem; color: #6e6e73;">
+                    <% if history.device_name.present? %>
+                      <%= history.device_name %>
+                      <br>
+                      <small style="color: #86868b; font-family: monospace;">
+                        <%= history.fingerprint&.[](0..15) %>...
+                      </small>
+                    <% else %>
+                      <span style="color: #c7c7cc;">-</span>
+                    <% end %>
+                  </td>
+                  <td style="padding: 1rem; color: #6e6e73;">
+                    <% if history.browser.present? %>
+                      <i class="bi bi-browser-chrome me-1"></i>
+                      <%= history.browser %>
+                    <% else %>
+                      <span style="color: #c7c7cc;">-</span>
+                    <% end %>
+                  </td>
+                  <td style="padding: 1rem; color: #6e6e73;">
+                    <% if history.os.present? %>
+                      <i class="bi bi-laptop me-1"></i>
+                      <%= history.os %>
+                    <% else %>
+                      <span style="color: #c7c7cc;">-</span>
+                    <% end %>
+                  </td>
+                  <td style="padding: 1rem;">
+                    <% if history.failure_reason.present? %>
+                      <span style="color: #ff3b30; font-weight: 500;">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        <%= history.failure_reason %>
+                      </span>
+                    <% else %>
+                      <span style="color: #c7c7cc;">-</span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="text-center py-5">
+          <i class="bi bi-inbox" style="font-size: 3rem; color: #c7c7cc;"></i>
+          <p class="mt-3 mb-0" style="color: #6e6e73;">
+            <% if @filter == 'all' %>
+              로그인 이력이 없습니다.
+            <% else %>
+              해당 필터에 맞는 로그인 이력이 없습니다.
+            <% end %>
+          </p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

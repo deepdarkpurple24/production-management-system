@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  fingerprint: MyString
+  device_name: MyString
+  browser: MyString
+  os: MyString
+  active: false
+  last_used_at: 2025-11-23 16:58:44
+
+two:
+  user: two
+  fingerprint: MyString
+  device_name: MyString
+  browser: MyString
+  os: MyString
+  active: false
+  last_used_at: 2025-11-23 16:58:44

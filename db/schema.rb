@@ -10,7 +10,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_22_151007) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_23_075852) do
+  create_table "authorized_devices", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "browser"
+    t.datetime "created_at", null: false
+    t.string "device_name"
+    t.string "fingerprint", null: false
+    t.datetime "last_used_at"
+    t.string "os"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["active"], name: "index_authorized_devices_on_active"
+    t.index ["fingerprint"], name: "index_authorized_devices_on_fingerprint"
+    t.index ["user_id", "fingerprint"], name: "index_authorized_devices_on_user_id_and_fingerprint"
+    t.index ["user_id"], name: "index_authorized_devices_on_user_id"
+  end
+
   create_table "checked_ingredients", force: :cascade do |t|
     t.integer "batch_index", default: 0, null: false
     t.datetime "created_at", null: false
@@ -234,6 +250,24 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_22_151007) do
     t.index ["item_code"], name: "index_items_on_item_code", unique: true
   end
 
+  create_table "login_histories", force: :cascade do |t|
+    t.datetime "attempted_at", null: false
+    t.string "browser"
+    t.datetime "created_at", null: false
+    t.string "device_name"
+    t.string "failure_reason"
+    t.string "fingerprint"
+    t.string "ip_address"
+    t.string "os"
+    t.boolean "success", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id"
+    t.index ["attempted_at"], name: "index_login_histories_on_attempted_at"
+    t.index ["ip_address"], name: "index_login_histories_on_ip_address"
+    t.index ["success"], name: "index_login_histories_on_success"
+    t.index ["user_id"], name: "index_login_histories_on_user_id"
+  end
+
   create_table "opened_items", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.date "expiration_date"
@@ -451,6 +485,26 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_22_151007) do
     t.index ["position"], name: "index_storage_locations_on_position"
   end
 
+  create_table "users", force: :cascade do |t|
+    t.boolean "admin", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "current_sign_in_at"
+    t.string "current_sign_in_ip"
+    t.string "email", default: "", null: false
+    t.string "encrypted_password", default: "", null: false
+    t.datetime "last_sign_in_at"
+    t.string "last_sign_in_ip"
+    t.string "name"
+    t.datetime "remember_created_at"
+    t.datetime "reset_password_sent_at"
+    t.string "reset_password_token"
+    t.integer "sign_in_count", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+  end
+
+  add_foreign_key "authorized_devices", "users"
   add_foreign_key "checked_ingredients", "opened_items"
   add_foreign_key "checked_ingredients", "production_logs"
   add_foreign_key "checked_ingredients", "receipts"
@@ -463,6 +517,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_22_151007) do
   add_foreign_key "ingredient_items", "items"
   add_foreign_key "ingredient_versions", "ingredients"
   add_foreign_key "item_versions", "items"
+  add_foreign_key "login_histories", "users"
   add_foreign_key "opened_items", "items"
   add_foreign_key "opened_items", "receipts"
   add_foreign_key "production_logs", "finished_products"

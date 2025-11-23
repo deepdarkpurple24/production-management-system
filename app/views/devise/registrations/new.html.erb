@@ -1,0 +1,74 @@
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="text-center mb-5">
+        <h1 style="font-weight: 700; color: #1d1d1f; font-size: 2.5rem;">회원가입</h1>
+        <p class="text-muted" style="font-size: 1.1rem;">생산관리 시스템 계정을 생성합니다</p>
+      </div>
+
+      <div class="card" style="border: 1px solid #e8e8ed; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
+        <div class="card-body p-5">
+          <%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
+            <%= render "devise/shared/error_messages", resource: resource %>
+
+            <div class="mb-4">
+              <%= f.label :name, "이름", class: "form-label", style: "font-weight: 500; color: #1d1d1f;" %>
+              <%= f.text_field :name, class: "form-control form-control-lg", placeholder: "이름을 입력하세요", required: true, style: "border-radius: 10px; border: 1.5px solid #d2d2d7;" %>
+            </div>
+
+            <div class="mb-4">
+              <%= f.label :email, "이메일", class: "form-label", style: "font-weight: 500; color: #1d1d1f;" %>
+              <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "form-control form-control-lg", placeholder: "user@example.com", style: "border-radius: 10px; border: 1.5px solid #d2d2d7;" %>
+              <small class="form-text text-muted">로그인 시 사용할 이메일 주소</small>
+            </div>
+
+            <div class="mb-4">
+              <%= f.label :password, "비밀번호", class: "form-label", style: "font-weight: 500; color: #1d1d1f;" %>
+              <%= f.password_field :password, autocomplete: "new-password", class: "form-control form-control-lg", placeholder: "비밀번호 (최소 #{@minimum_password_length}자)", style: "border-radius: 10px; border: 1.5px solid #d2d2d7;" %>
+              <% if @minimum_password_length %>
+                <small class="form-text text-muted">최소 <%= @minimum_password_length %>자 이상 입력해주세요</small>
+              <% end %>
+            </div>
+
+            <div class="mb-4">
+              <%= f.label :password_confirmation, "비밀번호 확인", class: "form-label", style: "font-weight: 500; color: #1d1d1f;" %>
+              <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "form-control form-control-lg", placeholder: "비밀번호 재입력", style: "border-radius: 10px; border: 1.5px solid #d2d2d7;" %>
+            </div>
+
+            <% if User.count.zero? %>
+              <div class="alert alert-success" role="alert" style="border-radius: 10px; background-color: #d4edda; border: none;">
+                <i class="bi bi-shield-check me-2"></i>
+                <small><strong>최초 사용자:</strong> 첫 번째 가입자는 자동으로 관리자 권한을 받습니다.</small>
+              </div>
+            <% else %>
+              <div class="alert alert-warning" role="alert" style="border-radius: 10px; background-color: #fff3cd; border: none;">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <small><strong>안내:</strong> 관리자만 신규 사용자를 생성할 수 있습니다.</small>
+              </div>
+            <% end %>
+
+            <div class="d-grid mb-4">
+              <%= f.submit "회원가입", class: "btn-apple btn-apple-primary btn-lg", style: "border-radius: 10px; font-weight: 600; padding: 0.875rem;" %>
+            </div>
+
+            <div class="alert alert-info" role="alert" style="border-radius: 10px; background-color: #e3f2fd; border: none;">
+              <i class="bi bi-shield-lock me-2"></i>
+              <small><strong>보안 안내:</strong> 가입 시 사용한 디바이스는 자동으로 승인됩니다.</small>
+            </div>
+          <% end %>
+
+          <div class="text-center mt-4">
+            <%= render "devise/shared/links" %>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center mt-4">
+        <small class="text-muted">
+          <i class="bi bi-info-circle me-1"></i>
+          이미 계정이 있으신가요? <%= link_to "로그인", new_session_path(resource_name), style: "color: #0071e3; text-decoration: none;" %>
+        </small>
+      </div>
+    </div>
+  </div>
+</div>

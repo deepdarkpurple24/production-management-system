@@ -1,0 +1,83 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0" style="font-weight: 600; color: #1d1d1f;">
+      <i class="bi bi-person-plus-fill me-2" style="color: #0071e3;"></i>
+      신규 사용자 추가
+    </h2>
+    <%= link_to admin_users_path, class: "btn btn-outline-secondary" do %>
+      <i class="bi bi-arrow-left me-2"></i>목록으로
+    <% end %>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card" style="border: 1px solid #e8e8ed; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+        <div class="card-header" style="background-color: #f5f5f7; border-bottom: 1px solid #e8e8ed; padding: 1rem 1.5rem;">
+          <h5 class="mb-0" style="font-weight: 600; color: #1d1d1f;">사용자 정보</h5>
+        </div>
+        <div class="card-body p-4">
+          <%= form_with model: @user, url: admin_users_path, local: true do |form| %>
+            <% if @user.errors.any? %>
+              <div class="alert alert-danger" role="alert">
+                <h5 class="alert-heading">
+                  <i class="bi bi-exclamation-triangle me-2"></i>
+                  <%= pluralize(@user.errors.count, "error") %> prohibited this user from being saved:
+                </h5>
+                <ul class="mb-0">
+                  <% @user.errors.full_messages.each do |message| %>
+                    <li><%= message %></li>
+                  <% end %>
+                </ul>
+              </div>
+            <% end %>
+
+            <div class="mb-3">
+              <%= form.label :name, "이름", class: "form-label", style: "font-weight: 500; color: #1d1d1f;" %>
+              <%= form.text_field :name, class: "form-control", placeholder: "사용자 이름을 입력하세요", required: true %>
+            </div>
+
+            <div class="mb-3">
+              <%= form.label :email, "이메일", class: "form-label", style: "font-weight: 500; color: #1d1d1f;" %>
+              <%= form.email_field :email, class: "form-control", placeholder: "user@example.com", required: true %>
+              <small class="form-text text-muted">로그인 시 사용할 이메일 주소</small>
+            </div>
+
+            <div class="mb-3">
+              <%= form.label :password, "비밀번호", class: "form-label", style: "font-weight: 500; color: #1d1d1f;" %>
+              <%= form.password_field :password, class: "form-control", placeholder: "비밀번호 (최소 6자)", required: true, autocomplete: "new-password" %>
+              <small class="form-text text-muted">최소 6자 이상 입력해주세요</small>
+            </div>
+
+            <div class="mb-3">
+              <%= form.label :password_confirmation, "비밀번호 확인", class: "form-label", style: "font-weight: 500; color: #1d1d1f;" %>
+              <%= form.password_field :password_confirmation, class: "form-control", placeholder: "비밀번호 재입력", required: true, autocomplete: "new-password" %>
+            </div>
+
+            <div class="mb-4">
+              <div class="form-check form-switch">
+                <%= form.check_box :admin, class: "form-check-input", style: "cursor: pointer;" %>
+                <%= form.label :admin, class: "form-check-label", style: "cursor: pointer; font-weight: 500; color: #1d1d1f;" do %>
+                  <i class="bi bi-shield-check me-1" style="color: #34c759;"></i>
+                  관리자 권한 부여
+                <% end %>
+              </div>
+              <small class="form-text text-muted">
+                관리자는 모든 사용자 및 디바이스를 관리할 수 있습니다
+              </small>
+            </div>
+
+            <div class="alert alert-info" role="alert">
+              <i class="bi bi-info-circle me-2"></i>
+              <strong>안내:</strong> 사용자 생성 시 현재 디바이스가 자동으로 승인됩니다. 추가 디바이스는 관리자가 직접 승인해야 합니다.
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <%= form.submit "사용자 추가", class: "btn-apple btn-apple-primary" %>
+              <%= link_to "취소", admin_users_path, class: "btn btn-outline-secondary" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

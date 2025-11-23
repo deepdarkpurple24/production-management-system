@@ -1,0 +1,96 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0" style="font-weight: 600; color: #1d1d1f;">
+      <i class="bi bi-pencil-fill me-2" style="color: #0071e3;"></i>
+      사용자 정보 수정
+    </h2>
+    <div>
+      <%= link_to admin_user_path(@user), class: "btn btn-outline-secondary me-2" do %>
+        <i class="bi bi-eye me-2"></i>상세보기
+      <% end %>
+      <%= link_to admin_users_path, class: "btn btn-outline-secondary" do %>
+        <i class="bi bi-arrow-left me-2"></i>목록으로
+      <% end %>
+    </div>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card" style="border: 1px solid #e8e8ed; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+        <div class="card-header" style="background-color: #f5f5f7; border-bottom: 1px solid #e8e8ed; padding: 1rem 1.5rem;">
+          <h5 class="mb-0" style="font-weight: 600; color: #1d1d1f;">사용자 정보</h5>
+        </div>
+        <div class="card-body p-4">
+          <%= form_with model: @user, url: admin_user_path(@user), method: :patch, local: true do |form| %>
+            <% if @user.errors.any? %>
+              <div class="alert alert-danger" role="alert">
+                <h5 class="alert-heading">
+                  <i class="bi bi-exclamation-triangle me-2"></i>
+                  <%= pluralize(@user.errors.count, "error") %> prohibited this user from being saved:
+                </h5>
+                <ul class="mb-0">
+                  <% @user.errors.full_messages.each do |message| %>
+                    <li><%= message %></li>
+                  <% end %>
+                </ul>
+              </div>
+            <% end %>
+
+            <div class="mb-3">
+              <%= form.label :name, "이름", class: "form-label", style: "font-weight: 500; color: #1d1d1f;" %>
+              <%= form.text_field :name, class: "form-control", placeholder: "사용자 이름을 입력하세요", required: true %>
+            </div>
+
+            <div class="mb-3">
+              <%= form.label :email, "이메일", class: "form-label", style: "font-weight: 500; color: #1d1d1f;" %>
+              <%= form.email_field :email, class: "form-control", placeholder: "user@example.com", required: true %>
+              <small class="form-text text-muted">로그인 시 사용할 이메일 주소</small>
+            </div>
+
+            <div class="mb-3">
+              <%= form.label :password, "새 비밀번호", class: "form-label", style: "font-weight: 500; color: #1d1d1f;" %>
+              <%= form.password_field :password, class: "form-control", placeholder: "변경하려면 입력 (최소 6자)", autocomplete: "new-password" %>
+              <small class="form-text text-muted">비밀번호를 변경하지 않으려면 비워두세요</small>
+            </div>
+
+            <div class="mb-3">
+              <%= form.label :password_confirmation, "새 비밀번호 확인", class: "form-label", style: "font-weight: 500; color: #1d1d1f;" %>
+              <%= form.password_field :password_confirmation, class: "form-control", placeholder: "새 비밀번호 재입력", autocomplete: "new-password" %>
+            </div>
+
+            <div class="mb-4">
+              <div class="form-check form-switch">
+                <%= form.check_box :admin, class: "form-check-input", style: "cursor: pointer;", disabled: (@user == current_user || (@user.admin? && User.admins.count == 1)) %>
+                <%= form.label :admin, class: "form-check-label", style: "cursor: pointer; font-weight: 500; color: #1d1d1f;" do %>
+                  <i class="bi bi-shield-check me-1" style="color: #34c759;"></i>
+                  관리자 권한
+                <% end %>
+              </div>
+              <small class="form-text text-muted">
+                <% if @user == current_user %>
+                  <i class="bi bi-info-circle me-1"></i>
+                  자기 자신의 권한은 변경할 수 없습니다
+                <% elsif @user.admin? && User.admins.count == 1 %>
+                  <i class="bi bi-info-circle me-1"></i>
+                  마지막 관리자의 권한은 변경할 수 없습니다
+                <% else %>
+                  관리자는 모든 사용자 및 디바이스를 관리할 수 있습니다
+                <% end %>
+              </small>
+            </div>
+
+            <div class="alert alert-warning" role="alert">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              <strong>주의:</strong> 비밀번호 변경 시 사용자는 다시 로그인해야 합니다.
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <%= form.submit "저장", class: "btn-apple btn-apple-primary" %>
+              <%= link_to "취소", admin_user_path(@user), class: "btn btn-outline-secondary" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

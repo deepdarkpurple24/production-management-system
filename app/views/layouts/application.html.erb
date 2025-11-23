@@ -85,6 +85,26 @@
                 <li><a class="dropdown-item" href="#"><i class="bi bi-wrench me-2"></i>유지보수기록</a></li>
               </ul>
             </li>
+            <% if user_signed_in? && current_user.admin? %>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle <%= 'active' if controller_path.start_with?('admin') %>" href="#" role="button" data-bs-toggle="dropdown">
+                  관리자
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li><%= link_to admin_users_path, class: "dropdown-item #{'active' if controller_name == 'users' && controller_path.start_with?('admin')}" do %><i class="bi bi-people me-2"></i>사용자 관리<% end %></li>
+                  <li><%= link_to admin_login_histories_path, class: "dropdown-item #{'active' if controller_name == 'login_histories'}" do %><i class="bi bi-clock-history me-2"></i>로그인 이력<% end %></li>
+                </ul>
+              </li>
+            <% end %>
+            <% if user_signed_in? %>
+              <li class="nav-item">
+                <%= button_to "로그아웃", destroy_user_session_path, method: :delete, class: "nav-link btn btn-link", style: "text-decoration: none; border: none; background: none; padding: 0.5rem 1rem;" %>
+              </li>
+            <% else %>
+              <li class="nav-item">
+                <%= link_to "로그인", new_user_session_path, class: "nav-link" %>
+              </li>
+            <% end %>
           </ul>
         </div>
       </div>
@@ -92,6 +112,24 @@
 
     <!-- Main Content -->
     <main>
+      <!-- Flash Messages -->
+      <% if notice.present? || alert.present? %>
+        <div class="container mt-3">
+          <% if notice.present? %>
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+              <%= notice %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          <% end %>
+          <% if alert.present? %>
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+              <%= alert %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
       <%= yield %>
     </main>
 

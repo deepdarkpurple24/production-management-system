@@ -1,0 +1,23 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  fingerprint: MyString
+  ip_address: MyString
+  browser: MyString
+  os: MyString
+  device_name: MyString
+  success: false
+  failure_reason: MyString
+  attempted_at: 2025-11-23 16:58:52
+
+two:
+  user: two
+  fingerprint: MyString
+  ip_address: MyString
+  browser: MyString
+  os: MyString
+  device_name: MyString
+  success: false
+  failure_reason: MyString
+  attempted_at: 2025-11-23 16:58:52

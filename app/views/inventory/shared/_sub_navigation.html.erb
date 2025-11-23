@@ -10,11 +10,11 @@
         <% end %>
       </li>
       <li class="nav-item">
-        <a href="#"
-           class="nav-link disabled"
-           style="border-radius: 8px; font-weight: 500; font-size: 0.9rem;">
+        <%= link_to inventory_opened_items_path,
+            class: "nav-link #{current_page?(controller: 'inventory/opened_items') ? 'active' : ''}",
+            style: "border-radius: 8px; font-weight: 500; font-size: 0.9rem;" do %>
           <i class="bi bi-box-seam me-1"></i>개봉품관리
-        </a>
+        <% end %>
       </li>
       <li class="nav-item">
         <%= link_to inventory_shipments_path,

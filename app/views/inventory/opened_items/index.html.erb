@@ -1,3 +1,5 @@
+<%= render 'inventory/shared/sub_navigation' %>
+
 <div class="container-fluid py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="mb-0" style="font-weight: 600; color: #1d1d1f;">
@@ -5,31 +7,6 @@
       개봉품 관리
     </h2>
   </div>
-
-  <!-- 품목별 통계 카드 -->
-  <% if @items_summary.any? %>
-    <div class="row g-3 mb-4">
-      <% @items_summary.each do |summary| %>
-        <div class="col-md-6 col-lg-4">
-          <div class="card h-100" style="border: 1px solid #e8e8ed; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-            <div class="card-body">
-              <h5 class="card-title mb-3" style="font-weight: 600; color: #1d1d1f;">
-                <%= summary.item_name %>
-              </h5>
-              <div class="d-flex justify-content-between mb-2">
-                <span style="color: #6e6e73;">개봉품 수량:</span>
-                <strong style="color: #0071e3;"><%= summary.opened_count %>개</strong>
-              </div>
-              <div class="d-flex justify-content-between">
-                <span style="color: #6e6e73;">총 잔여 중량:</span>
-                <strong style="color: #34c759;"><%= number_with_delimiter(summary.total_weight.to_f.round(0)) %>g</strong>
-              </div>
-            </div>
-          </div>
-        </div>
-      <% end %>
-    </div>
-  <% end %>
 
   <!-- 개봉품 상세 목록 -->
   <div class="card" style="border: 1px solid #e8e8ed; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">

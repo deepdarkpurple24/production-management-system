@@ -82,31 +82,18 @@ class IngredientInventoryService
     ingredient = recipe_ingredient.referenced_ingredient
 
     Rails.logger.info "=== Referenced Ingredient 처리: #{ingredient.name} ==="
-    Rails.logger.info "필요량: #{used_weight}g, 생산량: #{ingredient.production_quantity}#{ingredient.production_unit}"
+    Rails.logger.info "필요량: #{used_weight}g"
 
-    # 생산량을 그램으로 환산
-    production_quantity_g = convert_to_grams(ingredient.production_quantity, ingredient.production_unit)
-    Rails.logger.info "생산량(그램 환산): #{production_quantity_g}g"
+    # Ingredient를 재귀적으로 펼쳐서 최종 Item 리스트와 사용량 얻기
+    item_usages = expand_ingredient_to_items(ingredient, used_weight)
 
-    # 배율 계산
-    multiplier = used_weight / production_quantity_g
-    Rails.logger.info "배율: #{multiplier} (#{used_weight}g / #{production_quantity_g}g)"
+    Rails.logger.info "펼쳐진 품목 수: #{item_usages.size}"
 
     ActiveRecord::Base.transaction do
-      # Ingredient의 각 item에 대해 실제 사용량 계산 및 재고 차감
-      ingredient.ingredient_items.where(source_type: 'item').each do |ingredient_item|
-        item = ingredient_item.item
-        next unless item
-
-        # 재료 구성에서의 양을 그램으로 환산
-        item_quantity_g = convert_to_grams(ingredient_item.quantity, ingredient_item.unit)
-
-        # 실제 사용량 = 재료 구성량 × 배율
-        actual_used_weight = item_quantity_g * multiplier
-
+      # 각 품목에 대해 재고 차감
+      item_usages.each do |item, actual_used_weight|
         Rails.logger.info "  품목: #{item.name}"
-        Rails.logger.info "    재료 구성: #{ingredient_item.quantity}#{ingredient_item.unit} = #{item_quantity_g}g"
-        Rails.logger.info "    실제 사용량: #{item_quantity_g}g × #{multiplier.round(4)} = #{actual_used_weight.round(2)}g"
+        Rails.logger.info "    실제 사용량: #{actual_used_weight.round(2)}g"
 
         # 해당 품목에 대해 재고 차감
         item_result = process_item_deduction(production_log, recipe_ingredient, item, actual_used_weight, batch_index)
@@ -130,6 +117,61 @@ class IngredientInventoryService
     Rails.logger.error error_msg
     Rails.logger.error e.backtrace.first(5).join("\n")
     result[:errors] << error_msg
+    result
+  end
+
+  # Ingredient를 재귀적으로 펼쳐서 최종 Item 리스트와 사용량 반환
+  # @param ingredient [Ingredient] 펼칠 재료
+  # @param required_weight [Float] 필요한 중량 (그램)
+  # @param depth [Integer] 재귀 깊이 (무한 루프 방지)
+  # @return [Hash<Item, Float>] { Item => 사용량(g) }
+  def self.expand_ingredient_to_items(ingredient, required_weight, depth = 0)
+    return {} if depth > 10 # 무한 재귀 방지
+
+    Rails.logger.info "#{'  ' * depth}> Ingredient 펼치기: #{ingredient.name} (필요량: #{required_weight.round(2)}g)"
+
+    # 생산량을 그램으로 환산
+    production_quantity_g = convert_to_grams(ingredient.production_quantity, ingredient.production_unit)
+    Rails.logger.info "#{'  ' * depth}  생산량: #{production_quantity_g}g"
+
+    # 배율 계산
+    multiplier = required_weight / production_quantity_g
+    Rails.logger.info "#{'  ' * depth}  배율: #{multiplier.round(4)}"
+
+    result = {}
+
+    # ingredient_items 순회
+    ingredient.ingredient_items.each do |ingredient_item|
+      # 구성 재료의 양을 그램으로 환산
+      item_quantity_g = convert_to_grams(ingredient_item.quantity, ingredient_item.unit)
+      scaled_quantity = item_quantity_g * multiplier
+
+      Rails.logger.info "#{'  ' * depth}  - #{ingredient_item.source_type}: #{item_quantity_g}g × #{multiplier.round(4)} = #{scaled_quantity.round(2)}g"
+
+      if ingredient_item.source_type == 'item' && ingredient_item.item
+        # Item인 경우: 결과에 추가 (같은 item이면 합산)
+        item = ingredient_item.item
+        result[item] ||= 0
+        result[item] += scaled_quantity
+        Rails.logger.info "#{'  ' * depth}    → Item: #{item.name} (누적: #{result[item].round(2)}g)"
+
+      elsif ingredient_item.source_type == 'ingredient' && ingredient_item.referenced_ingredient
+        # Ingredient인 경우: 재귀적으로 펼치기
+        sub_ingredient = ingredient_item.referenced_ingredient
+        Rails.logger.info "#{'  ' * depth}    → 하위 Ingredient: #{sub_ingredient.name} 재귀 처리"
+
+        # 재귀 호출
+        sub_results = expand_ingredient_to_items(sub_ingredient, scaled_quantity, depth + 1)
+
+        # 하위 결과를 현재 결과에 병합 (같은 item이면 합산)
+        sub_results.each do |item, weight|
+          result[item] ||= 0
+          result[item] += weight
+        end
+      end
+    end
+
+    Rails.logger.info "#{'  ' * depth}< 펼치기 완료: #{result.size}개 품목"
     result
   end
 

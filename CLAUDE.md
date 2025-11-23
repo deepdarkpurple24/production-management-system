@@ -21,6 +21,8 @@ This document provides a comprehensive overview of the Production Management Sys
 - **Framework**: Ruby on Rails 8.1.1
 - **Ruby Version**: 3.4.7
 - **Database**: SQLite3 (with multi-database support in production)
+- **Authentication**: Devise (email/password with device-based access control)
+- **Authorization**: Pundit (role-based policies)
 - **Asset Pipeline**: Propshaft
 - **Background Jobs**: Solid Queue
 - **Caching**: Solid Cache
@@ -210,8 +212,86 @@ production-management-system/
 - **RecipeProcess** (`recipe_processes`): 공정 관리
   - Process names for recipe equipment grouping
 
+### 7. Authentication & Authorization (인증/권한 관리)
+- **User** (`users`): 사용자 (Devise)
+  - Email/password authentication
+  - Trackable: sign_in_count, current/last sign_in timestamps and IPs
+  - Custom fields: `admin` (boolean), `name` (string)
+  - First registered user automatically becomes admin
+  - Device authorization methods: `device_authorized?`, `authorize_device`, `revoke_device`
+
+- **AuthorizedDevice** (`authorized_devices`): 승인된 디바이스
+  - Browser-based device fingerprinting (SHA-256 hashed)
+  - Stores: fingerprint, device_name, browser, os, active status
+  - Tracks last_used_at timestamp
+  - Scopes: `active`, `inactive`, `recent`
+  - Methods: `update_last_used!`, `deactivate!`, `display_name`
+
+- **LoginHistory** (`login_histories`): 로그인 이력
+  - Tracks ALL login attempts (successful and failed)
+  - Records: user, fingerprint, ip_address, browser, os, device_name, success, failure_reason, attempted_at
+  - Scopes: `successful`, `failed`, `recent`, `today`, `this_week`, `by_ip`
+  - Class method: `log_attempt` for creating records
+  - Methods: `display_status`, `status_color`
+
+**Device Fingerprinting**: Browser-based unique identification using:
+- Canvas fingerprinting (text rendering variations)
+- WebGL renderer information (GPU vendor/model)
+- Available fonts detection
+- Screen resolution and pixel ratio
+- Timezone and language settings
+- Hardware concurrency (CPU cores)
+- Touch support detection
+- SHA-256 hashing for security
+
+**Authentication Flow**:
+1. **Registration**: Auto-authorize the device used for signup (first user becomes admin)
+2. **Login**: Check device fingerprint against authorized_devices, reject if not authorized
+3. **Device Management**: Admins can manually authorize/revoke devices for users
+4. **Login History**: All attempts logged with success/failure reasons
+
 
 ## Key Routes & Endpoints
+
+### Authentication (Devise)
+```ruby
+devise_for :users, controllers: {
+  sessions: 'users/sessions',          # Custom login with device check
+  registrations: 'users/registrations' # Custom registration (admin-only after first user)
+}
+
+# Routes:
+GET    /users/sign_in          # Login page
+POST   /users/sign_in          # Login action (with device fingerprint check)
+DELETE /users/sign_out         # Logout
+GET    /users/sign_up          # Registration page (blocked unless admin or first user)
+POST   /users                  # Registration action (auto-authorize device)
+```
+
+### Admin Module
+```ruby
+namespace :admin do
+  resources :users do
+    resources :authorized_devices, only: [:create, :destroy] do
+      member do
+        patch :toggle_active  # Activate/deactivate device
+      end
+    end
+  end
+  resources :login_histories, only: [:index]  # Security monitoring dashboard
+end
+
+# Routes:
+GET    /admin/users                                      # User list
+GET    /admin/users/:id                                  # User detail (devices + login history)
+GET    /admin/users/:id/edit                             # Edit user
+PATCH  /admin/users/:id                                  # Update user
+DELETE /admin/users/:id                                  # Delete user (restrictions apply)
+POST   /admin/users/:user_id/authorized_devices          # Manually authorize device
+DELETE /admin/users/:user_id/authorized_devices/:id      # Delete device
+PATCH  /admin/users/:user_id/authorized_devices/:id/toggle_active  # Toggle device active status
+GET    /admin/login_histories                            # Login history (all users)
+```
 
 ### Main Modules
 - Root: `GET /` → `home#index`
@@ -380,6 +460,16 @@ bin/rails db:reset          # Drop, create, migrate, seed
 
 # Console
 bin/rails console
+
+# Authentication management (via console)
+bin/rails console
+> User.first                                    # Check first user (should be admin)
+> user = User.find_by(email: 'user@example.com')
+> user.update(admin: true)                      # Make user admin
+> user.authorized_devices                       # List user's devices
+> user.authorize_device(fingerprint, device_info)  # Manually authorize device
+> user.revoke_device(fingerprint)               # Revoke device
+> LoginHistory.recent.limit(10)                 # Recent login attempts
 
 # Security checks
 bin/brakeman                # Static security analysis
@@ -729,7 +819,66 @@ end
 - User creates production log with 3 units actual production
 - Production plan quantity automatically updates to 3 units
 
-### 13. FIFO Inventory Management System
+### 13. Device-Based Authentication Pattern
+**CRITICAL**: All Devise forms must include device fingerprint hidden fields for authentication to work.
+
+**Form Selector Pattern** (`device_fingerprint.js`):
+```javascript
+// MUST include all possible form action paths
+const deviseForms = document.querySelectorAll(
+  'form[action*="sign_in"], form[action*="sign_up"], form[action="/users"], form[action*="/admin/users"]'
+);
+```
+
+**Why Multiple Selectors**:
+- `form[action*="sign_in"]` - Login form (`/users/sign_in`)
+- `form[action*="sign_up"]` - May not match due to exact path
+- `form[action="/users"]` - Registration form (exact path)
+- `form[action*="/admin/users"]` - Admin user creation
+
+**Hidden Fields Injected**:
+```javascript
+// Four hidden fields added to each form
+fingerprintField.name = 'device_fingerprint';     // SHA-256 hash
+browserField.name = 'device_browser';             // Chrome, Firefox, etc.
+osField.name = 'device_os';                       // Windows, macOS, Linux
+deviceNameField.name = 'device_name';             // "Chrome on Windows"
+```
+
+**Controller Pattern**:
+```ruby
+# In SessionsController#create or RegistrationsController#create
+fingerprint = params[:device_fingerprint]
+device_info = {
+  browser: params[:device_browser],
+  os: params[:device_os],
+  device_name: params[:device_name]
+}
+
+# Check authorization
+unless resource.device_authorized?(fingerprint)
+  # Log failed attempt with reason
+  LoginHistory.log_attempt(user: resource, fingerprint: fingerprint,
+                           ip: request.remote_ip, success: false,
+                           failure_reason: "디바이스가 승인되지 않았습니다", **device_info)
+  # Reject login
+end
+```
+
+**First User Flow**:
+```ruby
+# RegistrationsController#create
+if User.count.zero?
+  resource.admin = true  # First user becomes admin
+end
+
+if resource.persisted?
+  resource.authorize_device(fingerprint, device_info)  # Auto-authorize
+  LoginHistory.log_attempt(...)  # Log successful registration
+end
+```
+
+### 14. FIFO Inventory Management System
 **CRITICAL**: Ingredient checking in production logs triggers automatic inventory deduction using FIFO (First-In-First-Out) logic.
 
 **Workflow** (`IngredientInventoryService`):
@@ -820,6 +969,63 @@ bin/rails test:system            # Browser-based system tests
 ```
 
 ## Recent Development History
+
+### 2025-11-23: Authentication & Authorization System
+- **Devise Integration**:
+  - Added Devise gem for user authentication
+  - Enabled trackable module for login monitoring (sign_in_count, timestamps, IPs)
+  - Custom fields: `admin` (boolean), `name` (string)
+  - First registered user automatically becomes admin
+- **Device-Based Access Control**:
+  - Browser fingerprinting using Canvas, WebGL, fonts, screen, hardware, timezone
+  - SHA-256 hashing of device signatures for security
+  - AuthorizedDevice model tracks fingerprint, browser, os, device_name, active status
+  - Device authorization required for login (admins can manually authorize/revoke)
+  - SessionStorage caching of fingerprint (cleared on browser close)
+- **Login History & Security Monitoring**:
+  - LoginHistory model tracks ALL login attempts (success and failed)
+  - Records: user, fingerprint, ip_address, browser, os, failure_reason, attempted_at
+  - Scopes for filtering: successful, failed, recent, today, this_week, by_ip
+  - Complete audit trail for security compliance
+- **Custom Devise Controllers**:
+  - SessionsController: Device fingerprint validation before login
+  - RegistrationsController: Auto-authorize device on signup, admin-only registration after first user
+  - Login flow: authenticate → check device → log attempt → update device timestamp
+- **Admin Interface**:
+  - User management: list, create, edit, delete (with protections)
+  - Device management: view, authorize, revoke, toggle active status
+  - Login history dashboard with statistics and filtering
+  - Apple-refined design consistent with application theme
+- **JavaScript Device Fingerprinting** (`device_fingerprint.js`):
+  - DeviceFingerprint class with async generation
+  - Multiple fingerprinting signals combined into unique hash
+  - Auto-injects hidden fields into Devise forms (sign_in, sign_up, admin user creation)
+  - Browser and OS detection for display purposes
+- **Security Features**:
+  - CSRF protection (existing)
+  - Device-based access control (new)
+  - Login attempt tracking (new)
+  - Admin action restrictions (cannot delete self or last admin)
+  - Flash messages for authentication failures with specific reasons
+- **Database Migrations**:
+  - `devise_create_users`: Users table with Devise fields + custom admin/name
+  - `create_authorized_devices`: Device authorization tracking
+  - `create_login_histories`: Login attempt audit trail
+- **Routes Updates**:
+  - `devise_for :users` with custom controllers
+  - Admin namespace for users, authorized_devices, login_histories
+  - Device toggle/delete actions
+- **ApplicationController Update**:
+  - Added `before_action :authenticate_user!` to enforce authentication globally
+  - All pages now require login
+- **Navigation Updates** (`application.html.erb`):
+  - Added admin dropdown menu (visible only to admins)
+  - Login/logout links
+  - Flash message display area
+- **Critical Bug Fix**:
+  - JavaScript form selector didn't match registration form path `/users`
+  - Updated selector to include `form[action="/users"]` and `form[action*="/admin/users"]`
+  - Fixed issue where device fingerprint wasn't added to signup form
 
 ### 2025-11-23: FIFO Inventory Management System
 - **Automatic Inventory Deduction**:
@@ -1049,13 +1255,49 @@ bin/rails db:migrate
 
 ## Security Considerations
 
-- CSRF Protection: Enabled globally via csrf_meta_tags in layout
-- Content Security Policy: Configured via csp_meta_tag
-- Brakeman: Static security analysis scanner for Rails vulnerabilities
-- Bundler Audit: Checks for vulnerable gem dependencies
-- No Authentication: Currently no user authentication system (consider adding)
-- No Authorization: No role-based access control
-- SQLite: Not recommended for high-concurrency production
+**Implemented Security Measures**:
+- **CSRF Protection**: Enabled globally via csrf_meta_tags in layout
+- **Content Security Policy**: Configured via csp_meta_tag
+- **Authentication**: Devise-based email/password authentication
+- **Device-based Access Control**: Browser fingerprinting with SHA-256 hashing
+- **Login History Tracking**: Complete audit trail of all login attempts
+- **Authorization**: Admin-based role system (first user auto-admin)
+- **Brakeman**: Static security analysis scanner for Rails vulnerabilities
+- **Bundler Audit**: Checks for vulnerable gem dependencies
+
+**Device Fingerprinting Security**:
+- SHA-256 hashing of browser-based device signatures
+- Multiple fingerprinting signals (Canvas, WebGL, fonts, hardware, etc.)
+- SessionStorage for fingerprint caching (cleared on browser close)
+- Device authorization required for login (admin can manage)
+- Last used timestamp tracking for device activity monitoring
+
+**Authentication Security Features**:
+- Trackable module: Monitors sign-in count, timestamps, and IP addresses
+- Login history: Success/failure tracking with detailed failure reasons
+- Device management: Admins can activate/deactivate devices
+- Registration restriction: Only admins can create new users (after first user)
+- Auto-authorization: Devices used for registration automatically authorized
+
+**Known Security Limitations**:
+- **SQLite**: Not recommended for high-concurrency production environments
+- **Device Fingerprinting**: Can be evaded by sophisticated attackers (browser fingerprinting is not foolproof)
+- **No Email Confirmation**: Devise confirmable module not enabled
+- **No Password Reset**: Devise recoverable module enabled but may need email configuration
+- **No Rate Limiting**: No protection against brute force login attempts (consider adding Rack::Attack)
+- **No Two-Factor Authentication**: Device-based authorization is single-factor
+- **Admin Deletion Protection**: Cannot delete last admin or self, but no audit trail for admin actions
+
+**Recommended Security Improvements**:
+1. Enable Devise confirmable module for email verification
+2. Configure email service for password resets
+3. Add Rack::Attack for rate limiting and brute force protection
+4. Consider adding two-factor authentication (TOTP)
+5. Add admin action audit logging
+6. Consider moving to PostgreSQL for production
+7. Implement session timeout for inactive users
+8. Add IP-based blocking for suspicious activity
+9. Regular security dependency updates (bundler-audit, brakeman)
 
 ## Performance Notes
 
@@ -1096,20 +1338,38 @@ Documentation:
 - README.md - Basic project info
 
 Configuration:
-- config/routes.rb - Application structure
+- config/routes.rb - Application structure (includes authentication routes)
 - config/database.yml - Database configuration
+- config/initializers/devise.rb - Devise authentication configuration
 - db/schema.rb - Database structure
 - Gemfile / package.json - Dependencies
 
 Key Models:
+- app/models/user.rb - Authentication, device authorization methods
+- app/models/authorized_device.rb - Device fingerprint tracking
+- app/models/login_history.rb - Login attempt audit trail
 - app/models/recipe.rb - Version tracking example
 - app/models/item.rb - Auto-code generation, stock calculations
 - app/models/finished_product.rb - Multi-recipe composition
 
+Controllers:
+- app/controllers/application_controller.rb - Global authentication requirement
+- app/controllers/users/sessions_controller.rb - Custom login with device check
+- app/controllers/users/registrations_controller.rb - Custom registration with auto-device authorization
+- app/controllers/admin/users_controller.rb - User management
+- app/controllers/admin/authorized_devices_controller.rb - Device management
+- app/controllers/admin/login_histories_controller.rb - Login history dashboard
+
 Frontend:
+- app/javascript/device_fingerprint.js - Browser fingerprinting for device identification
 - app/javascript/interactions.js - Global helpers
 - app/assets/stylesheets/application.bootstrap.scss - Design system
-- app/views/layouts/application.html.erb - Main layout
+- app/views/layouts/application.html.erb - Main layout (includes admin menu, flash messages)
+- app/views/devise/sessions/new.html.erb - Login page
+- app/views/devise/registrations/new.html.erb - Registration page
+- app/views/admin/users/index.html.erb - User management interface
+- app/views/admin/users/show.html.erb - User detail (devices + login history)
+- app/views/admin/login_histories/index.html.erb - Login history dashboard
 
 ## Quick Reference
 
@@ -1121,9 +1381,13 @@ Common Commands:
 - tail -f log/development.log - Watch logs
 
 Common Models:
+- User - User accounts (authentication)
+- AuthorizedDevice - Device authorization
+- LoginHistory - Login attempt tracking
 - Item - Inventory items
 - Receipt - Receiving inventory
 - Shipment - Shipping inventory
+- OpenedItem - Opened inventory items
 - Recipe - Recipes
 - FinishedProduct - Final products
 - ProductionPlan - Production schedule
@@ -1131,6 +1395,11 @@ Common Models:
 - Equipment - Equipment/machinery
 
 Common Paths:
+- /users/sign_in - Login page
+- /users/sign_up - Registration (admin-only after first user)
+- /admin/users - User management (admin only)
+- /admin/users/:id - User detail with devices and login history
+- /admin/login_histories - Login history dashboard (admin only)
 - / - Home dashboard
 - /inventory/items - Item management
 - /inventory/receipts - Receiving records
@@ -1188,11 +1457,26 @@ const itemOptions = itemsData.map(item => `<option value="${item.id}">${item.nam
 
 ---
 
-Document Version: 1.6
+Document Version: 1.7
 Last Updated: 2025-11-23
-Schema Version: 20251122151007
+Schema Version: 20251123075852
 Rails Version: 8.1.1
 Ruby Version: 3.4.7
 Node Version: 24.11.1
 
 Created for: Future Claude instances to quickly understand and work with this codebase
+
+---
+
+## Changelog
+
+### Version 1.7 (2025-11-23)
+- Added comprehensive Authentication & Authorization System documentation
+- Documented Devise integration with device-based access control
+- Added User, AuthorizedDevice, LoginHistory models to Core Domain Models
+- Added authentication and admin routes documentation
+- Added authentication management console commands
+- Updated Security Considerations with implemented measures and recommendations
+- Added detailed Recent Development History for authentication system
+- Updated Common Models and Common Paths to include authentication-related items
+- Schema updated to 20251123075852 (create_login_histories)

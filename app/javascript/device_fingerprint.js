@@ -187,7 +187,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   console.log('Device fingerprint generated:', data.fingerprint.substring(0, 16) + '...');
 
   // Add fingerprint to all Devise forms
-  const deviseForms = document.querySelectorAll('form[action*="sign_in"], form[action*="sign_up"]');
+  // Include: /users/sign_in, /users/sign_up, /users (registration), /admin/users (admin user creation)
+  const deviseForms = document.querySelectorAll('form[action*="sign_in"], form[action*="sign_up"], form[action="/users"], form[action*="/admin/users"]');
 
   deviseForms.forEach(form => {
     // Add fingerprint field

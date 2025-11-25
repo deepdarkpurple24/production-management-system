@@ -10,19 +10,24 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_23_075852) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_25_145111) do
   create_table "authorized_devices", force: :cascade do |t|
     t.boolean "active", default: true, null: false
+    t.string "authorization_token"
+    t.datetime "authorization_token_sent_at"
     t.string "browser"
     t.datetime "created_at", null: false
     t.string "device_name"
     t.string "fingerprint", null: false
     t.datetime "last_used_at"
     t.string "os"
+    t.string "status", default: "approved", null: false
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.index ["active"], name: "index_authorized_devices_on_active"
+    t.index ["authorization_token"], name: "index_authorized_devices_on_authorization_token", unique: true
     t.index ["fingerprint"], name: "index_authorized_devices_on_fingerprint"
+    t.index ["status"], name: "index_authorized_devices_on_status"
     t.index ["user_id", "fingerprint"], name: "index_authorized_devices_on_user_id_and_fingerprint"
     t.index ["user_id"], name: "index_authorized_devices_on_user_id"
   end
@@ -280,6 +285,17 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_23_075852) do
     t.index ["item_id", "receipt_id"], name: "index_opened_items_on_item_id_and_receipt_id"
     t.index ["item_id"], name: "index_opened_items_on_item_id"
     t.index ["receipt_id"], name: "index_opened_items_on_receipt_id"
+  end
+
+  create_table "page_permissions", force: :cascade do |t|
+    t.boolean "allowed_for_users", default: true
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.string "name", null: false
+    t.string "page_key", null: false
+    t.integer "position", default: 0
+    t.datetime "updated_at", null: false
+    t.index ["page_key"], name: "index_page_permissions_on_page_key", unique: true
   end
 
   create_table "production_logs", force: :cascade do |t|

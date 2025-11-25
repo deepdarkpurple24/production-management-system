@@ -180,7 +180,8 @@ export class DeviceFingerprint {
 }
 
 // Auto-generate fingerprint on page load and add to forms
-document.addEventListener('DOMContentLoaded', async () => {
+// Use 'turbo:load' for Hotwire Turbo compatibility
+document.addEventListener('turbo:load', async () => {
   const stored = DeviceFingerprint.getStored();
   const data = stored || await DeviceFingerprint.generateAndStore();
 

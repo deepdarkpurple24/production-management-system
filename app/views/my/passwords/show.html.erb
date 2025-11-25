@@ -1,0 +1,65 @@
+<div class="container-fluid py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+      <div class="card shadow-sm" style="border-radius: 12px;">
+        <div class="card-header bg-white" style="border-bottom: 1px solid #e8e8ed; border-radius: 12px 12px 0 0;">
+          <h5 class="mb-0">
+            <i class="bi bi-key me-2"></i>비밀번호 변경
+          </h5>
+        </div>
+        <div class="card-body p-4">
+          <%= form_with url: my_password_path, method: :patch, local: true do |f| %>
+            <div class="mb-4">
+              <label class="form-label">현재 비밀번호</label>
+              <%= password_field_tag :current_password, nil, class: "form-control", required: true, autocomplete: "current-password" %>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="mb-3">
+              <label class="form-label">새 비밀번호</label>
+              <%= password_field_tag :password, nil, class: "form-control", required: true, minlength: 6, autocomplete: "new-password" %>
+              <div class="form-text">최소 6자 이상 입력하세요.</div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label">새 비밀번호 확인</label>
+              <%= password_field_tag :password_confirmation, nil, class: "form-control", required: true, minlength: 6, autocomplete: "new-password" %>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+              <%= f.submit "비밀번호 변경", class: "btn btn-primary" %>
+              <%= link_to "취소", root_path, class: "btn btn-outline-secondary" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="card mt-4 shadow-sm" style="border-radius: 12px;">
+        <div class="card-body">
+          <h6 class="text-muted mb-3">
+            <i class="bi bi-info-circle me-2"></i>계정 정보
+          </h6>
+          <table class="table table-sm mb-0">
+            <tr>
+              <td class="text-muted" style="width: 120px;">이름</td>
+              <td><%= current_user.name.presence || '-' %></td>
+            </tr>
+            <tr>
+              <td class="text-muted">이메일</td>
+              <td><%= current_user.email %></td>
+            </tr>
+            <tr>
+              <td class="text-muted">가입일</td>
+              <td><%= current_user.created_at.strftime('%Y-%m-%d') %></td>
+            </tr>
+            <tr>
+              <td class="text-muted">마지막 로그인</td>
+              <td><%= current_user.last_sign_in_at&.strftime('%Y-%m-%d %H:%M') || '-' %></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

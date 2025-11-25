@@ -22,6 +22,11 @@
           <i class="bi bi-gear-fill me-1"></i>기기관리
         </button>
       </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="permissions-tab" data-bs-toggle="tab" data-bs-target="#permissions-settings" type="button" role="tab" style="border-radius: 8px; font-weight: 500; font-size: 0.9rem;">
+          <i class="bi bi-shield-lock-fill me-1"></i>접근권한
+        </button>
+      </li>
     </ul>
   </div>
 </div>
@@ -562,6 +567,82 @@
                 <% end %>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. 접근권한 설정 탭 -->
+    <div class="tab-pane fade" id="permissions-settings" role="tabpanel">
+      <h4 class="mb-4" style="font-weight: 600; color: #1d1d1f;">
+        <i class="bi bi-shield-lock-fill me-2" style="color: #0071e3;"></i>일반 사용자 접근권한
+      </h4>
+
+      <div class="row g-4">
+        <div class="col-12">
+          <div class="card-modern">
+            <div class="card-body p-4">
+              <h5 class="card-title mb-3" style="font-weight: 600; font-size: 1.125rem;">
+                <i class="bi bi-person-check me-2"></i>페이지별 접근권한 설정
+              </h5>
+              <p class="text-muted small mb-4">
+                일반 사용자(관리자가 아닌 사용자)가 접근할 수 있는 페이지를 설정합니다. 관리자는 모든 페이지에 접근할 수 있습니다.
+              </p>
+
+              <%= form_with url: update_page_permissions_batch_path, method: :patch, local: true do |f| %>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="width: 50px;">허용</th>
+                        <th>페이지</th>
+                        <th>설명</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% @page_permissions.each do |permission| %>
+                        <tr>
+                          <td>
+                            <div class="form-check form-switch">
+                              <%= check_box_tag "permissions[#{permission.id}]", "1", permission.allowed_for_users,
+                                  class: "form-check-input",
+                                  id: "permission_#{permission.id}",
+                                  style: "cursor: pointer;" %>
+                            </div>
+                          </td>
+                          <td>
+                            <label for="permission_<%= permission.id %>" style="cursor: pointer; font-weight: 500;">
+                              <%= permission.name %>
+                            </label>
+                          </td>
+                          <td class="text-muted small">
+                            <%= permission.description %>
+                          </td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="d-flex justify-content-end mt-3">
+                  <%= f.submit "권한 저장", class: "btn btn-primary" %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <!-- 안내 사항 -->
+        <div class="col-12">
+          <div class="alert alert-info">
+            <h6 class="alert-heading">
+              <i class="bi bi-info-circle me-2"></i>안내 사항
+            </h6>
+            <ul class="mb-0 small">
+              <li>관리자는 모든 페이지에 접근할 수 있으며, 이 설정의 영향을 받지 않습니다.</li>
+              <li>허용하지 않은 페이지는 일반 사용자의 메뉴에서 숨겨지고, 직접 URL 접근도 차단됩니다.</li>
+              <li>하위 메뉴(예: 재고관리 > 입고)를 허용하려면 상위 메뉴(재고관리)도 함께 허용해야 합니다.</li>
+            </ul>
           </div>
         </div>
       </div>

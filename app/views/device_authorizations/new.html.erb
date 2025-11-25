@@ -1,0 +1,92 @@
+<div class="container-apple py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <!-- Card -->
+      <div class="card-apple">
+        <div class="card-apple-body text-center">
+          <!-- Icon -->
+          <div class="mb-4">
+            <i class="bi bi-shield-lock-fill text-warning" style="font-size: 4rem;"></i>
+          </div>
+
+          <!-- Title -->
+          <h2 class="h3 mb-3">새 디바이스가 감지되었습니다</h2>
+
+          <!-- Description -->
+          <p class="text-muted mb-4">
+            보안을 위해 새로운 디바이스에서의 로그인을 감지했습니다.<br>
+            계속하려면 이 디바이스를 승인해야 합니다.
+          </p>
+
+          <!-- Device Info -->
+          <div class="bg-light rounded-3 p-3 mb-4 text-start">
+            <h6 class="text-muted mb-3" style="font-size: 0.875rem; font-weight: 600;">디바이스 정보</h6>
+            <div class="d-flex align-items-center mb-2">
+              <i class="bi bi-laptop me-2 text-muted"></i>
+              <span style="font-weight: 500;"><%= @device_info[:device_name] %></span>
+            </div>
+            <div class="d-flex align-items-center mb-2">
+              <i class="bi bi-browser-chrome me-2 text-muted"></i>
+              <span class="text-muted" style="font-size: 0.875rem;"><%= @device_info[:browser] %></span>
+            </div>
+            <div class="d-flex align-items-center">
+              <i class="bi bi-pc-display me-2 text-muted"></i>
+              <span class="text-muted" style="font-size: 0.875rem;"><%= @device_info[:os] %></span>
+            </div>
+          </div>
+
+          <!-- Options -->
+          <div class="mb-4">
+            <h6 class="text-start mb-3" style="font-weight: 600;">디바이스 승인 방법을 선택하세요</h6>
+
+            <!-- Option 1: Email (Default) -->
+            <%= form_with url: send_email_device_authorizations_path, method: :post, class: "mb-3" do |f| %>
+              <%= hidden_field_tag :fingerprint, @fingerprint %>
+              <%= hidden_field_tag :browser, @device_info[:browser] %>
+              <%= hidden_field_tag :os, @device_info[:os] %>
+              <%= hidden_field_tag :device_name, @device_info[:device_name] %>
+              <%= hidden_field_tag :email, @email %>
+
+              <button type="submit" class="btn-apple btn-apple-primary w-100 d-flex align-items-center justify-content-center">
+                <i class="bi bi-envelope me-2"></i>
+                이메일로 승인 링크 받기
+              </button>
+            <% end %>
+
+            <p class="text-muted mb-3" style="font-size: 0.875rem;">
+              <i class="bi bi-info-circle me-1"></i>
+              이메일로 승인 링크가 발송됩니다. (24시간 유효)
+            </p>
+
+            <!-- Option 2: Request Admin -->
+            <%= form_with url: request_admin_device_authorizations_path, method: :post do |f| %>
+              <%= hidden_field_tag :fingerprint, @fingerprint %>
+              <%= hidden_field_tag :browser, @device_info[:browser] %>
+              <%= hidden_field_tag :os, @device_info[:os] %>
+              <%= hidden_field_tag :device_name, @device_info[:device_name] %>
+              <%= hidden_field_tag :email, @email %>
+
+              <button type="submit" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center">
+                <i class="bi bi-person-badge me-2"></i>
+                관리자에게 승인 요청
+              </button>
+            <% end %>
+
+            <p class="text-muted mt-2 mb-0" style="font-size: 0.875rem;">
+              <i class="bi bi-info-circle me-1"></i>
+              관리자가 승인할 때까지 기다려야 합니다.
+            </p>
+          </div>
+
+          <!-- Back Link -->
+          <div class="mt-4">
+            <%= link_to new_user_session_path, class: "text-muted" do %>
+              <i class="bi bi-arrow-left me-1"></i>
+              로그인 페이지로 돌아가기
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

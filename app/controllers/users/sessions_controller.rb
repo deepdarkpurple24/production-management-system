@@ -17,12 +17,17 @@ class Users::SessionsController < Devise::SessionsController
 
     # Check if device is authorized
     unless resource.device_authorized?(fingerprint)
-      # Device not authorized
-      log_login_attempt(resource, fingerprint, device_info, false, "디바이스가 승인되지 않았습니다")
+      # Device not authorized - redirect to authorization flow
+      log_login_attempt(resource, fingerprint, device_info, false, "새 디바이스 감지")
 
       sign_out(resource)
-      flash[:alert] = "이 디바이스는 승인되지 않았습니다. 관리자에게 문의하세요."
-      redirect_to new_user_session_path
+      redirect_to new_device_authorization_path(
+        fingerprint: fingerprint,
+        browser: device_info[:browser],
+        os: device_info[:os],
+        device_name: device_info[:device_name],
+        email: resource.email
+      )
       return
     end
 

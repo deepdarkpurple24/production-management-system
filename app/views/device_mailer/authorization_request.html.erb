@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 12px 12px 0 0;
+      text-align: center;
+    }
+    .content {
+      background: #fff;
+      padding: 30px;
+      border: 1px solid #e8e8ed;
+      border-top: none;
+    }
+    .device-info {
+      background: #f7f7f9;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    .button {
+      display: inline-block;
+      background: #667eea;
+      color: white !important;
+      padding: 14px 28px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      margin: 20px 0;
+    }
+    .footer {
+      background: #f7f7f9;
+      padding: 20px;
+      border-radius: 0 0 12px 12px;
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+    }
+    .warning {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1 style="margin: 0;">🔐 새 디바이스 승인 요청</h1>
+  </div>
+
+  <div class="content">
+    <p>안녕하세요, <strong><%= @user.name || @user.email %></strong>님</p>
+
+    <p>새로운 디바이스에서 계정 로그인 시도가 감지되었습니다.</p>
+
+    <div class="device-info">
+      <h3 style="margin-top: 0;">디바이스 정보</h3>
+      <p style="margin: 5px 0;">
+        <strong>디바이스:</strong> <%= @device.device_name %><br>
+        <strong>브라우저:</strong> <%= @device.browser %><br>
+        <strong>운영체제:</strong> <%= @device.os %><br>
+        <strong>시도 시간:</strong> <%= l(@device.created_at, format: :long) %>
+      </p>
+    </div>
+
+    <p>본인의 로그인 시도가 맞다면 아래 버튼을 클릭하여 디바이스를 승인해주세요:</p>
+
+    <div style="text-align: center;">
+      <a href="<%= @approval_url %>" class="button">
+        ✓ 디바이스 승인하기
+      </a>
+    </div>
+
+    <div class="warning">
+      <strong>⚠️ 주의사항</strong>
+      <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+        <li>이 링크는 24시간 동안 유효합니다.</li>
+        <li>본인의 시도가 아니라면 이 이메일을 무시하고 비밀번호를 변경하세요.</li>
+        <li>링크를 다른 사람과 공유하지 마세요.</li>
+      </ul>
+    </div>
+
+    <p style="margin-top: 30px; font-size: 14px; color: #666;">
+      링크가 작동하지 않는다면, 아래 URL을 복사하여 브라우저에 붙여넣으세요:<br>
+      <code style="background: #f7f7f9; padding: 5px; display: block; margin-top: 10px; word-break: break-all;"><%= @approval_url %></code>
+    </p>
+  </div>
+
+  <div class="footer">
+    <p style="margin: 0;">
+      생산관리시스템<br>
+      이 이메일은 자동으로 발송되었습니다.
+    </p>
+  </div>
+</body>
+</html>

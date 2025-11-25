@@ -74,7 +74,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
     # Block if user is not signed in or not admin
     unless user_signed_in? && current_user.admin?
       flash[:alert] = "신규 회원가입은 관리자만 할 수 있습니다."
-      redirect_to root_path
+      redirect_to new_user_session_path
     end
   end
 end

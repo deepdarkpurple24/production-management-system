@@ -1,12 +1,14 @@
 <!-- Hero Section -->
 <div class="hero-section">
   <div class="container position-relative">
-    <!-- 설정 버튼 -->
-    <div class="position-absolute top-0 end-0 mt-3">
-      <%= link_to settings_path, class: "btn-modern btn-modern-outline" do %>
-        <i class="bi bi-gear me-2"></i>설정
-      <% end %>
-    </div>
+    <!-- 설정 버튼 (관리자만) -->
+    <% if current_user&.admin? %>
+      <div class="position-absolute top-0 end-0 mt-3">
+        <%= link_to settings_path, class: "btn-modern btn-modern-outline" do %>
+          <i class="bi bi-gear me-2"></i>설정
+        <% end %>
+      </div>
+    <% end %>
 
     <h1>생산관리 통합 시스템</h1>
     <p class="lead">제조업의 모든 프로세스를 하나로</p>
@@ -19,60 +21,68 @@
   <div class="row g-4">
 
     <!-- Production Management -->
-    <div class="col-lg-3 col-md-6">
-      <%= link_to production_plans_path, class: "text-decoration-none" do %>
-        <div class="card-modern h-100">
-          <div class="card-body text-center py-5">
-            <div class="card-icon icon-blue">
-              <i class="bi bi-clipboard-data"></i>
+    <% if page_allowed?('production_plans') || page_allowed?('production_logs') %>
+      <div class="col-lg-3 col-md-6">
+        <%= link_to production_plans_path, class: "text-decoration-none" do %>
+          <div class="card-modern h-100">
+            <div class="card-body text-center py-5">
+              <div class="card-icon icon-blue">
+                <i class="bi bi-clipboard-data"></i>
+              </div>
+              <h5 class="card-title mb-0">생산관리</h5>
             </div>
-            <h5 class="card-title mb-0">생산관리</h5>
           </div>
-        </div>
-      <% end %>
-    </div>
+        <% end %>
+      </div>
+    <% end %>
 
     <!-- Inventory Management -->
-    <div class="col-lg-3 col-md-6">
-      <%= link_to inventory_path, class: "text-decoration-none" do %>
-        <div class="card-modern h-100">
-          <div class="card-body text-center py-5">
-            <div class="card-icon icon-green">
-              <i class="bi bi-box-seam"></i>
+    <% if page_allowed?('inventory_receipts') || page_allowed?('inventory_opened_items') || page_allowed?('inventory_shipments') || page_allowed?('inventory_stocks') || page_allowed?('inventory_items') %>
+      <div class="col-lg-3 col-md-6">
+        <%= link_to inventory_path, class: "text-decoration-none" do %>
+          <div class="card-modern h-100">
+            <div class="card-body text-center py-5">
+              <div class="card-icon icon-green">
+                <i class="bi bi-box-seam"></i>
+              </div>
+              <h5 class="card-title mb-0">재고관리</h5>
             </div>
-            <h5 class="card-title mb-0">재고관리</h5>
           </div>
-        </div>
-      <% end %>
-    </div>
+        <% end %>
+      </div>
+    <% end %>
 
     <!-- Recipe Management -->
-    <div class="col-lg-3 col-md-6">
-      <%= link_to recipes_path, class: "text-decoration-none" do %>
-        <div class="card-modern h-100">
-          <div class="card-body text-center py-5">
-            <div class="card-icon icon-orange">
-              <i class="bi bi-book"></i>
+    <% if page_allowed?('recipes') || page_allowed?('finished_products') || page_allowed?('ingredients') %>
+      <div class="col-lg-3 col-md-6">
+        <%= link_to recipes_path, class: "text-decoration-none" do %>
+          <div class="card-modern h-100">
+            <div class="card-body text-center py-5">
+              <div class="card-icon icon-orange">
+                <i class="bi bi-book"></i>
+              </div>
+              <h5 class="card-title mb-0">레시피관리</h5>
             </div>
-            <h5 class="card-title mb-0">레시피관리</h5>
           </div>
-        </div>
-      <% end %>
-    </div>
+        <% end %>
+      </div>
+    <% end %>
 
     <!-- Equipment Management -->
-    <div class="col-lg-3 col-md-6">
-      <%= link_to equipments_path, class: "text-decoration-none" do %>
-        <div class="card-modern h-100">
-          <div class="card-body text-center py-5">
-            <div class="card-icon icon-red">
-              <i class="bi bi-gear-fill"></i>
+    <% if page_allowed?('equipments') %>
+      <div class="col-lg-3 col-md-6">
+        <%= link_to equipments_path, class: "text-decoration-none" do %>
+          <div class="card-modern h-100">
+            <div class="card-body text-center py-5">
+              <div class="card-icon icon-red">
+                <i class="bi bi-gear-fill"></i>
+              </div>
+              <h5 class="card-title mb-0">기기관리</h5>
             </div>
-            <h5 class="card-title mb-0">기기관리</h5>
           </div>
-        </div>
-      <% end %>
-    </div>
+        <% end %>
+      </div>
+    <% end %>
 
   </div>
 </div>

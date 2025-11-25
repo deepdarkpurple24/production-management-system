@@ -16,6 +16,21 @@ Rails.application.routes.draw do
     resources :login_histories, only: [:index]
   end
 
+  # Device authorization routes
+  resources :device_authorizations, only: [:new] do
+    collection do
+      post :send_email
+      post :request_admin
+      get :approve
+    end
+  end
+
+  # User profile and device management routes
+  namespace :my do
+    resource :password, only: [:show, :update]
+    resources :devices, only: [:index, :update, :destroy]
+  end
+
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
@@ -58,6 +73,8 @@ Rails.application.routes.draw do
   post "settings/storage_locations", to: "settings#create_storage_location", as: "create_storage_location"
   delete "settings/storage_locations/:id", to: "settings#destroy_storage_location", as: "destroy_storage_location"
   patch "settings/storage_locations/update_positions", to: "settings#update_storage_location_positions", as: "update_storage_location_positions"
+  patch "settings/page_permissions/:id", to: "settings#update_page_permission", as: "update_page_permission"
+  patch "settings/page_permissions", to: "settings#update_page_permissions_batch", as: "update_page_permissions_batch"
 
   # 각 모듈 메인 페이지
   get "production", to: "production#index", as: "production"

@@ -16,19 +16,14 @@ class Admin::UsersController < Admin::BaseController
   def create
     @user = User.new(user_params)
 
-    # Get device info for auto-authorization
-    fingerprint = params[:device_fingerprint]
-    device_info = {
-      device_name: params[:device_name],
-      browser: params[:device_browser],
-      os: params[:device_os]
-    }
+    # Store password for invitation email (before it gets encrypted)
+    temporary_password = params[:user][:password]
 
     if @user.save
-      # Auto-authorize current device for new user
-      @user.authorize_device(fingerprint, device_info)
+      # Send invitation email with temporary password
+      UserMailer.invitation(@user, temporary_password).deliver_now
 
-      flash[:notice] = "사용자가 생성되었습니다."
+      flash[:notice] = "사용자가 생성되었습니다. 초대 이메일이 발송되었습니다."
       redirect_to admin_user_path(@user)
     else
       render :new

@@ -19,6 +19,7 @@ class SettingsController < ApplicationController
     @storage_location = StorageLocation.new
     @gijeongddeok_default = GijeongddeokDefault.instance
     @gijeongddeok_fields = GijeongddeokFieldOrder.all
+    @page_permissions = PagePermission.ordered
   end
 
   def create_purpose
@@ -310,6 +311,26 @@ class SettingsController < ApplicationController
       StorageLocation.unscoped.find(id).update_column(:position, index + 1)
     end
     head :ok
+  end
+
+  def update_page_permission
+    @page_permission = PagePermission.find(params[:id])
+    @page_permission.update(allowed_for_users: params[:allowed_for_users])
+    redirect_to settings_system_path(tab: 'permissions'), notice: '페이지 권한이 변경되었습니다.'
+  end
+
+  def update_page_permissions_batch
+    # First, set all permissions to false (unchecked boxes don't send params)
+    PagePermission.update_all(allowed_for_users: false)
+
+    # Then, set the checked ones to true
+    if params[:permissions].present?
+      params[:permissions].each do |id, allowed|
+        PagePermission.find(id).update(allowed_for_users: allowed == '1')
+      end
+    end
+
+    redirect_to settings_system_path(tab: 'permissions'), notice: '페이지 권한이 저장되었습니다.'
   end
 
   private

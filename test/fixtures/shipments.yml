@@ -4,14 +4,14 @@ one:
   item: one
   shipment_date: 2025-11-15
   quantity: 9.99
-  destination: MyString
-  purpose: MyString
+  purpose: 생산 사용
+  requester: 생산팀
   notes: MyText
 
 two:
   item: two
   shipment_date: 2025-11-15
   quantity: 9.99
-  destination: MyString
-  purpose: MyString
+  purpose: 판매
+  requester: 영업팀
   notes: MyText

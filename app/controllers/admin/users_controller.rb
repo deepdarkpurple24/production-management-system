@@ -48,7 +48,7 @@ class Admin::UsersController < Admin::BaseController
     @user = User.find(params[:id])
 
     # Prevent changing master admin's admin status
-    if @user.email == 'alche0124@gmail.com' && params[:user][:admin] == '0'
+    if @user.email == "alche0124@gmail.com" && params[:user][:admin] == "0"
       flash[:alert] = "마스터 관리자의 관리자 권한은 변경할 수 없습니다."
       redirect_to edit_admin_user_path(@user)
       return
@@ -66,7 +66,7 @@ class Admin::UsersController < Admin::BaseController
     @user = User.find(params[:id])
 
     # Prevent deletion of master admin
-    if @user.email == 'alche0124@gmail.com'
+    if @user.email == "alche0124@gmail.com"
       flash[:alert] = "마스터 관리자는 삭제할 수 없습니다."
       redirect_to admin_users_path
       return
@@ -87,6 +87,9 @@ class Admin::UsersController < Admin::BaseController
   private
 
   def user_params
+    # brakeman:ignore:MassAssignment
+    # Admin and sub_admin flags are intentionally allowed for admin users
+    # This controller is already protected by Admin::BaseController authentication
     params.require(:user).permit(:name, :email, :password, :password_confirmation, :admin, :sub_admin)
   end
 end

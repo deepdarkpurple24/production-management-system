@@ -63,7 +63,7 @@
                 <%= form.check_box :admin, class: "form-check-input", style: "cursor: pointer;", disabled: (@user.email == 'alche0124@gmail.com') %>
                 <%= form.label :admin, class: "form-check-label", style: "cursor: pointer; font-weight: 500; color: #1d1d1f;" do %>
                   <i class="bi bi-shield-check me-1" style="color: #34c759;"></i>
-                  관리자 권한
+                  Master 권한
                 <% end %>
               </div>
               <small class="form-text text-muted">
@@ -71,7 +71,7 @@
                   <i class="bi bi-info-circle me-1"></i>
                   마스터 관리자의 권한은 변경할 수 없습니다
                 <% else %>
-                  관리자는 모든 사용자 및 디바이스를 관리할 수 있으며, 모든 페이지에 접근 가능합니다
+                  Master는 모든 사용자 및 디바이스를 관리할 수 있으며, 모든 페이지에 접근 가능합니다
                 <% end %>
               </small>
             </div>
@@ -81,11 +81,11 @@
                 <%= form.check_box :sub_admin, class: "form-check-input", style: "cursor: pointer;" %>
                 <%= form.label :sub_admin, class: "form-check-label", style: "cursor: pointer; font-weight: 500; color: #1d1d1f;" do %>
                   <i class="bi bi-shield-half me-1" style="color: #ff9500;"></i>
-                  부관리자 권한
+                  관리자 권한
                 <% end %>
               </div>
               <small class="form-text text-muted">
-                부관리자는 지정된 페이지에만 접근할 수 있습니다 (설정 > 시스템 설정 > 사용자 접근권한에서 설정)
+                관리자는 지정된 페이지에만 접근할 수 있습니다 (설정 > 시스템 설정 > 사용자 접근권한에서 설정)
               </small>
             </div>
 

@@ -60,19 +60,16 @@
 
             <div class="mb-3">
               <div class="form-check form-switch">
-                <%= form.check_box :admin, class: "form-check-input", style: "cursor: pointer;", disabled: (@user == current_user || (@user.admin? && User.admins.count == 1)) %>
+                <%= form.check_box :admin, class: "form-check-input", style: "cursor: pointer;", disabled: (@user.email == 'alche0124@gmail.com') %>
                 <%= form.label :admin, class: "form-check-label", style: "cursor: pointer; font-weight: 500; color: #1d1d1f;" do %>
                   <i class="bi bi-shield-check me-1" style="color: #34c759;"></i>
                   관리자 권한
                 <% end %>
               </div>
               <small class="form-text text-muted">
-                <% if @user == current_user %>
+                <% if @user.email == 'alche0124@gmail.com' %>
                   <i class="bi bi-info-circle me-1"></i>
-                  자기 자신의 권한은 변경할 수 없습니다
-                <% elsif @user.admin? && User.admins.count == 1 %>
-                  <i class="bi bi-info-circle me-1"></i>
-                  마지막 관리자의 권한은 변경할 수 없습니다
+                  마스터 관리자의 권한은 변경할 수 없습니다
                 <% else %>
                   관리자는 모든 사용자 및 디바이스를 관리할 수 있으며, 모든 페이지에 접근 가능합니다
                 <% end %>

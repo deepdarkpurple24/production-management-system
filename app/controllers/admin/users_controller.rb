@@ -47,6 +47,13 @@ class Admin::UsersController < Admin::BaseController
   def update
     @user = User.find(params[:id])
 
+    # Prevent changing master admin's admin status
+    if @user.email == 'alche0124@gmail.com' && params[:user][:admin] == '0'
+      flash[:alert] = "마스터 관리자의 관리자 권한은 변경할 수 없습니다."
+      redirect_to edit_admin_user_path(@user)
+      return
+    end
+
     if @user.update(user_params)
       flash[:notice] = "사용자 정보가 업데이트되었습니다."
       redirect_to admin_user_path(@user)
@@ -58,16 +65,16 @@ class Admin::UsersController < Admin::BaseController
   def destroy
     @user = User.find(params[:id])
 
-    # Prevent self-deletion
-    if @user == current_user
-      flash[:alert] = "자기 자신은 삭제할 수 없습니다."
+    # Prevent deletion of master admin
+    if @user.email == 'alche0124@gmail.com'
+      flash[:alert] = "마스터 관리자는 삭제할 수 없습니다."
       redirect_to admin_users_path
       return
     end
 
-    # Prevent deletion of last admin
-    if @user.admin? && User.admins.count == 1
-      flash[:alert] = "마지막 관리자는 삭제할 수 없습니다."
+    # Prevent self-deletion
+    if @user == current_user
+      flash[:alert] = "자기 자신은 삭제할 수 없습니다."
       redirect_to admin_users_path
       return
     end

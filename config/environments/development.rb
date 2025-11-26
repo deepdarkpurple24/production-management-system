@@ -41,16 +41,30 @@ Rails.application.configure do
   config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
 
   # Gmail SMTP configuration
-  config.action_mailer.delivery_method = :smtp
-  config.action_mailer.smtp_settings = {
-    address: "smtp.gmail.com",
-    port: 587,
-    domain: "gmail.com",
-    user_name: Rails.application.credentials.dig(:gmail, :email),
-    password: Rails.application.credentials.dig(:gmail, :password),
-    authentication: "plain",
-    enable_starttls_auto: true
-  }
+  begin
+    gmail_email = Rails.application.credentials.dig(:gmail, :email)
+    gmail_password = Rails.application.credentials.dig(:gmail, :password)
+
+    if gmail_email && gmail_password
+      config.action_mailer.delivery_method = :smtp
+      config.action_mailer.smtp_settings = {
+        address: "smtp.gmail.com",
+        port: 587,
+        domain: "gmail.com",
+        user_name: gmail_email,
+        password: gmail_password,
+        authentication: "plain",
+        enable_starttls_auto: true
+      }
+    else
+      # Fallback to test delivery method if credentials are missing
+      config.action_mailer.delivery_method = :test
+    end
+  rescue ActiveSupport::MessageEncryptor::InvalidMessage
+    # If credentials can't be decrypted, use test delivery method
+    config.action_mailer.delivery_method = :test
+    puts "⚠️  Warning: Gmail credentials not available, using test mailer"
+  end
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log

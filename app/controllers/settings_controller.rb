@@ -321,12 +321,18 @@ class SettingsController < ApplicationController
 
   def update_page_permissions_batch
     # First, set all permissions to false (unchecked boxes don't send params)
-    PagePermission.update_all(allowed_for_users: false)
+    PagePermission.update_all(allowed_for_users: false, allowed_for_sub_admins: false)
 
     # Then, set the checked ones to true
-    if params[:permissions].present?
-      params[:permissions].each do |id, allowed|
+    if params[:permissions_users].present?
+      params[:permissions_users].each do |id, allowed|
         PagePermission.find(id).update(allowed_for_users: allowed == '1')
+      end
+    end
+
+    if params[:permissions_sub_admins].present?
+      params[:permissions_sub_admins].each do |id, allowed|
+        PagePermission.find(id).update(allowed_for_sub_admins: allowed == '1')
       end
     end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_25_145111) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_26_053056) do
   create_table "authorized_devices", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.string "authorization_token"
@@ -288,6 +288,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_25_145111) do
   end
 
   create_table "page_permissions", force: :cascade do |t|
+    t.boolean "allowed_for_sub_admins", default: false, null: false
     t.boolean "allowed_for_users", default: true
     t.datetime "created_at", null: false
     t.string "description"
@@ -515,6 +516,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_25_145111) do
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
     t.integer "sign_in_count", default: 0, null: false
+    t.boolean "sub_admin", default: false, null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true

@@ -13,11 +13,20 @@ class User < ApplicationRecord
 
   # Scopes
   scope :admins, -> { where(admin: true) }
-  scope :regular_users, -> { where(admin: false) }
+  scope :sub_admins, -> { where(sub_admin: true) }
+  scope :regular_users, -> { where(admin: false, sub_admin: false) }
 
   # Methods
   def admin?
     admin
+  end
+
+  def sub_admin?
+    sub_admin
+  end
+
+  def has_admin_privileges?
+    admin? || sub_admin?
   end
 
   def device_authorized?(fingerprint)

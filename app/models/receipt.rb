@@ -1,3 +1,4 @@
+# 입고 내역 - 품목 입고 기록 및 유통기한 관리
 class Receipt < ApplicationRecord
   belongs_to :item
   has_many :receipt_versions, -> { order(version_number: :desc) }, dependent: :destroy

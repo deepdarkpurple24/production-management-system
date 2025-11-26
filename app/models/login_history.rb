@@ -1,3 +1,4 @@
+# 로그인 이력 - 성공/실패 감사 추적
 class LoginHistory < ApplicationRecord
   belongs_to :user, optional: true  # Allow failed login attempts without user
 

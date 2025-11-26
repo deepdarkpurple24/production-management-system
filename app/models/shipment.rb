@@ -1,3 +1,4 @@
+# 출고 내역 - 품목 출고 기록 및 재고 차감
 class Shipment < ApplicationRecord
   belongs_to :item
   has_many :shipment_versions, -> { order(version_number: :desc) }, dependent: :destroy

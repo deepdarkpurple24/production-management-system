@@ -1,3 +1,4 @@
+# 공정 정보 - 레시피 단계 구분
 class RecipeProcess < ApplicationRecord
   validates :name, presence: true, uniqueness: true
 

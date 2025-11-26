@@ -1,3 +1,4 @@
+# 완제품 정보 - 다중 레시피 조합
 class FinishedProduct < ApplicationRecord
   has_many :finished_product_recipes, -> { order(position: :asc) }, dependent: :destroy
   has_many :recipes, through: :finished_product_recipes

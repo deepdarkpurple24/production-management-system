@@ -1,3 +1,4 @@
+# 장비 모드 - 장비별 작동 방식
 class EquipmentMode < ApplicationRecord
   belongs_to :equipment_type
 

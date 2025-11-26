@@ -1,3 +1,4 @@
+# 출고 목적 - 출고 사유 분류
 class ShipmentPurpose < ApplicationRecord
   validates :name, presence: true, uniqueness: true
 

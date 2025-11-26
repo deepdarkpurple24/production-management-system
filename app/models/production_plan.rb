@@ -1,3 +1,4 @@
+# 생산 계획 - 일자별 생산 스케줄
 class ProductionPlan < ApplicationRecord
   belongs_to :finished_product
   has_many :production_logs, dependent: :destroy

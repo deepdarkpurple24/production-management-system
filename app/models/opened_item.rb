@@ -1,3 +1,4 @@
+# 개봉품 관리 - FIFO 기반 부분 사용 재고 추적
 class OpenedItem < ApplicationRecord
   belongs_to :item
   belongs_to :receipt

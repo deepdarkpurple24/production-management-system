@@ -1,3 +1,4 @@
+# 페이지 권한 - 사용자 역할별 접근 제어
 class PagePermission < ApplicationRecord
   validates :page_key, presence: true, uniqueness: true
   validates :name, presence: true

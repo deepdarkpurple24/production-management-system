@@ -1,8 +1,10 @@
+# 사용자 계정 및 인증 관리
+# Devise 기반 인증, 디바이스별 접근 제어, 로그인 이력 추적
 class User < ApplicationRecord
   # Include default devise modules. Others available are:
-  # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
+  # :lockable, :timeoutable and :omniauthable
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :validatable, :trackable
+         :recoverable, :rememberable, :validatable, :trackable, :confirmable
 
   # Associations
   has_many :authorized_devices, dependent: :destroy

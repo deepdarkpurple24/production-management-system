@@ -1,3 +1,4 @@
+# 완제품-레시피 연결 - 레시피별 수량
 class FinishedProductRecipe < ApplicationRecord
   belongs_to :finished_product
   belongs_to :recipe

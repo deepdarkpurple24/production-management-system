@@ -6,6 +6,7 @@ one:
   admin: true
   sub_admin: false
   encrypted_password: <%= Devise::Encryptor.digest(User, 'password123') %>
+  confirmed_at: <%= Time.now %>
   created_at: <%= Time.now %>
   updated_at: <%= Time.now %>
 
@@ -15,5 +16,6 @@ two:
   admin: false
   sub_admin: true
   encrypted_password: <%= Devise::Encryptor.digest(User, 'password123') %>
+  confirmed_at: <%= Time.now %>
   created_at: <%= Time.now %>
   updated_at: <%= Time.now %>

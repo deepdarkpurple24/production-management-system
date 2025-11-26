@@ -1,3 +1,4 @@
+# 반죽일지 - 실제 생산 기록 및 품질 데이터
 class ProductionLog < ApplicationRecord
   belongs_to :production_plan
   belongs_to :finished_product

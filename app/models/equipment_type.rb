@@ -1,3 +1,4 @@
+# 장비 구분 - 장비 분류 체계
 class EquipmentType < ApplicationRecord
   has_many :equipment_modes, dependent: :destroy
 

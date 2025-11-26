@@ -1,0 +1,8 @@
+attributes:
+  - content
+  - foreign_keys
+notation: simple
+orientation: horizontal
+title: "Production Management System - Database Schema"
+polymorphism: true
+inheritance: true

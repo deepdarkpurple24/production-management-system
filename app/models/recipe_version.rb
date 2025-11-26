@@ -1,3 +1,4 @@
+# 레시피 버전 관리 - 변경 이력 추적
 class RecipeVersion < ApplicationRecord
   belongs_to :recipe
 

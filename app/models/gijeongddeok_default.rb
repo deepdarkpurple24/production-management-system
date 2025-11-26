@@ -1,3 +1,4 @@
+# 기정떡 기본값 - 생산일지 초기값
 class GijeongddeokDefault < ApplicationRecord
   # 단일 레코드만 존재하도록 보장
   def self.instance

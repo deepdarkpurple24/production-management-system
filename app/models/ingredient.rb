@@ -1,3 +1,4 @@
+# 재료 구성 정보 - 품목 조합 및 생산 단위
 class Ingredient < ApplicationRecord
   belongs_to :equipment_type, optional: true
   belongs_to :equipment_mode, optional: true

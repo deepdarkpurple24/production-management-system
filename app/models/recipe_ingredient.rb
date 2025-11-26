@@ -1,3 +1,4 @@
+# 레시피-재료 연결 - 재료별 중량 및 순서
 class RecipeIngredient < ApplicationRecord
   belongs_to :recipe
   belongs_to :item, optional: true  # 소계 행 또는 재료 선택 시 item이 없음

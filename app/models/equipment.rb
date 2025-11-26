@@ -1,3 +1,4 @@
+# 장비 정보 - 생산 설비 및 상태 관리
 class Equipment < ApplicationRecord
   belongs_to :equipment_type, optional: true
   has_many :recipe_equipments, dependent: :destroy

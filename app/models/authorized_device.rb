@@ -1,3 +1,4 @@
+# 승인된 디바이스 - 브라우저 지문 기반 접근 제어
 class AuthorizedDevice < ApplicationRecord
   belongs_to :user
 

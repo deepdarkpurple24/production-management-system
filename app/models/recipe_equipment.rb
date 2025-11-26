@@ -1,3 +1,4 @@
+# 레시피-장비 연결 - 공정별 장비 배치
 class RecipeEquipment < ApplicationRecord
   belongs_to :recipe
   belongs_to :equipment, optional: true

@@ -1,3 +1,4 @@
+# 재료-품목 연결 - 수량 및 단위 변환
 class IngredientItem < ApplicationRecord
   belongs_to :ingredient
   belongs_to :item, optional: true  # 소계 행 또는 재료/기타 선택 시 item이 없음

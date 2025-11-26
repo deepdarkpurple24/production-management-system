@@ -1,3 +1,4 @@
+# 재료 사용 기록 - 생산일지와 재고 연결
 class CheckedIngredient < ApplicationRecord
   belongs_to :production_log
   belongs_to :recipe

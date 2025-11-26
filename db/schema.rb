@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_26_113301) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_26_131532) do
   create_table "authorized_devices", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.string "authorization_token"
@@ -498,6 +498,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_26_113301) do
 
   create_table "users", force: :cascade do |t|
     t.boolean "admin", default: false, null: false
+    t.datetime "confirmation_sent_at"
+    t.string "confirmation_token"
+    t.datetime "confirmed_at"
     t.datetime "created_at", null: false
     t.datetime "current_sign_in_at"
     t.string "current_sign_in_ip"
@@ -511,7 +514,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_26_113301) do
     t.string "reset_password_token"
     t.integer "sign_in_count", default: 0, null: false
     t.boolean "sub_admin", default: false, null: false
+    t.string "unconfirmed_email"
     t.datetime "updated_at", null: false
+    t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end

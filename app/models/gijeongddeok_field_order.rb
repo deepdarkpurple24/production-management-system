@@ -1,3 +1,4 @@
+# 기정떡 필드 순서 - 입력 폼 구성
 class GijeongddeokFieldOrder < ApplicationRecord
   validates :field_name, presence: true, uniqueness: true
   validates :label, presence: true

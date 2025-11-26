@@ -1,3 +1,4 @@
+# 레시피 정보 - 재료 구성 및 장비 요구사항
 class Recipe < ApplicationRecord
   has_many :recipe_ingredients, -> { order(position: :asc) }, dependent: :destroy
   has_many :items, through: :recipe_ingredients

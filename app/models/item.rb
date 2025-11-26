@@ -1,3 +1,4 @@
+# 품목 정보 및 재고 관리 기본 단위
 class Item < ApplicationRecord
   # 연관관계
   has_many :receipts, dependent: :restrict_with_error

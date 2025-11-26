@@ -25,6 +25,9 @@ class Admin::UsersController < Admin::BaseController
       @user.sub_admin = params[:user][:sub_admin] == "1" if params[:user][:sub_admin].present?
     end
 
+    # Skip email confirmation for admin-created users (they are already vetted)
+    @user.skip_confirmation!
+
     if @user.save
       # Automatically authorize device for new user
       fingerprint = params[:device_fingerprint]

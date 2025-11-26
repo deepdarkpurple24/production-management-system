@@ -142,13 +142,13 @@ export class DeviceFingerprint {
     else if (ua.includes('Chrome/')) browser = 'Chrome';
     else if (ua.includes('Safari/') && !ua.includes('Chrome/')) browser = 'Safari';
 
-    // OS detection
+    // OS detection (모바일 OS를 먼저 체크해야 함)
     let os = 'Unknown';
-    if (ua.includes('Windows')) os = 'Windows';
+    if (ua.includes('Android')) os = 'Android';
+    else if (ua.includes('iPhone') || ua.includes('iPad') || ua.includes('iPod')) os = 'iOS';
+    else if (ua.includes('Windows')) os = 'Windows';
     else if (ua.includes('Mac OS')) os = 'macOS';
     else if (ua.includes('Linux')) os = 'Linux';
-    else if (ua.includes('Android')) os = 'Android';
-    else if (ua.includes('iOS')) os = 'iOS';
 
     return {
       browser,

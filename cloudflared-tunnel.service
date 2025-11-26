@@ -1,0 +1,16 @@
+[Unit]
+Description=Cloudflare Tunnel for Production Management System
+After=network.target
+
+[Service]
+Type=simple
+User=alche0124
+Group=alche0124
+ExecStart=/usr/local/bin/cloudflared tunnel --no-autoupdate run --token eyJhIjoiOGJlM2UzNDAyNDNjNzkzMWQyODNiNTIxNWExMGFkMDUiLCJ0IjoiMDE2ODlhZjUtZDJmMy00ODQzLTljYTEtZTRmOGY2ZjkxNDI0IiwicyI6IllqRTJZbVEwTldFdFpURXpOaTAwTnpZMkxXSTBORGt0T0RNME5qQTNNR0k0WlRJMyJ9
+Restart=on-failure
+RestartSec=10s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

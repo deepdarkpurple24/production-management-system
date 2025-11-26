@@ -44,7 +44,7 @@ class PagePermission < ApplicationRecord
     permission = find_by(page_key: page_key)
     return true if permission.nil? # 등록되지 않은 페이지는 기본 허용
 
-    # 부관리자 권한 확인
+    # 관리자 권한 확인
     return true if user&.sub_admin? && permission.allowed_for_sub_admins?
 
     # 일반 사용자 권한 확인

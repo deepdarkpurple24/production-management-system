@@ -19,6 +19,12 @@ class Admin::UsersController < Admin::BaseController
     # Store password for invitation email (before it gets encrypted)
     temporary_password = params[:user][:password]
 
+    # Handle privileged fields separately (only admins can set these)
+    if current_user.admin?
+      @user.admin = params[:user][:admin] == "1" if params[:user][:admin].present?
+      @user.sub_admin = params[:user][:sub_admin] == "1" if params[:user][:sub_admin].present?
+    end
+
     if @user.save
       # Automatically authorize device for new user
       fingerprint = params[:device_fingerprint]
@@ -66,6 +72,15 @@ class Admin::UsersController < Admin::BaseController
       return
     end
 
+    # Handle privileged fields separately (only admins can set these)
+    if current_user.admin? && params[:user][:admin].present?
+      @user.admin = params[:user][:admin] == "1"
+    end
+
+    if current_user.admin? && params[:user][:sub_admin].present?
+      @user.sub_admin = params[:user][:sub_admin] == "1"
+    end
+
     if @user.update(user_params)
       Rails.logger.info "After update - admin: #{@user.admin}, sub_admin: #{@user.sub_admin}"
       flash[:notice] = "사용자 정보가 업데이트되었습니다."
@@ -102,9 +117,8 @@ class Admin::UsersController < Admin::BaseController
   private
 
   def user_params
-    # brakeman:ignore:MassAssignment
-    # Admin and sub_admin flags are intentionally allowed for admin users
-    # This controller is already protected by Admin::BaseController authentication
-    params.require(:user).permit(:name, :email, :password, :password_confirmation, :admin, :sub_admin)
+    # Privileged fields (admin, sub_admin) are handled separately in create/update actions
+    # to prevent mass assignment security vulnerabilities
+    params.require(:user).permit(:name, :email, :password, :password_confirmation)
   end
 end

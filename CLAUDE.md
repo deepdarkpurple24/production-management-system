@@ -20,7 +20,7 @@ This document provides a comprehensive overview of the Production Management Sys
 ### Backend
 - **Framework**: Ruby on Rails 8.1.1
 - **Ruby Version**: 3.4.7
-- **Database**: SQLite3 (with multi-database support in production)
+- **Database**: PostgreSQL 17 (production), SQLite3 (development/test)
 - **Authentication**: Devise (email/password with device-based access control)
 - **Authorization**: Pundit (role-based policies)
 - **Asset Pipeline**: Propshaft
@@ -937,11 +937,13 @@ All timestamps are in Seoul time zone (KST).
 
 ### Database
 - **Development/Test**: Single SQLite database in `storage/`
-- **Production**: Multi-database setup
-  - Primary: `storage/production.sqlite3`
-  - Cache: `storage/production_cache.sqlite3`
-  - Queue: `storage/production_queue.sqlite3`
-  - Cable: `storage/production_cable.sqlite3`
+- **Production**: PostgreSQL with multi-database setup
+  - Primary: `production_management_system_production`
+  - Cache: `production_management_system_cache`
+  - Queue: `production_management_system_queue`
+  - Cable: `production_management_system_cable`
+  - Deployment: Docker Compose with PostgreSQL 17 Alpine
+  - Backup: Automated daily backup to Supabase (3 AM KST via cron)
 
 ### Asset Pipeline
 - **CSS**: SCSS → SASS compiler → PostCSS → Autoprefixer → `app/assets/builds/application.css`
@@ -969,6 +971,49 @@ bin/rails test:system            # Browser-based system tests
 ```
 
 ## Recent Development History
+
+### 2025-11-27: PostgreSQL Migration & Supabase Backup System
+- **Database Migration**: SQLite → PostgreSQL
+  - Migrated from SQLite to PostgreSQL for production scalability
+  - Created comprehensive migration rake task (`lib/tasks/migrate_sqlite_to_postgresql.rake`)
+  - Preserves all record IDs and resets PostgreSQL sequences
+  - Handles 35 models in dependency order (109 records migrated successfully)
+- **Docker Compose Deployment**:
+  - PostgreSQL 17 Alpine container (`docker-compose.yml`)
+  - Volume persistence: `postgres_data`
+  - Health checks configured
+  - Environment variables: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
+- **Supabase Backup System**:
+  - Dual backup scripts: Original (`backup_to_supabase.sh`) and Simplified (`backup_to_supabase_simple.sh`)
+  - Simplified version backs up to default `postgres` database for dashboard visibility
+  - Automated daily backups via cron (3 AM KST)
+  - Backup retention: 7 days
+  - Restore script available (`restore_from_supabase.sh`)
+  - Connection: Supabase Connection Pooler (Session Mode, port 5432) for compatibility
+  - Logs: `~/logs/pg_backup_cron.log`
+- **Backup Commands**:
+  ```bash
+  # Manual backup
+  ./scripts/backup_to_supabase_simple.sh
+
+  # Restore from Supabase (disaster recovery)
+  ./scripts/restore_from_supabase.sh
+
+  # Check cron status
+  crontab -l
+
+  # View backup logs
+  tail -f ~/logs/pg_backup_cron.log
+  ```
+- **Environment Setup**:
+  - Requires `SUPABASE_PASSWORD` environment variable
+  - PostgreSQL client tools (`psql`, `pg_dump`) required on server
+  - `.gitignore` updated to exclude `docker-compose.yml`, `*.sql`, `*.sql.gz`
+- **Security**:
+  - Supabase credentials stored in environment variables only
+  - No hardcoded passwords in scripts
+  - Backup files compressed with gzip
+  - GitGuardian false positive addressed (environment variable usage is correct)
 
 ### 2025-11-23: Authentication & Authorization System
 - **Devise Integration**:
@@ -1301,17 +1346,17 @@ bin/rails db:migrate
 - User-friendly countdown timer with "Continue" button
 
 **Known Security Limitations**:
-- **SQLite**: Not recommended for high-concurrency production environments
 - **Device Fingerprinting**: Can be evaded by sophisticated attackers (browser fingerprinting is not foolproof)
 - **No Two-Factor Authentication**: Device-based authorization is single-factor
 - **Admin Deletion Protection**: Cannot delete last admin or self, but no audit trail for admin actions
+- **Backup Security**: Supabase credentials stored in environment variables (secure, but consider additional encryption for backup files)
 
 **Recommended Security Improvements**:
 1. Consider adding two-factor authentication (TOTP)
 2. Add admin action audit logging
-3. Consider moving to PostgreSQL for production
-4. Implement IP-based blocking for repeated violations
-5. Regular security dependency updates (bundler-audit, brakeman)
+3. Implement IP-based blocking for repeated violations
+4. Regular security dependency updates (bundler-audit, brakeman)
+5. Consider encrypting backup files with GPG before storing
 
 ## Performance Notes
 
@@ -1349,11 +1394,12 @@ Documentation:
 - CLAUDE.md - Comprehensive architecture guide
 - CHANGELOG.md - Development history
 - INTERACTION_GUIDE.md - Frontend patterns
+- BACKUP_GUIDE.md - PostgreSQL and Supabase backup procedures
 - README.md - Basic project info
 
 Configuration:
 - config/routes.rb - Application structure (includes authentication routes)
-- config/database.yml - Database configuration
+- config/database.yml - Database configuration (PostgreSQL production, SQLite dev/test)
 - config/initializers/devise.rb - Devise authentication configuration (timeout_in, confirmable)
 - config/initializers/rack_attack.rb - Rate limiting rules
 - config/locales/devise.ko.yml - Korean authentication messages
@@ -1361,6 +1407,12 @@ Configuration:
 - config/application.rb - i18n locale settings, Rack::Attack middleware
 - db/schema.rb - Database structure
 - Gemfile / package.json - Dependencies
+
+Scripts:
+- scripts/backup_to_supabase.sh - Original backup script (separate databases)
+- scripts/backup_to_supabase_simple.sh - Simplified backup (default postgres DB)
+- scripts/restore_from_supabase.sh - Disaster recovery restore script
+- lib/tasks/migrate_sqlite_to_postgresql.rake - One-time SQLite to PostgreSQL migration
 
 Key Models:
 - app/models/user.rb - Authentication, device authorization methods
@@ -1477,18 +1529,38 @@ const itemOptions = itemsData.map(item => `<option value="${item.id}">${item.nam
 
 ---
 
-Document Version: 1.8
-Last Updated: 2025-11-26
+Document Version: 1.9
+Last Updated: 2025-11-27
 Schema Version: 20251126131532
 Rails Version: 8.1.1
 Ruby Version: 3.4.7
 Node Version: 24.11.1
+PostgreSQL Version: 17 (Alpine)
 
 Created for: Future Claude instances to quickly understand and work with this codebase
 
 ---
 
 ## Changelog
+
+### Version 1.9 (2025-11-27)
+- **Database Migration**:
+  - Migrated from SQLite to PostgreSQL for production
+  - Added migration rake task documentation
+  - Docker Compose deployment with PostgreSQL 17
+- **Backup System**:
+  - Supabase automated backup system (daily 3 AM KST)
+  - Dual backup scripts (original and simplified)
+  - Restore procedures documented
+  - Backup commands and monitoring added
+- **Documentation**:
+  - Added BACKUP_GUIDE.md reference
+  - Updated database configuration details
+  - Added backup/restore scripts to Important Files
+  - Updated security considerations for backup
+- **Configuration**:
+  - Environment variable management for Supabase
+  - .gitignore updates for sensitive files
 
 ### Version 1.8 (2025-11-26)
 - **Security Enhancements**:

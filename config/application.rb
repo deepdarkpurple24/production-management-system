@@ -25,6 +25,10 @@ module ProductionManagementSystem
     config.active_record.default_timezone = :local
     # config.eager_load_paths << Rails.root.join("extras")
 
+    # Set default locale to Korean
+    config.i18n.default_locale = :ko
+    config.i18n.available_locales = [:ko, :en]
+
     # Enable Rack::Attack middleware for rate limiting
     config.middleware.use Rack::Attack
   end

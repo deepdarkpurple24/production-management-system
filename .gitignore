@@ -44,3 +44,11 @@
 
 # Ignore webhook configuration with secrets
 /hooks.json
+
+# Ignore backup-related files and secrets
+.env.backup
+/tmp/pg_backup
+/tmp/pg_restore
+*.sql
+*.sql.gz
+docker-compose.yml

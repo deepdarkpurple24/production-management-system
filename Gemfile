@@ -22,6 +22,7 @@ gem "jbuilder"
 # Authentication and Authorization
 gem "devise"  # User authentication
 gem "pundit"  # Authorization policies
+gem "rack-attack"  # Rate limiting and request throttling
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"

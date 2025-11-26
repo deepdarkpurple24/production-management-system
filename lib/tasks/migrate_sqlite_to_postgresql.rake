@@ -22,9 +22,9 @@ namespace :db do
       { model: ItemCategory, name: 'ItemCategory' },
       { model: StorageLocation, name: 'StorageLocation' },
       { model: ShipmentPurpose, name: 'ShipmentPurpose' },
-      { model: ShipmentRequester, name: 'ShipmentRequester' },
       { model: GijeongddeokDefault, name: 'GijeongddeokDefault' },
       { model: GijeongddeokFieldOrder, name: 'GijeongddeokFieldOrder' },
+      { model: PagePermission, name: 'PagePermission' },
 
       # 2. User 관련
       { model: AuthorizedDevice, name: 'AuthorizedDevice' },
@@ -49,9 +49,18 @@ namespace :db do
       { model: RecipeIngredient, name: 'RecipeIngredient' },
       { model: RecipeEquipment, name: 'RecipeEquipment' },
 
+      # 6-1. 재료 버전
+      { model: IngredientVersion, name: 'IngredientVersion' },
+
+      # 6-2. 품목 버전
+      { model: ItemVersion, name: 'ItemVersion' },
+      { model: ReceiptVersion, name: 'ReceiptVersion' },
+      { model: ShipmentVersion, name: 'ShipmentVersion' },
+
       # 7. 완제품
       { model: FinishedProduct, name: 'FinishedProduct' },
       { model: FinishedProductRecipe, name: 'FinishedProductRecipe' },
+      { model: FinishedProductVersion, name: 'FinishedProductVersion' },
 
       # 8. 생산 계획 및 로그
       { model: ProductionPlan, name: 'ProductionPlan' },

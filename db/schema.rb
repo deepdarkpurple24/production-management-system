@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_26_112506) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_26_113301) do
   create_table "authorized_devices", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.string "authorization_token"
@@ -453,14 +453,6 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_26_112506) do
     t.integer "position", default: 0
     t.datetime "updated_at", null: false
     t.index ["position"], name: "index_shipment_purposes_on_position"
-  end
-
-  create_table "shipment_requesters", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "name"
-    t.integer "position", default: 0
-    t.datetime "updated_at", null: false
-    t.index ["position"], name: "index_shipment_requesters_on_position"
   end
 
   create_table "shipment_versions", force: :cascade do |t|

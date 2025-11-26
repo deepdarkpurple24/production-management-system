@@ -12,13 +12,11 @@ class Inventory::ShipmentsController < ApplicationController
     @shipment = Shipment.new(shipment_date: Time.current)
     @items = Item.all.order(:name)
     @shipment_purposes = ShipmentPurpose.all
-    @shipment_requesters = ShipmentRequester.all
   end
 
   def edit
     @items = Item.all.order(:name)
     @shipment_purposes = ShipmentPurpose.all
-    @shipment_requesters = ShipmentRequester.all
   end
 
   def create
@@ -30,7 +28,6 @@ class Inventory::ShipmentsController < ApplicationController
     else
       @items = Item.all.order(:name)
       @shipment_purposes = ShipmentPurpose.all
-      @shipment_requesters = ShipmentRequester.all
       render :new, status: :unprocessable_entity
     end
   end
@@ -41,7 +38,6 @@ class Inventory::ShipmentsController < ApplicationController
     else
       @items = Item.all.order(:name)
       @shipment_purposes = ShipmentPurpose.all
-      @shipment_requesters = ShipmentRequester.all
       render :edit, status: :unprocessable_entity
     end
   end

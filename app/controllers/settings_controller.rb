@@ -5,13 +5,11 @@ class SettingsController < ApplicationController
 
   def system
     @shipment_purposes = ShipmentPurpose.all
-    @shipment_requesters = ShipmentRequester.all
     @equipment_types = EquipmentType.all
     @recipe_processes = RecipeProcess.all
     @item_categories = ItemCategory.all
     @storage_locations = StorageLocation.all
     @shipment_purpose = ShipmentPurpose.new
-    @shipment_requester = ShipmentRequester.new
     @equipment_type = EquipmentType.new
     @equipment_mode = EquipmentMode.new
     @recipe_process = RecipeProcess.new
@@ -29,8 +27,6 @@ class SettingsController < ApplicationController
       redirect_to settings_system_path(tab: "inventory"), notice: "출고 목적이 추가되었습니다."
     else
       @shipment_purposes = ShipmentPurpose.all
-      @shipment_requesters = ShipmentRequester.all
-      @shipment_requester = ShipmentRequester.new
       render :system, status: :unprocessable_entity
     end
   end
@@ -41,36 +37,9 @@ class SettingsController < ApplicationController
     redirect_to settings_system_path(tab: "inventory"), notice: "출고 목적이 삭제되었습니다."
   end
 
-  def create_requester
-    # 현재 로그인한 사용자의 이름을 자동으로 사용
-    @shipment_requester = ShipmentRequester.new(name: current_user.name)
-
-    if @shipment_requester.save
-      redirect_to settings_system_path(tab: "inventory"), notice: "출고 요청자가 추가되었습니다."
-    else
-      @shipment_purposes = ShipmentPurpose.all
-      @shipment_requesters = ShipmentRequester.all
-      @shipment_purpose = ShipmentPurpose.new
-      render :system, status: :unprocessable_entity
-    end
-  end
-
-  def destroy_requester
-    @shipment_requester = ShipmentRequester.find(params[:id])
-    @shipment_requester.destroy
-    redirect_to settings_system_path(tab: "inventory"), notice: "출고 요청자가 삭제되었습니다."
-  end
-
   def update_purpose_positions
     params[:positions].each_with_index do |id, index|
       ShipmentPurpose.unscoped.find(id).update_column(:position, index + 1)
-    end
-    head :ok
-  end
-
-  def update_requester_positions
-    params[:positions].each_with_index do |id, index|
-      ShipmentRequester.unscoped.find(id).update_column(:position, index + 1)
     end
     head :ok
   end
@@ -82,10 +51,8 @@ class SettingsController < ApplicationController
       redirect_to settings_system_path(tab: "equipment"), notice: "장비 구분이 추가되었습니다."
     else
       @shipment_purposes = ShipmentPurpose.all
-      @shipment_requesters = ShipmentRequester.all
       @equipment_types = EquipmentType.all
       @shipment_purpose = ShipmentPurpose.new
-      @shipment_requester = ShipmentRequester.new
       render :system, status: :unprocessable_entity
     end
   end
@@ -110,10 +77,8 @@ class SettingsController < ApplicationController
       redirect_to settings_system_path(tab: "equipment"), notice: "장비 모드가 추가되었습니다."
     else
       @shipment_purposes = ShipmentPurpose.all
-      @shipment_requesters = ShipmentRequester.all
       @equipment_types = EquipmentType.all
       @shipment_purpose = ShipmentPurpose.new
-      @shipment_requester = ShipmentRequester.new
       @equipment_type = EquipmentType.new
       render :system, status: :unprocessable_entity
     end
@@ -145,11 +110,9 @@ class SettingsController < ApplicationController
       redirect_to settings_system_path(tab: "recipe"), notice: "공정이 추가되었습니다."
     else
       @shipment_purposes = ShipmentPurpose.all
-      @shipment_requesters = ShipmentRequester.all
       @equipment_types = EquipmentType.all
       @recipe_processes = RecipeProcess.all
       @shipment_purpose = ShipmentPurpose.new
-      @shipment_requester = ShipmentRequester.new
       @equipment_type = EquipmentType.new
       @equipment_mode = EquipmentMode.new
       render :system, status: :unprocessable_entity
@@ -182,11 +145,9 @@ class SettingsController < ApplicationController
       redirect_to settings_system_path(tab: "production"), notice: "기정떡 기본값이 저장되었습니다."
     else
       @shipment_purposes = ShipmentPurpose.all
-      @shipment_requesters = ShipmentRequester.all
       @equipment_types = EquipmentType.all
       @recipe_processes = RecipeProcess.all
       @shipment_purpose = ShipmentPurpose.new
-      @shipment_requester = ShipmentRequester.new
       @equipment_type = EquipmentType.new
       @equipment_mode = EquipmentMode.new
       @recipe_process = RecipeProcess.new
@@ -253,12 +214,10 @@ class SettingsController < ApplicationController
       redirect_to settings_system_path(tab: "inventory"), notice: "품목 카테고리가 추가되었습니다."
     else
       @shipment_purposes = ShipmentPurpose.all
-      @shipment_requesters = ShipmentRequester.all
       @equipment_types = EquipmentType.all
       @recipe_processes = RecipeProcess.all
       @item_categories = ItemCategory.all
       @shipment_purpose = ShipmentPurpose.new
-      @shipment_requester = ShipmentRequester.new
       @equipment_type = EquipmentType.new
       @equipment_mode = EquipmentMode.new
       @recipe_process = RecipeProcess.new
@@ -286,13 +245,11 @@ class SettingsController < ApplicationController
       redirect_to settings_system_path(tab: "inventory"), notice: "보관위치가 추가되었습니다."
     else
       @shipment_purposes = ShipmentPurpose.all
-      @shipment_requesters = ShipmentRequester.all
       @equipment_types = EquipmentType.all
       @recipe_processes = RecipeProcess.all
       @item_categories = ItemCategory.all
       @storage_locations = StorageLocation.all
       @shipment_purpose = ShipmentPurpose.new
-      @shipment_requester = ShipmentRequester.new
       @equipment_type = EquipmentType.new
       @equipment_mode = EquipmentMode.new
       @recipe_process = RecipeProcess.new

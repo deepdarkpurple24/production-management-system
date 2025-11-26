@@ -326,63 +326,6 @@
             </div>
           </div>
         </div>
-
-        <!-- 출고 요청자 관리 -->
-        <div class="col-12">
-          <div class="card-modern">
-            <div class="card-body p-4">
-              <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
-                <i class="bi bi-person me-2"></i>출고 요청자 관리
-              </h5>
-
-              <!-- 새 요청자 추가 폼 -->
-              <%= form_with(url: create_shipment_requester_path, local: true, class: "mb-4") do |f| %>
-                <div class="d-flex align-items-center gap-3">
-                  <div class="flex-grow-1">
-                    <div class="alert alert-info mb-0 d-flex align-items-center" style="background-color: #e3f2fd; border-color: #90caf9; color: #1976d2;">
-                      <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
-                      <div>
-                        <strong><%= current_user.name %></strong>
-                        <small class="d-block text-muted" style="font-size: 0.875rem;">현재 로그인한 사용자</small>
-                      </div>
-                    </div>
-                  </div>
-                  <%= f.submit "내 이름을 요청자로 추가", class: "btn-modern btn-modern-primary" %>
-                </div>
-                <% if @shipment_requester.errors.any? %>
-                  <div class="text-danger small mt-2">
-                    <%= @shipment_requester.errors.full_messages.join(", ") %>
-                  </div>
-                <% end %>
-              <% end %>
-
-              <!-- 요청자 목록 -->
-              <% if @shipment_requesters.any? %>
-                <small class="text-muted mb-2 d-block">
-                  <i class="bi bi-arrows-move me-1"></i>드래그하여 순서 변경
-                </small>
-                <div class="list-group" id="requesters-list">
-                  <% @shipment_requesters.each do |requester| %>
-                    <div class="list-group-item d-flex justify-content-between align-items-center sortable-item" style="border: 1px solid #e8e8ed; border-radius: 8px; margin-bottom: 8px; cursor: move;" data-id="<%= requester.id %>">
-                      <div class="d-flex align-items-center">
-                        <i class="bi bi-grip-vertical me-2 text-muted"></i>
-                        <span style="font-weight: 500;"><%= requester.name %></span>
-                      </div>
-                      <%= button_to destroy_shipment_requester_path(requester), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "btn btn-sm btn-outline-danger" do %>
-                        <i class="bi bi-trash"></i>
-                      <% end %>
-                    </div>
-                  <% end %>
-                </div>
-              <% else %>
-                <div class="text-center text-muted py-3">
-                  <i class="bi bi-inbox" style="font-size: 2rem; color: #d2d2d7;"></i>
-                  <p class="mt-2 mb-0 small">등록된 출고 요청자가 없습니다.</p>
-                </div>
-              <% end %>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -842,48 +785,6 @@
               console.log('출고 목적 순서가 업데이트되었습니다.');
               if (window.toast) {
                 window.toast.success('순서가 변경되었습니다.', '출고 목적');
-              }
-            }
-          })
-          .catch(error => {
-            console.error('순서 업데이트 에러:', error);
-            if (window.toast) {
-              window.toast.error('순서 변경에 실패했습니다.', '오류');
-            }
-          });
-        }
-      });
-    }
-
-    // 출고 요청자 목록 드래그 앤 드롭
-    var requestersList = document.getElementById('requesters-list');
-    if (requestersList && !requestersList.hasAttribute('data-sortable-initialized')) {
-      requestersList.setAttribute('data-sortable-initialized', 'true');
-      var requestersSortable = Sortable.create(requestersList, {
-        animation: 150,
-        handle: '.bi-grip-vertical',
-        ghostClass: 'sortable-ghost',
-        onEnd: function(evt) {
-          var positions = [];
-          var items = requestersList.querySelectorAll('.sortable-item');
-          items.forEach(function(item) {
-            positions.push(item.dataset.id);
-          });
-
-          // 서버에 순서 업데이트 요청
-          fetch('<%= update_requester_positions_path %>', {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
-            },
-            body: JSON.stringify({ positions: positions })
-          })
-          .then(response => {
-            if (response.ok) {
-              console.log('출고 요청자 순서가 업데이트되었습니다.');
-              if (window.toast) {
-                window.toast.success('순서가 변경되었습니다.', '출고 요청자');
               }
             }
           })

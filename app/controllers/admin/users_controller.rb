@@ -47,6 +47,12 @@ class Admin::UsersController < Admin::BaseController
   def update
     @user = User.find(params[:id])
 
+    # Remove password fields if blank (to avoid Devise validation errors)
+    if params[:user][:password].blank?
+      params[:user].delete(:password)
+      params[:user].delete(:password_confirmation)
+    end
+
     # Log params for debugging
     Rails.logger.info "=== User Update Debug ==="
     Rails.logger.info "User: #{@user.email}"

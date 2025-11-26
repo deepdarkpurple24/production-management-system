@@ -8,64 +8,64 @@ namespace :db do
 
     # SQLite 연결 설정
     sqlite_config = {
-      adapter: 'sqlite3',
-      database: Rails.root.join('storage', 'production.sqlite3').to_s
+      adapter: "sqlite3",
+      database: Rails.root.join("storage", "production.sqlite3").to_s
     }
 
     # 마이그레이션할 모델 순서 (외래 키 관계 고려)
     models = [
       # 1. 독립 모델 (외래 키 없음)
-      { model: User, name: 'User' },
-      { model: EquipmentType, name: 'EquipmentType' },
-      { model: EquipmentMode, name: 'EquipmentMode' },
-      { model: RecipeProcess, name: 'RecipeProcess' },
-      { model: ItemCategory, name: 'ItemCategory' },
-      { model: StorageLocation, name: 'StorageLocation' },
-      { model: ShipmentPurpose, name: 'ShipmentPurpose' },
-      { model: GijeongddeokDefault, name: 'GijeongddeokDefault' },
-      { model: GijeongddeokFieldOrder, name: 'GijeongddeokFieldOrder' },
-      { model: PagePermission, name: 'PagePermission' },
+      { model: User, name: "User" },
+      { model: EquipmentType, name: "EquipmentType" },
+      { model: EquipmentMode, name: "EquipmentMode" },
+      { model: RecipeProcess, name: "RecipeProcess" },
+      { model: ItemCategory, name: "ItemCategory" },
+      { model: StorageLocation, name: "StorageLocation" },
+      { model: ShipmentPurpose, name: "ShipmentPurpose" },
+      { model: GijeongddeokDefault, name: "GijeongddeokDefault" },
+      { model: GijeongddeokFieldOrder, name: "GijeongddeokFieldOrder" },
+      { model: PagePermission, name: "PagePermission" },
 
       # 2. User 관련
-      { model: AuthorizedDevice, name: 'AuthorizedDevice' },
-      { model: LoginHistory, name: 'LoginHistory' },
+      { model: AuthorizedDevice, name: "AuthorizedDevice" },
+      { model: LoginHistory, name: "LoginHistory" },
 
       # 3. 품목 관련
-      { model: Item, name: 'Item' },
-      { model: Receipt, name: 'Receipt' },
-      { model: Shipment, name: 'Shipment' },
-      { model: OpenedItem, name: 'OpenedItem' },
+      { model: Item, name: "Item" },
+      { model: Receipt, name: "Receipt" },
+      { model: Shipment, name: "Shipment" },
+      { model: OpenedItem, name: "OpenedItem" },
 
       # 4. 장비
-      { model: Equipment, name: 'Equipment' },
+      { model: Equipment, name: "Equipment" },
 
       # 5. 재료
-      { model: Ingredient, name: 'Ingredient' },
-      { model: IngredientItem, name: 'IngredientItem' },
+      { model: Ingredient, name: "Ingredient" },
+      { model: IngredientItem, name: "IngredientItem" },
 
       # 6. 레시피
-      { model: Recipe, name: 'Recipe' },
-      { model: RecipeVersion, name: 'RecipeVersion' },
-      { model: RecipeIngredient, name: 'RecipeIngredient' },
-      { model: RecipeEquipment, name: 'RecipeEquipment' },
+      { model: Recipe, name: "Recipe" },
+      { model: RecipeVersion, name: "RecipeVersion" },
+      { model: RecipeIngredient, name: "RecipeIngredient" },
+      { model: RecipeEquipment, name: "RecipeEquipment" },
 
       # 6-1. 재료 버전
-      { model: IngredientVersion, name: 'IngredientVersion' },
+      { model: IngredientVersion, name: "IngredientVersion" },
 
       # 6-2. 품목 버전
-      { model: ItemVersion, name: 'ItemVersion' },
-      { model: ReceiptVersion, name: 'ReceiptVersion' },
-      { model: ShipmentVersion, name: 'ShipmentVersion' },
+      { model: ItemVersion, name: "ItemVersion" },
+      { model: ReceiptVersion, name: "ReceiptVersion" },
+      { model: ShipmentVersion, name: "ShipmentVersion" },
 
       # 7. 완제품
-      { model: FinishedProduct, name: 'FinishedProduct' },
-      { model: FinishedProductRecipe, name: 'FinishedProductRecipe' },
-      { model: FinishedProductVersion, name: 'FinishedProductVersion' },
+      { model: FinishedProduct, name: "FinishedProduct" },
+      { model: FinishedProductRecipe, name: "FinishedProductRecipe" },
+      { model: FinishedProductVersion, name: "FinishedProductVersion" },
 
       # 8. 생산 계획 및 로그
-      { model: ProductionPlan, name: 'ProductionPlan' },
-      { model: ProductionLog, name: 'ProductionLog' },
-      { model: CheckedIngredient, name: 'CheckedIngredient' }
+      { model: ProductionPlan, name: "ProductionPlan" },
+      { model: ProductionLog, name: "ProductionLog" },
+      { model: CheckedIngredient, name: "CheckedIngredient" }
     ]
 
     begin
@@ -102,7 +102,7 @@ namespace :db do
           records.each_with_index do |record, index|
             begin
               # 속성 복사 (타임스탬프 포함)
-              attrs = record.attributes.except('id')
+              attrs = record.attributes.except("id")
 
               # 새 레코드 생성
               new_record = model.new(attrs)

@@ -1,38 +1,50 @@
 require "test_helper"
 
 class IngredientsControllerTest < ActionDispatch::IntegrationTest
-  test "should get index" do
-    get ingredients_index_url
-    assert_response :success
+  setup do
+    @ingredient = ingredients(:one)
+    @user = users(:one)
+    sign_in @user
   end
 
-  test "should get show" do
-    get ingredients_show_url
+  test "should get index" do
+    get ingredients_url
     assert_response :success
   end
 
   test "should get new" do
-    get ingredients_new_url
+    get new_ingredient_url
+    assert_response :success
+  end
+
+  test "should create ingredient" do
+    assert_difference("Ingredient.count") do
+      post ingredients_url, params: { ingredient: { name: "Test Ingredient", production_quantity: 100, production_unit: "g" } }
+    end
+
+    assert_redirected_to ingredient_url(Ingredient.last)
+  end
+
+  test "should show ingredient" do
+    get ingredient_url(@ingredient)
     assert_response :success
   end
 
   test "should get edit" do
-    get ingredients_edit_url
+    get edit_ingredient_url(@ingredient)
     assert_response :success
   end
 
-  test "should get create" do
-    get ingredients_create_url
-    assert_response :success
+  test "should update ingredient" do
+    patch ingredient_url(@ingredient), params: { ingredient: { name: @ingredient.name } }
+    assert_redirected_to ingredient_url(@ingredient)
   end
 
-  test "should get update" do
-    get ingredients_update_url
-    assert_response :success
-  end
+  test "should destroy ingredient" do
+    assert_difference("Ingredient.count", -1) do
+      delete ingredient_url(@ingredient)
+    end
 
-  test "should get destroy" do
-    get ingredients_destroy_url
-    assert_response :success
+    assert_redirected_to ingredients_url
   end
 end

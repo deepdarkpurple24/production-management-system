@@ -2,18 +2,18 @@
 
 one:
   user: one
-  fingerprint: MyString
-  device_name: MyString
-  browser: MyString
-  os: MyString
-  active: false
+  fingerprint: fingerprint_hash_one_12345
+  device_name: Chrome on Windows
+  browser: Chrome
+  os: Windows
+  active: true
   last_used_at: 2025-11-23 16:58:44
 
 two:
   user: two
-  fingerprint: MyString
-  device_name: MyString
-  browser: MyString
-  os: MyString
-  active: false
+  fingerprint: fingerprint_hash_two_67890
+  device_name: Firefox on macOS
+  browser: Firefox
+  os: macOS
+  active: true
   last_used_at: 2025-11-23 16:58:44

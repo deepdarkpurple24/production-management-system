@@ -1,11 +1,17 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  name: MyString
-  description: MyText
-  notes: MyText
+  name: Test Ingredient One
+  description: Test ingredient description one
+  notes: Test notes one
+  production_quantity: 1000
+  production_unit: g
+  cooking_time: "30분"
 
 two:
-  name: MyString
-  description: MyText
-  notes: MyText
+  name: Test Ingredient Two
+  description: Test ingredient description two
+  notes: Test notes two
+  production_quantity: 2000
+  production_unit: mL
+  cooking_time: "45분"

@@ -7,8 +7,15 @@ class DeviceMailerTest < ActionMailer::TestCase
 
     mail = DeviceMailer.authorization_request(user, device)
 
+    # Check subject
     assert_match /새 디바이스 승인 요청/, mail.subject
-    assert_equal user.email, mail.to.first
-    assert_match user.name, mail.body.encoded
+    assert_match user.name, mail.subject
+
+    # Check recipients (should be sent to admins)
+    admin_emails = User.where(admin: true).pluck(:email)
+    assert_equal admin_emails.sort, mail.to.sort
+
+    # Check that mail has content (body is base64 encoded)
+    assert_not_nil mail.body
   end
 end

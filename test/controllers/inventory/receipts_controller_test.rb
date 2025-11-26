@@ -19,7 +19,14 @@ class Inventory::ReceiptsControllerTest < ActionDispatch::IntegrationTest
 
   test "should create receipt" do
     assert_difference("Receipt.count") do
-      post inventory_receipts_url, params: { receipt: { item_id: items(:one).id, quantity: 100 } }
+      post inventory_receipts_url, params: {
+        receipt: {
+          item_id: items(:one).id,
+          receipt_date: Date.today,
+          quantity: 100,
+          unit_price: 1000
+        }
+      }
     end
 
     assert_redirected_to inventory_receipts_url

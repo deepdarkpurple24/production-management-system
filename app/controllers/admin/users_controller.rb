@@ -20,6 +20,16 @@ class Admin::UsersController < Admin::BaseController
     temporary_password = params[:user][:password]
 
     if @user.save
+      # Automatically authorize device for new user
+      fingerprint = params[:device_fingerprint]
+      device_info = {
+        device_name: params[:device_name],
+        browser: params[:device_browser],
+        os: params[:device_os]
+      }
+
+      @user.authorize_device(fingerprint, device_info)
+
       # Send invitation email with temporary password
       UserMailer.invitation(@user, temporary_password).deliver_now
 

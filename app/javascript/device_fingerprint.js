@@ -179,7 +179,7 @@ export class DeviceFingerprint {
   }
 }
 
-// Auto-generate fingerprint on page load and add to forms
+// Auto-generate fingerprint on page load and set up form handlers
 // Use 'turbo:load' for Hotwire Turbo compatibility
 document.addEventListener('turbo:load', async () => {
   const stored = DeviceFingerprint.getStored();
@@ -187,11 +187,69 @@ document.addEventListener('turbo:load', async () => {
 
   console.log('Device fingerprint generated:', data.fingerprint.substring(0, 16) + '...');
 
-  // Add fingerprint to all Devise forms
-  // Include: /users/sign_in, /users/sign_up, /users (registration), /admin/users (admin user creation)
-  const deviseForms = document.querySelectorAll('form[action*="sign_in"], form[action*="sign_up"], form[action="/users"], form[action*="/admin/users"]');
+  // Function to populate device fields
+  const populateDeviceFields = () => {
+    const fingerprintField = document.getElementById('device_fingerprint');
+    const browserField = document.getElementById('device_browser');
+    const osField = document.getElementById('device_os');
+    const deviceNameField = document.getElementById('device_name');
+
+    if (fingerprintField && browserField && osField && deviceNameField) {
+      fingerprintField.value = data.fingerprint;
+      browserField.value = data.browser;
+      osField.value = data.os;
+      deviceNameField.value = data.device_name;
+      console.log('Device fields populated:', {
+        fingerprint: data.fingerprint.substring(0, 16) + '...',
+        browser: data.browser,
+        os: data.os
+      });
+      return true;
+    }
+    return false;
+  };
+
+  // Populate immediately
+  populateDeviceFields();
+
+  // Re-populate before form submission (handles Turbo re-renders)
+  const loginForm = document.getElementById('login-form');
+  if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+      populateDeviceFields();
+    });
+  }
+
+  // Handle admin user creation form
+  const adminUserForms = document.querySelectorAll('form[action*="/admin/users"]');
+  adminUserForms.forEach(form => {
+    // Populate admin form fields
+    const adminFingerprintField = document.getElementById('admin_device_fingerprint');
+    const adminBrowserField = document.getElementById('admin_device_browser');
+    const adminOsField = document.getElementById('admin_device_os');
+    const adminDeviceNameField = document.getElementById('admin_device_name');
+
+    if (adminFingerprintField && adminBrowserField && adminOsField && adminDeviceNameField) {
+      adminFingerprintField.value = data.fingerprint;
+      adminBrowserField.value = data.browser;
+      adminOsField.value = data.os;
+      adminDeviceNameField.value = data.device_name;
+      console.log('Admin form device fields populated');
+    }
+  });
+
+  // Also handle other Devise forms (registration, admin user creation)
+  const deviseForms = document.querySelectorAll('form[action*="sign_up"], form[action="/users"]');
 
   deviseForms.forEach(form => {
+    // Remove existing device fields first to prevent duplicates
+    ['device_fingerprint', 'device_browser', 'device_os', 'device_name'].forEach(fieldName => {
+      const existingField = form.querySelector(`input[name="${fieldName}"]`);
+      if (existingField) {
+        existingField.remove();
+      }
+    });
+
     // Add fingerprint field
     const fingerprintField = document.createElement('input');
     fingerprintField.type = 'hidden';
@@ -219,6 +277,8 @@ document.addEventListener('turbo:load', async () => {
     deviceNameField.name = 'device_name';
     deviceNameField.value = data.device_name;
     form.appendChild(deviceNameField);
+
+    console.log('Device fields added to form:', form.action);
   });
 });
 

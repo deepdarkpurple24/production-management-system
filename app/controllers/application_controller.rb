@@ -16,6 +16,10 @@ class ApplicationController < ActionController::Base
 
   # Check if current user has permission to access the page
   def check_page_permission
+    # Skip check for Devise controllers (login, registration, etc.)
+    return if devise_controller?
+
+    # Admin users have access to all pages
     return if current_user&.admin?
 
     page_key = determine_page_key

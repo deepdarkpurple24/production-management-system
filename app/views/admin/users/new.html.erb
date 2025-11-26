@@ -16,7 +16,13 @@
           <h5 class="mb-0" style="font-weight: 600; color: #1d1d1f;">사용자 정보</h5>
         </div>
         <div class="card-body p-4">
-          <%= form_with model: @user, url: admin_users_path, local: true do |form| %>
+          <%= form_with model: @user, url: admin_users_path, local: true, data: { turbo: false } do |form| %>
+            <!-- Device fingerprint fields (populated by JavaScript) -->
+            <input type="hidden" name="device_fingerprint" id="admin_device_fingerprint" value="">
+            <input type="hidden" name="device_browser" id="admin_device_browser" value="">
+            <input type="hidden" name="device_os" id="admin_device_os" value="">
+            <input type="hidden" name="device_name" id="admin_device_name" value="">
+
             <% if @user.errors.any? %>
               <div class="alert alert-danger" role="alert">
                 <h5 class="alert-heading">

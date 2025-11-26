@@ -27,7 +27,7 @@ module ProductionManagementSystem
 
     # Set default locale to Korean
     config.i18n.default_locale = :ko
-    config.i18n.available_locales = [:ko, :en]
+    config.i18n.available_locales = [ :ko, :en ]
 
     # Enable Rack::Attack middleware for rate limiting
     config.middleware.use Rack::Attack

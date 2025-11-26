@@ -1,0 +1,45 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=your-secure-password-here  # 강력한 비밀번호로 변경
+      - POSTGRES_DB=production_management_system_production
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    ports:
+      - "3000:80"
+    environment:
+      - RAILS_ENV=production
+      - RAILS_MASTER_KEY=864b086e8130a60ff1273cc89f18ca02
+      - SECRET_KEY_BASE=5bf56eb6b1691c262136ab790006aae16510dc7bf52dda40d9b2381f8869fd7b3b54776fd61d5077cff2ec3ca88e25e484a2362d75ccc5735f203a3c5a02df0a
+      - RAILS_SERVE_STATIC_FILES=true
+      # PostgreSQL 연결 정보
+      - DB_HOST=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=your-secure-password-here  # db 서비스와 동일하게
+    volumes:
+      - ./storage:/rails/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  cloudflared-pms:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run --token eyJhIjoiOGJlM2UzNDAyNDNjNzkzMWQyODNiNTIxNWExMGFkMDUiLCJ0IjoiM2Y3N2VlYTctMzM3Yy00MjViLThlYTEtZDY1YTcyY2IzM2FlIiwicyI6Ik1tWTRPV1ZqTkdVdE0yWmtaQzAwT0RVekxUZzROREV0Wm1Wak1Ua3hNemxoTVdWayJ9
+    restart: unless-stopped
+    network_mode: host
+
+volumes:
+  postgres_data:

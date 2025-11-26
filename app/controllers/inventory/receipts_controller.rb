@@ -1,5 +1,5 @@
 class Inventory::ReceiptsController < ApplicationController
-  before_action :set_receipt, only: [:show, :edit, :update, :destroy]
+  before_action :set_receipt, only: [ :show, :edit, :update, :destroy ]
 
   def index
     @receipts = Receipt.includes(:item).order(receipt_date: :desc)
@@ -21,7 +21,7 @@ class Inventory::ReceiptsController < ApplicationController
     @receipt = Receipt.new(receipt_params)
 
     if @receipt.save
-      redirect_to inventory_receipts_path, notice: '입고가 성공적으로 등록되었습니다.'
+      redirect_to inventory_receipts_path, notice: "입고가 성공적으로 등록되었습니다."
     else
       @items = Item.all.order(:name)
       render :new, status: :unprocessable_entity
@@ -30,7 +30,7 @@ class Inventory::ReceiptsController < ApplicationController
 
   def update
     if @receipt.update(receipt_params)
-      redirect_to inventory_receipts_path, notice: '입고 정보가 수정되었습니다.'
+      redirect_to inventory_receipts_path, notice: "입고 정보가 수정되었습니다."
     else
       @items = Item.all.order(:name)
       render :edit, status: :unprocessable_entity
@@ -39,7 +39,7 @@ class Inventory::ReceiptsController < ApplicationController
 
   def destroy
     @receipt.destroy
-    redirect_to inventory_receipts_path, notice: '입고 기록이 삭제되었습니다.'
+    redirect_to inventory_receipts_path, notice: "입고 기록이 삭제되었습니다."
   end
 
   private

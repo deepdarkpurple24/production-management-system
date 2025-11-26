@@ -10,7 +10,7 @@ class CreateCheckedIngredients < ActiveRecord::Migration[8.1]
 
     # 같은 production_log + recipe + ingredient_index 조합은 한 번만 저장
     add_index :checked_ingredients,
-              [:production_log_id, :recipe_id, :ingredient_index],
+              [ :production_log_id, :recipe_id, :ingredient_index ],
               unique: true,
               name: 'index_checked_ingredients_uniqueness'
   end

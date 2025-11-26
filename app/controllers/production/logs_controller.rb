@@ -1,8 +1,8 @@
 class Production::LogsController < ApplicationController
-  before_action :set_production_log, only: [:edit, :update, :destroy]
+  before_action :set_production_log, only: [ :edit, :update, :destroy ]
 
   def index
-    @status = params[:status] || 'pending'
+    @status = params[:status] || "pending"
     @selected_date = params[:date] ? Date.parse(params[:date]) : Date.today
 
     # 모든 탭의 개수를 계산 (항상 표시하기 위해)
@@ -14,7 +14,7 @@ class Production::LogsController < ApplicationController
     # 이미 반죽일지가 생성된 (plan_id, recipe_id) 조합 찾기
     existing_logs = ProductionLog
       .where(production_plan_id: production_plans.pluck(:id))
-      .where.not(status: 'pending')
+      .where.not(status: "pending")
       .pluck(:production_plan_id, :recipe_id)
       .to_set
 
@@ -26,7 +26,7 @@ class Production::LogsController < ApplicationController
 
       if recipes.any?
         recipes.each do |recipe|
-          unless existing_logs.include?([plan.id, recipe.id])
+          unless existing_logs.include?([ plan.id, recipe.id ])
             pending_count += 1
           end
         end
@@ -40,17 +40,17 @@ class Production::LogsController < ApplicationController
 
     # 작업중 개수
     @in_progress_count = ProductionLog
-      .where(status: 'in_progress', production_date: @selected_date)
+      .where(status: "in_progress", production_date: @selected_date)
       .count
 
     # 작업완료 개수
     @completed_count = ProductionLog
-      .where(status: 'completed', production_date: @selected_date)
+      .where(status: "completed", production_date: @selected_date)
       .count
 
     # 현재 탭에 따라 상세 데이터 로드
     case @status
-    when 'pending'
+    when "pending"
       # 레시피별로 평탄화하여 각각 독립적인 항목으로 표시
       @pending_plans = []
       production_plans.each do |plan|
@@ -59,7 +59,7 @@ class Production::LogsController < ApplicationController
 
         if recipes.any?
           recipes.each do |recipe|
-            unless existing_logs.include?([plan.id, recipe.id])
+            unless existing_logs.include?([ plan.id, recipe.id ])
               @pending_plans << {
                 plan: plan,
                 finished_product: finished_product,
@@ -78,16 +78,16 @@ class Production::LogsController < ApplicationController
         end
       end
 
-    when 'in_progress'
+    when "in_progress"
       @production_logs = ProductionLog
         .includes(:finished_product, :production_plan, :recipe)
-        .where(status: 'in_progress', production_date: @selected_date)
+        .where(status: "in_progress", production_date: @selected_date)
         .order(created_at: :desc)
 
-    when 'completed'
+    when "completed"
       @production_logs = ProductionLog
         .includes(:finished_product, :production_plan, :recipe)
-        .where(status: 'completed', production_date: @selected_date)
+        .where(status: "completed", production_date: @selected_date)
         .order(created_at: :desc)
     end
   end
@@ -140,10 +140,10 @@ class Production::LogsController < ApplicationController
       @production_log = ProductionLog.new(production_log_params)
 
       # 기정떡은 바로 작업완료, 나머지는 작업중으로 시작
-      if @production_log.finished_product&.name&.include?('기정떡')
-        @production_log.status = 'completed'
+      if @production_log.finished_product&.name&.include?("기정떡")
+        @production_log.status = "completed"
       else
-        @production_log.status = 'in_progress'
+        @production_log.status = "in_progress"
       end
     end
 
@@ -154,7 +154,7 @@ class Production::LogsController < ApplicationController
       # 막걸리 자동 출고 처리
       process_makgeolli_shipment(@production_log)
 
-      redirect_to production_logs_path(status: @production_log.status), notice: '생산 일지가 성공적으로 등록되었습니다.'
+      redirect_to production_logs_path(status: @production_log.status), notice: "생산 일지가 성공적으로 등록되었습니다."
     else
       @production_plans = ProductionPlan
         .includes(:finished_product)
@@ -194,7 +194,7 @@ class Production::LogsController < ApplicationController
         process_makgeolli_shipment(@production_log, old_makgeolli_consumption)
       end
 
-      redirect_to production_logs_path(status: from_status, date: @production_log.production_date), notice: '생산 일지가 성공적으로 수정되었습니다.'
+      redirect_to production_logs_path(status: from_status, date: @production_log.production_date), notice: "생산 일지가 성공적으로 수정되었습니다."
     else
       @production_plans = ProductionPlan
         .includes(:finished_product)
@@ -209,10 +209,10 @@ class Production::LogsController < ApplicationController
   end
 
   def destroy
-    from_status = params[:from_status] || 'pending'
+    from_status = params[:from_status] || "pending"
     production_date = @production_log.production_date
     @production_log.destroy
-    redirect_to production_logs_path(status: from_status, date: production_date), notice: '생산 일지가 성공적으로 삭제되었습니다.'
+    redirect_to production_logs_path(status: from_status, date: production_date), notice: "생산 일지가 성공적으로 삭제되었습니다."
   end
 
   def create_draft
@@ -243,10 +243,10 @@ class Production::LogsController < ApplicationController
     @production_log.production_date = params[:production_date] ? Date.parse(params[:production_date]) : Date.today
 
     # 기정떡이 아니면 작업중으로 시작
-    if @production_log.finished_product&.name&.include?('기정떡')
-      @production_log.status = 'pending'  # 기정떡은 일단 pending으로 시작
+    if @production_log.finished_product&.name&.include?("기정떡")
+      @production_log.status = "pending"  # 기정떡은 일단 pending으로 시작
     else
-      @production_log.status = 'in_progress'
+      @production_log.status = "in_progress"
     end
 
     if @production_log.save
@@ -272,7 +272,7 @@ class Production::LogsController < ApplicationController
     recipe_ingredient = recipe.recipe_ingredients.find_by(position: ingredient_index)
 
     unless recipe_ingredient
-      render json: { success: false, errors: ['재료를 찾을 수 없습니다.'] }, status: :unprocessable_entity
+      render json: { success: false, errors: [ "재료를 찾을 수 없습니다." ] }, status: :unprocessable_entity
       return
     end
 
@@ -290,7 +290,7 @@ class Production::LogsController < ApplicationController
       end
 
       if used_weight <= 0
-        render json: { success: false, errors: ['재료의 중량이 설정되지 않았습니다.'] }, status: :unprocessable_entity
+        render json: { success: false, errors: [ "재료의 중량이 설정되지 않았습니다." ] }, status: :unprocessable_entity
         return
       end
 
@@ -346,8 +346,8 @@ class Production::LogsController < ApplicationController
         success: true,
         status: @production_log.status,
         checked_count: checked_count,
-        production_date: @production_log.production_date&.strftime('%m-%d'),
-        production_time: @production_log.production_time&.strftime('%H:%M')
+        production_date: @production_log.production_date&.strftime("%m-%d"),
+        production_time: @production_log.production_time&.strftime("%H:%M")
       }
     else
       render json: { success: false }, status: :unprocessable_entity
@@ -378,7 +378,7 @@ class Production::LogsController < ApplicationController
       render json: {
         success: true,
         batch_index: batch_index,
-        completion_time: current_time.strftime('%m-%d %H:%M')
+        completion_time: current_time.strftime("%m-%d %H:%M")
       }
     else
       render json: { success: false, errors: @production_log.errors.full_messages }, status: :unprocessable_entity
@@ -406,7 +406,7 @@ class Production::LogsController < ApplicationController
 
   def update_work_status(production_log)
     # 기정떡은 작업 단계 변경 안 함 (항상 completed)
-    return if production_log.finished_product&.name&.include?('기정떡')
+    return if production_log.finished_product&.name&.include?("기정떡")
 
     # production_log의 레시피만 사용 (단일 레시피)
     recipe = production_log.recipe
@@ -419,13 +419,13 @@ class Production::LogsController < ApplicationController
 
     # 기정떡이 아니고 weight_per_unit이 있는 경우에만 배치 계산
     if weight_per_unit > 0 && production_log.production_plan.present?
-      recipe_total = recipe.recipe_ingredients.where(row_type: ['ingredient', nil]).sum(:weight)
+      recipe_total = recipe.recipe_ingredients.where(row_type: [ "ingredient", nil ]).sum(:weight)
       recipe_total = recipe_total.zero? ? 1 : recipe_total
       multiplier = (production_log.production_plan.quantity.to_f * weight_per_unit) / recipe_total
       total_scaled = recipe_total * multiplier
 
       # 장비 최대 작업 중량 확인
-      max_work_capacity = recipe.recipe_equipments.where.not(work_capacity: [nil, 0]).maximum(:work_capacity)
+      max_work_capacity = recipe.recipe_equipments.where.not(work_capacity: [ nil, 0 ]).maximum(:work_capacity)
       max_work_capacity_g = max_work_capacity ? max_work_capacity * 1000 : nil
 
       if max_work_capacity_g && max_work_capacity_g > 0 && total_scaled > max_work_capacity_g
@@ -438,7 +438,7 @@ class Production::LogsController < ApplicationController
     end
 
     # 재료 개수 계산 (subtotal 제외) × 배치 개수
-    ingredient_count = recipe.recipe_ingredients.where.not(row_type: 'subtotal').count
+    ingredient_count = recipe.recipe_ingredients.where.not(row_type: "subtotal").count
     total_ingredients = ingredient_count * batch_count
 
     # 체크된 재료 개수 (해당 레시피만)
@@ -447,13 +447,13 @@ class Production::LogsController < ApplicationController
     # 상태 업데이트
     if checked_count == 0
       # 체크된 재료가 하나도 없으면 작업 전으로
-      production_log.status = 'pending'
+      production_log.status = "pending"
     elsif checked_count >= total_ingredients
       # 모든 재료가 체크되면 작업 완료로
-      production_log.status = 'completed'
+      production_log.status = "completed"
     else
       # 일부 재료만 체크되면 작업 중으로
-      production_log.status = 'in_progress'
+      production_log.status = "in_progress"
     end
   end
 

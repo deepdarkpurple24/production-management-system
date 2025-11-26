@@ -13,15 +13,15 @@ class Ingredient < ApplicationRecord
 
   # 총 수량 계산 (소계 제외)
   def total_quantity
-    ingredient_items.where(row_type: 'item').sum(:quantity)
+    ingredient_items.where(row_type: "item").sum(:quantity)
   end
 
   # 소계 전 수량 계산
   def subtotal_quantity
-    subtotal_item = ingredient_items.find_by(row_type: 'subtotal')
+    subtotal_item = ingredient_items.find_by(row_type: "subtotal")
     if subtotal_item
-      ingredient_items.where(row_type: 'item')
-                      .where('position < ?', subtotal_item.position)
+      ingredient_items.where(row_type: "item")
+                      .where("position < ?", subtotal_item.position)
                       .sum(:quantity)
     else
       total_quantity

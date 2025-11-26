@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Users::SessionsController < Devise::SessionsController
-  before_action :check_device_authorization, only: [:create]
+  before_action :check_device_authorization, only: [ :create ]
 
   # POST /resource/sign_in
   def create

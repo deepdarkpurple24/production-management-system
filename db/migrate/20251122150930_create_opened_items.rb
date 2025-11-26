@@ -10,7 +10,7 @@ class CreateOpenedItems < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :opened_items, [:item_id, :receipt_id]
+    add_index :opened_items, [ :item_id, :receipt_id ]
     add_index :opened_items, :expiration_date
   end
 end

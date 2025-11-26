@@ -26,7 +26,7 @@ class SettingsController < ApplicationController
     @shipment_purpose = ShipmentPurpose.new(shipment_purpose_params)
 
     if @shipment_purpose.save
-      redirect_to settings_system_path(tab: 'inventory'), notice: '출고 목적이 추가되었습니다.'
+      redirect_to settings_system_path(tab: "inventory"), notice: "출고 목적이 추가되었습니다."
     else
       @shipment_purposes = ShipmentPurpose.all
       @shipment_requesters = ShipmentRequester.all
@@ -38,14 +38,14 @@ class SettingsController < ApplicationController
   def destroy_purpose
     @shipment_purpose = ShipmentPurpose.find(params[:id])
     @shipment_purpose.destroy
-    redirect_to settings_system_path(tab: 'inventory'), notice: '출고 목적이 삭제되었습니다.'
+    redirect_to settings_system_path(tab: "inventory"), notice: "출고 목적이 삭제되었습니다."
   end
 
   def create_requester
     @shipment_requester = ShipmentRequester.new(shipment_requester_params)
 
     if @shipment_requester.save
-      redirect_to settings_system_path(tab: 'inventory'), notice: '출고 요청자가 추가되었습니다.'
+      redirect_to settings_system_path(tab: "inventory"), notice: "출고 요청자가 추가되었습니다."
     else
       @shipment_purposes = ShipmentPurpose.all
       @shipment_requesters = ShipmentRequester.all
@@ -57,7 +57,7 @@ class SettingsController < ApplicationController
   def destroy_requester
     @shipment_requester = ShipmentRequester.find(params[:id])
     @shipment_requester.destroy
-    redirect_to settings_system_path(tab: 'inventory'), notice: '출고 요청자가 삭제되었습니다.'
+    redirect_to settings_system_path(tab: "inventory"), notice: "출고 요청자가 삭제되었습니다."
   end
 
   def update_purpose_positions
@@ -78,7 +78,7 @@ class SettingsController < ApplicationController
     @equipment_type = EquipmentType.new(equipment_type_params)
 
     if @equipment_type.save
-      redirect_to settings_system_path(tab: 'equipment'), notice: '장비 구분이 추가되었습니다.'
+      redirect_to settings_system_path(tab: "equipment"), notice: "장비 구분이 추가되었습니다."
     else
       @shipment_purposes = ShipmentPurpose.all
       @shipment_requesters = ShipmentRequester.all
@@ -92,7 +92,7 @@ class SettingsController < ApplicationController
   def destroy_equipment_type
     @equipment_type = EquipmentType.find(params[:id])
     @equipment_type.destroy
-    redirect_to settings_system_path(tab: 'equipment'), notice: '장비 구분이 삭제되었습니다.'
+    redirect_to settings_system_path(tab: "equipment"), notice: "장비 구분이 삭제되었습니다."
   end
 
   def update_equipment_type_positions
@@ -106,7 +106,7 @@ class SettingsController < ApplicationController
     @equipment_mode = EquipmentMode.new(equipment_mode_params)
 
     if @equipment_mode.save
-      redirect_to settings_system_path(tab: 'equipment'), notice: '장비 모드가 추가되었습니다.'
+      redirect_to settings_system_path(tab: "equipment"), notice: "장비 모드가 추가되었습니다."
     else
       @shipment_purposes = ShipmentPurpose.all
       @shipment_requesters = ShipmentRequester.all
@@ -121,7 +121,7 @@ class SettingsController < ApplicationController
   def destroy_equipment_mode
     @equipment_mode = EquipmentMode.find(params[:id])
     @equipment_mode.destroy
-    redirect_to settings_system_path(tab: 'equipment'), notice: '장비 모드가 삭제되었습니다.'
+    redirect_to settings_system_path(tab: "equipment"), notice: "장비 모드가 삭제되었습니다."
   end
 
   def update_equipment_mode_positions
@@ -141,7 +141,7 @@ class SettingsController < ApplicationController
     @recipe_process = RecipeProcess.new(recipe_process_params)
 
     if @recipe_process.save
-      redirect_to settings_system_path(tab: 'recipe'), notice: '공정이 추가되었습니다.'
+      redirect_to settings_system_path(tab: "recipe"), notice: "공정이 추가되었습니다."
     else
       @shipment_purposes = ShipmentPurpose.all
       @shipment_requesters = ShipmentRequester.all
@@ -158,7 +158,7 @@ class SettingsController < ApplicationController
   def destroy_recipe_process
     @recipe_process = RecipeProcess.find(params[:id])
     @recipe_process.destroy
-    redirect_to settings_system_path(tab: 'recipe'), notice: '공정이 삭제되었습니다.'
+    redirect_to settings_system_path(tab: "recipe"), notice: "공정이 삭제되었습니다."
   end
 
   def update_recipe_process_positions
@@ -178,7 +178,7 @@ class SettingsController < ApplicationController
     end
 
     if @gijeongddeok_default.save
-      redirect_to settings_system_path(tab: 'production'), notice: '기정떡 기본값이 저장되었습니다.'
+      redirect_to settings_system_path(tab: "production"), notice: "기정떡 기본값이 저장되었습니다."
     else
       @shipment_purposes = ShipmentPurpose.all
       @shipment_requesters = ShipmentRequester.all
@@ -207,17 +207,17 @@ class SettingsController < ApplicationController
     # 필드명이 비어있으면 라벨로부터 자동 생성
     if @field.field_name.blank?
       base_name = @field.label.downcase
-                              .gsub(/[^a-z0-9가-힣\s]/, '') # 특수문자 제거
-                              .gsub(/\s+/, '_')              # 공백을 언더스코어로
+                              .gsub(/[^a-z0-9가-힣\s]/, "") # 특수문자 제거
+                              .gsub(/\s+/, "_")              # 공백을 언더스코어로
 
       # 한글이 포함된 경우 간단한 영문 변환 (카테고리 기반)
       if base_name =~ /[가-힣]/
         prefix = case @field.category
-                 when 'temperature' then 'temp'
-                 when 'ingredient' then 'ingredient'
-                 when 'makgeolli' then 'makgeolli'
-                 else 'custom'
-                 end
+        when "temperature" then "temp"
+        when "ingredient" then "ingredient"
+        when "makgeolli" then "makgeolli"
+        else "custom"
+        end
 
         # 유니크한 이름 생성
         counter = 1
@@ -233,23 +233,23 @@ class SettingsController < ApplicationController
     end
 
     if @field.save
-      redirect_to settings_system_path(tab: 'production'), notice: '필드가 추가되었습니다.'
+      redirect_to settings_system_path(tab: "production"), notice: "필드가 추가되었습니다."
     else
-      redirect_to settings_system_path(tab: 'production'), alert: "필드 추가 실패: #{@field.errors.full_messages.join(', ')}"
+      redirect_to settings_system_path(tab: "production"), alert: "필드 추가 실패: #{@field.errors.full_messages.join(', ')}"
     end
   end
 
   def destroy_gijeongddeok_field
     @field = GijeongddeokFieldOrder.find(params[:id])
     @field.destroy
-    redirect_to settings_system_path(tab: 'production'), notice: '필드가 삭제되었습니다.'
+    redirect_to settings_system_path(tab: "production"), notice: "필드가 삭제되었습니다."
   end
 
   def create_item_category
     @item_category = ItemCategory.new(item_category_params)
 
     if @item_category.save
-      redirect_to settings_system_path(tab: 'inventory'), notice: '품목 카테고리가 추가되었습니다.'
+      redirect_to settings_system_path(tab: "inventory"), notice: "품목 카테고리가 추가되었습니다."
     else
       @shipment_purposes = ShipmentPurpose.all
       @shipment_requesters = ShipmentRequester.all
@@ -268,7 +268,7 @@ class SettingsController < ApplicationController
   def destroy_item_category
     @item_category = ItemCategory.find(params[:id])
     @item_category.destroy
-    redirect_to settings_system_path(tab: 'inventory'), notice: '품목 카테고리가 삭제되었습니다.'
+    redirect_to settings_system_path(tab: "inventory"), notice: "품목 카테고리가 삭제되었습니다."
   end
 
   def update_item_category_positions
@@ -282,7 +282,7 @@ class SettingsController < ApplicationController
     @storage_location = StorageLocation.new(storage_location_params)
 
     if @storage_location.save
-      redirect_to settings_system_path(tab: 'inventory'), notice: '보관위치가 추가되었습니다.'
+      redirect_to settings_system_path(tab: "inventory"), notice: "보관위치가 추가되었습니다."
     else
       @shipment_purposes = ShipmentPurpose.all
       @shipment_requesters = ShipmentRequester.all
@@ -303,7 +303,7 @@ class SettingsController < ApplicationController
   def destroy_storage_location
     @storage_location = StorageLocation.find(params[:id])
     @storage_location.destroy
-    redirect_to settings_system_path(tab: 'inventory'), notice: '보관위치가 삭제되었습니다.'
+    redirect_to settings_system_path(tab: "inventory"), notice: "보관위치가 삭제되었습니다."
   end
 
   def update_storage_location_positions
@@ -316,7 +316,7 @@ class SettingsController < ApplicationController
   def update_page_permission
     @page_permission = PagePermission.find(params[:id])
     @page_permission.update(allowed_for_users: params[:allowed_for_users])
-    redirect_to settings_system_path(tab: 'permissions'), notice: '페이지 권한이 변경되었습니다.'
+    redirect_to settings_system_path(tab: "permissions"), notice: "페이지 권한이 변경되었습니다."
   end
 
   def update_page_permissions_batch
@@ -326,17 +326,17 @@ class SettingsController < ApplicationController
     # Then, set the checked ones to true
     if params[:permissions_users].present?
       params[:permissions_users].each do |id, allowed|
-        PagePermission.find(id).update(allowed_for_users: allowed == '1')
+        PagePermission.find(id).update(allowed_for_users: allowed == "1")
       end
     end
 
     if params[:permissions_sub_admins].present?
       params[:permissions_sub_admins].each do |id, allowed|
-        PagePermission.find(id).update(allowed_for_sub_admins: allowed == '1')
+        PagePermission.find(id).update(allowed_for_sub_admins: allowed == "1")
       end
     end
 
-    redirect_to settings_system_path(tab: 'permissions'), notice: '페이지 권한이 저장되었습니다.'
+    redirect_to settings_system_path(tab: "permissions"), notice: "페이지 권한이 저장되었습니다."
   end
 
   private

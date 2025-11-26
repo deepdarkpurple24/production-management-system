@@ -3,15 +3,15 @@ class AuthorizedDevice < ApplicationRecord
 
   # Validations
   validates :fingerprint, presence: true
-  validates :active, inclusion: { in: [true, false] }
+  validates :active, inclusion: { in: [ true, false ] }
 
   # Scopes
   scope :active, -> { where(active: true) }
   scope :inactive, -> { where(active: false) }
   scope :recent, -> { order(last_used_at: :desc) }
-  scope :pending, -> { where(status: 'pending') }
-  scope :approved, -> { where(status: 'approved') }
-  scope :rejected, -> { where(status: 'rejected') }
+  scope :pending, -> { where(status: "pending") }
+  scope :approved, -> { where(status: "approved") }
+  scope :rejected, -> { where(status: "rejected") }
 
   # Callbacks
   before_create :set_last_used_at
@@ -44,23 +44,23 @@ class AuthorizedDevice < ApplicationRecord
   end
 
   def approve!
-    update!(status: 'approved', active: true, authorization_token: nil, authorization_token_sent_at: nil)
+    update!(status: "approved", active: true, authorization_token: nil, authorization_token_sent_at: nil)
   end
 
   def reject!
-    update!(status: 'rejected', active: false)
+    update!(status: "rejected", active: false)
   end
 
   def pending?
-    status == 'pending'
+    status == "pending"
   end
 
   def approved?
-    status == 'approved'
+    status == "approved"
   end
 
   def rejected?
-    status == 'rejected'
+    status == "rejected"
   end
 
   private

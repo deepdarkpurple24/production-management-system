@@ -1,23 +1,23 @@
 Rails.application.routes.draw do
   devise_for :users, controllers: {
-    sessions: 'users/sessions',
-    registrations: 'users/registrations'
+    sessions: "users/sessions",
+    registrations: "users/registrations"
   }
 
   # Admin routes
   namespace :admin do
     resources :users do
-      resources :authorized_devices, only: [:create, :destroy] do
+      resources :authorized_devices, only: [ :create, :destroy ] do
         member do
           patch :toggle_active
         end
       end
     end
-    resources :login_histories, only: [:index]
+    resources :login_histories, only: [ :index ]
   end
 
   # Device authorization routes
-  resources :device_authorizations, only: [:new] do
+  resources :device_authorizations, only: [ :new ] do
     collection do
       post :send_email
       post :request_admin
@@ -27,8 +27,8 @@ Rails.application.routes.draw do
 
   # User profile and device management routes
   namespace :my do
-    resource :password, only: [:show, :update]
-    resources :devices, only: [:index, :update, :destroy]
+    resource :password, only: [ :show, :update ]
+    resources :devices, only: [ :index, :update, :destroy ]
   end
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
@@ -85,10 +85,10 @@ Rails.application.routes.draw do
   # 각 모듈별 라우트
   namespace :inventory do
     resources :receipts do
-      resources :receipt_versions, only: [:index, :destroy]
+      resources :receipt_versions, only: [ :index, :destroy ]
     end
     resources :shipments do
-      resources :shipment_versions, only: [:index, :destroy]
+      resources :shipment_versions, only: [ :index, :destroy ]
     end
     resources :items do
       collection do
@@ -98,10 +98,10 @@ Rails.application.routes.draw do
         get :suppliers
         post :add_supplier
       end
-      resources :item_versions, only: [:index, :destroy]
+      resources :item_versions, only: [ :index, :destroy ]
     end
-    resources :stocks, only: [:index]
-    resources :opened_items, only: [:index]
+    resources :stocks, only: [ :index ]
+    resources :opened_items, only: [ :index ]
   end
 
   namespace :production do
@@ -122,12 +122,12 @@ Rails.application.routes.draw do
     member do
       patch :update_ingredient_positions
     end
-    resources :recipe_versions, only: [:index, :destroy]
+    resources :recipe_versions, only: [ :index, :destroy ]
   end
 
   # 재료 관리
   resources :ingredients do
-    resources :ingredient_versions, only: [:index, :destroy]
+    resources :ingredient_versions, only: [ :index, :destroy ]
   end
 
   # 장비 관리
@@ -135,7 +135,7 @@ Rails.application.routes.draw do
 
   # 완제품 관리
   resources :finished_products do
-    resources :finished_product_versions, only: [:index, :destroy]
+    resources :finished_product_versions, only: [ :index, :destroy ]
   end
 
   # namespace :equipment do

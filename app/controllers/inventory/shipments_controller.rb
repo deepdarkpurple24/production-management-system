@@ -1,5 +1,5 @@
 class Inventory::ShipmentsController < ApplicationController
-  before_action :set_shipment, only: [:show, :edit, :update, :destroy]
+  before_action :set_shipment, only: [ :show, :edit, :update, :destroy ]
 
   def index
     @shipments = Shipment.includes(:item).order(shipment_date: :desc)
@@ -25,7 +25,7 @@ class Inventory::ShipmentsController < ApplicationController
     @shipment = Shipment.new(shipment_params)
 
     if @shipment.save
-      redirect_to inventory_shipments_path, notice: '출고가 성공적으로 등록되었습니다.'
+      redirect_to inventory_shipments_path, notice: "출고가 성공적으로 등록되었습니다."
     else
       @items = Item.all.order(:name)
       @shipment_purposes = ShipmentPurpose.all
@@ -36,7 +36,7 @@ class Inventory::ShipmentsController < ApplicationController
 
   def update
     if @shipment.update(shipment_params)
-      redirect_to inventory_shipments_path, notice: '출고 정보가 수정되었습니다.'
+      redirect_to inventory_shipments_path, notice: "출고 정보가 수정되었습니다."
     else
       @items = Item.all.order(:name)
       @shipment_purposes = ShipmentPurpose.all
@@ -47,7 +47,7 @@ class Inventory::ShipmentsController < ApplicationController
 
   def destroy
     @shipment.destroy
-    redirect_to inventory_shipments_path, notice: '출고 기록이 삭제되었습니다.'
+    redirect_to inventory_shipments_path, notice: "출고 기록이 삭제되었습니다."
   end
 
   private

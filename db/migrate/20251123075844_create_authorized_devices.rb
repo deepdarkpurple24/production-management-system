@@ -12,7 +12,7 @@ class CreateAuthorizedDevices < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :authorized_devices, [:user_id, :fingerprint]
+    add_index :authorized_devices, [ :user_id, :fingerprint ]
     add_index :authorized_devices, :fingerprint
     add_index :authorized_devices, :active
   end

@@ -148,14 +148,14 @@ class IngredientInventoryService
 
       Rails.logger.info "#{'  ' * depth}  - #{ingredient_item.source_type}: #{item_quantity_g}g × #{multiplier.round(4)} = #{scaled_quantity.round(2)}g"
 
-      if ingredient_item.source_type == 'item' && ingredient_item.item
+      if ingredient_item.source_type == "item" && ingredient_item.item
         # Item인 경우: 결과에 추가 (같은 item이면 합산)
         item = ingredient_item.item
         result[item] ||= 0
         result[item] += scaled_quantity
         Rails.logger.info "#{'  ' * depth}    → Item: #{item.name} (누적: #{result[item].round(2)}g)"
 
-      elsif ingredient_item.source_type == 'ingredient' && ingredient_item.referenced_ingredient
+      elsif ingredient_item.source_type == "ingredient" && ingredient_item.referenced_ingredient
         # Ingredient인 경우: 재귀적으로 펼치기
         sub_ingredient = ingredient_item.referenced_ingredient
         Rails.logger.info "#{'  ' * depth}    → 하위 Ingredient: #{sub_ingredient.name} 재귀 처리"
@@ -187,7 +187,7 @@ class IngredientInventoryService
 
     # FIFO: 유통기한이 짧은 입고품부터 찾기
     available_receipts = item.receipts
-      .where('expiration_date IS NOT NULL')
+      .where("expiration_date IS NOT NULL")
       .order(expiration_date: :asc, receipt_date: :asc)
 
     Rails.logger.info "    사용 가능한 입고품 수: #{available_receipts.count}"
@@ -265,7 +265,7 @@ class IngredientInventoryService
     existing_opened_item = item.opened_items
       .available
       .by_expiration
-      .where('remaining_weight >= ?', required_weight)
+      .where("remaining_weight >= ?", required_weight)
       .first
 
     if existing_opened_item
@@ -308,7 +308,7 @@ class IngredientInventoryService
   # @param production_log [ProductionLog] 반죽일지
   def self.create_shipment(item, receipt, production_log)
     # 생산 사용 목적 찾기 또는 생성
-    purpose = ShipmentPurpose.find_or_create_by!(name: '생산 사용') do |p|
+    purpose = ShipmentPurpose.find_or_create_by!(name: "생산 사용") do |p|
       p.position = ShipmentPurpose.maximum(:position).to_i + 1
     end
 
@@ -330,13 +330,13 @@ class IngredientInventoryService
     return 15000.0 unless weight # 기본값 15kg
 
     case unit
-    when 'Kg'
+    when "Kg"
       weight * 1000
-    when 'g'
+    when "g"
       weight
-    when 'L'
+    when "L"
       weight * 1000 # 물 기준 밀도
-    when 'mL'
+    when "mL"
       weight
     else
       weight * 1000 # 기본값: Kg로 간주

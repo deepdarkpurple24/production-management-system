@@ -26,7 +26,7 @@ class ApplicationController < ActionController::Base
     return if page_key.nil?
 
     unless PagePermission.allowed?(page_key, current_user)
-      flash[:alert] = '해당 페이지에 접근할 권한이 없습니다.'
+      flash[:alert] = "해당 페이지에 접근할 권한이 없습니다."
       redirect_to root_path
     end
   end
@@ -34,36 +34,36 @@ class ApplicationController < ActionController::Base
   # Determine page key from controller/action
   def determine_page_key
     case controller_path
-    when 'home'
-      'home'
-    when 'inventory'
-      'inventory'
-    when 'inventory/items'
-      'inventory_items'
-    when 'inventory/receipts'
-      'inventory_receipts'
-    when 'inventory/shipments'
-      'inventory_shipments'
-    when 'inventory/stocks'
-      'inventory_stocks'
-    when 'inventory/opened_items'
-      'inventory_opened_items'
-    when 'recipes'
-      'recipes'
-    when 'ingredients'
-      'ingredients'
-    when 'finished_products'
-      'finished_products'
-    when 'production'
-      'production'
-    when 'production/plans'
-      'production_plans'
-    when 'production/logs'
-      'production_logs'
-    when 'equipments'
-      'equipments'
-    when 'settings'
-      'settings'
+    when "home"
+      "home"
+    when "inventory"
+      "inventory"
+    when "inventory/items"
+      "inventory_items"
+    when "inventory/receipts"
+      "inventory_receipts"
+    when "inventory/shipments"
+      "inventory_shipments"
+    when "inventory/stocks"
+      "inventory_stocks"
+    when "inventory/opened_items"
+      "inventory_opened_items"
+    when "recipes"
+      "recipes"
+    when "ingredients"
+      "ingredients"
+    when "finished_products"
+      "finished_products"
+    when "production"
+      "production"
+    when "production/plans"
+      "production_plans"
+    when "production/logs"
+      "production_logs"
+    when "equipments"
+      "equipments"
+    when "settings"
+      "settings"
     else
       nil # Don't check permission for unlisted pages
     end

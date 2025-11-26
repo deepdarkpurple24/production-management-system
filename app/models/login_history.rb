@@ -3,14 +3,14 @@ class LoginHistory < ApplicationRecord
 
   # Validations
   validates :attempted_at, presence: true
-  validates :success, inclusion: { in: [true, false] }
+  validates :success, inclusion: { in: [ true, false ] }
 
   # Scopes
   scope :successful, -> { where(success: true) }
   scope :failed, -> { where(success: false) }
   scope :recent, -> { order(attempted_at: :desc) }
-  scope :today, -> { where('attempted_at >= ?', Time.current.beginning_of_day) }
-  scope :this_week, -> { where('attempted_at >= ?', Time.current.beginning_of_week) }
+  scope :today, -> { where("attempted_at >= ?", Time.current.beginning_of_day) }
+  scope :this_week, -> { where("attempted_at >= ?", Time.current.beginning_of_week) }
   scope :by_ip, ->(ip) { where(ip_address: ip) }
 
   # Class methods
@@ -30,10 +30,10 @@ class LoginHistory < ApplicationRecord
 
   # Instance methods
   def display_status
-    success ? '성공' : '실패'
+    success ? "성공" : "실패"
   end
 
   def status_color
-    success ? 'success' : 'danger'
+    success ? "success" : "danger"
   end
 end

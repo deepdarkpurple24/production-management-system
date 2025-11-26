@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class Users::RegistrationsController < Devise::RegistrationsController
-  before_action :configure_sign_up_params, only: [:create]
-  before_action :block_new_registrations, only: [:new, :create]
+  before_action :configure_sign_up_params, only: [ :create ]
+  before_action :block_new_registrations, only: [ :new, :create ]
 
   # GET /resource/sign_up
   def new
@@ -63,7 +63,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
   protected
 
   def configure_sign_up_params
-    devise_parameter_sanitizer.permit(:sign_up, keys: [:name])
+    devise_parameter_sanitizer.permit(:sign_up, keys: [ :name ])
   end
 
   # Block new registrations if not first user and not admin

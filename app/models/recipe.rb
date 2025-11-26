@@ -16,20 +16,20 @@ class Recipe < ApplicationRecord
 
   # 주재료 총 중량 계산
   def main_ingredient_weight
-    recipe_ingredients.where(is_main: true, row_type: 'ingredient').sum(:weight)
+    recipe_ingredients.where(is_main: true, row_type: "ingredient").sum(:weight)
   end
 
   # 총 중량 계산 (소계 제외)
   def total_weight
-    recipe_ingredients.where(row_type: 'ingredient').sum(:weight)
+    recipe_ingredients.where(row_type: "ingredient").sum(:weight)
   end
 
   # 소계 전 중량 계산
   def subtotal_weight
-    subtotal_ingredient = recipe_ingredients.find_by(row_type: 'subtotal')
+    subtotal_ingredient = recipe_ingredients.find_by(row_type: "subtotal")
     if subtotal_ingredient
-      recipe_ingredients.where(row_type: 'ingredient')
-                       .where('position < ?', subtotal_ingredient.position)
+      recipe_ingredients.where(row_type: "ingredient")
+                       .where("position < ?", subtotal_ingredient.position)
                        .sum(:weight)
     else
       total_weight
@@ -38,10 +38,10 @@ class Recipe < ApplicationRecord
 
   # 소계 후 중량 계산
   def after_subtotal_weight
-    subtotal_ingredient = recipe_ingredients.find_by(row_type: 'subtotal')
+    subtotal_ingredient = recipe_ingredients.find_by(row_type: "subtotal")
     if subtotal_ingredient
-      recipe_ingredients.where(row_type: 'ingredient')
-                       .where('position > ?', subtotal_ingredient.position)
+      recipe_ingredients.where(row_type: "ingredient")
+                       .where("position > ?", subtotal_ingredient.position)
                        .sum(:weight)
     else
       0

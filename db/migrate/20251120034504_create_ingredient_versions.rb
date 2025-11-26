@@ -19,6 +19,6 @@ class CreateIngredientVersions < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :ingredient_versions, [:ingredient_id, :version_number]
+    add_index :ingredient_versions, [ :ingredient_id, :version_number ]
   end
 end

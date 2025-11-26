@@ -52,22 +52,22 @@ class Item < ApplicationRecord
   def stock_status_color
     case stock_status
     when :critical
-      'danger'
+      "danger"
     when :low
-      'warning'
+      "warning"
     else
-      'success'
+      "success"
     end
   end
 
   def stock_status_text
     case stock_status
     when :critical
-      '부족'
+      "부족"
     when :low
-      '주의'
+      "주의"
     else
-      '충분'
+      "충분"
     end
   end
 

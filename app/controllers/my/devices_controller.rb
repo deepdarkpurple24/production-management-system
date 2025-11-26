@@ -1,6 +1,6 @@
 # 사용자 디바이스 관리 컨트롤러
 class My::DevicesController < ApplicationController
-  before_action :set_device, only: [:update, :destroy]
+  before_action :set_device, only: [ :update, :destroy ]
 
   # GET /my/devices
   def index
@@ -11,9 +11,9 @@ class My::DevicesController < ApplicationController
   # PATCH /my/devices/:id
   def update
     if @device.update(device_params)
-      redirect_to my_devices_path, notice: '디바이스 이름이 변경되었습니다.'
+      redirect_to my_devices_path, notice: "디바이스 이름이 변경되었습니다."
     else
-      redirect_to my_devices_path, alert: '디바이스 이름을 변경할 수 없습니다.'
+      redirect_to my_devices_path, alert: "디바이스 이름을 변경할 수 없습니다."
     end
   end
 
@@ -23,12 +23,12 @@ class My::DevicesController < ApplicationController
     current_fingerprint = params[:current_fingerprint] || cookies[:device_fingerprint]
 
     if @device.fingerprint == current_fingerprint
-      redirect_to my_devices_path, alert: '현재 사용 중인 디바이스는 삭제할 수 없습니다.'
+      redirect_to my_devices_path, alert: "현재 사용 중인 디바이스는 삭제할 수 없습니다."
       return
     end
 
     @device.destroy
-    redirect_to my_devices_path, notice: '디바이스가 삭제되었습니다.'
+    redirect_to my_devices_path, notice: "디바이스가 삭제되었습니다."
   end
 
   private

@@ -1,5 +1,5 @@
 class IngredientsController < ApplicationController
-  before_action :set_ingredient, only: [:show, :edit, :update, :destroy]
+  before_action :set_ingredient, only: [ :show, :edit, :update, :destroy ]
 
   def index
     @ingredients = Ingredient.all.order(created_at: :desc)
@@ -26,7 +26,7 @@ class IngredientsController < ApplicationController
     @ingredient = Ingredient.new(ingredient_params)
 
     if @ingredient.save
-      redirect_to ingredients_path, notice: '재료가 성공적으로 등록되었습니다.'
+      redirect_to ingredients_path, notice: "재료가 성공적으로 등록되었습니다."
     else
       @items = Item.all.order(:name)
       @ingredients = Ingredient.all.order(:name)
@@ -37,7 +37,7 @@ class IngredientsController < ApplicationController
 
   def update
     if @ingredient.update(ingredient_params)
-      redirect_to ingredients_path, notice: '재료 정보가 수정되었습니다.'
+      redirect_to ingredients_path, notice: "재료 정보가 수정되었습니다."
     else
       @items = Item.all.order(:name)
       @ingredients = Ingredient.where.not(id: @ingredient.id).order(:name)
@@ -48,7 +48,7 @@ class IngredientsController < ApplicationController
 
   def destroy
     @ingredient.destroy
-    redirect_to ingredients_path, notice: '재료가 삭제되었습니다.'
+    redirect_to ingredients_path, notice: "재료가 삭제되었습니다."
   end
 
   private

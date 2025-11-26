@@ -1,6 +1,6 @@
 class Inventory::ShipmentVersionsController < ApplicationController
   before_action :set_shipment
-  before_action :set_version, only: [:destroy]
+  before_action :set_version, only: [ :destroy ]
 
   def index
     @versions = @shipment.shipment_versions.order(version_number: :desc)
@@ -8,7 +8,7 @@ class Inventory::ShipmentVersionsController < ApplicationController
 
   def destroy
     @version.destroy
-    redirect_to inventory_shipment_shipment_versions_path(@shipment), notice: '수정내역이 삭제되었습니다.'
+    redirect_to inventory_shipment_shipment_versions_path(@shipment), notice: "수정내역이 삭제되었습니다."
   end
 
   private

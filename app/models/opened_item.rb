@@ -9,7 +9,7 @@ class OpenedItem < ApplicationRecord
   # 유통기한 순으로 정렬 (짧은 것부터)
   scope :by_expiration, -> { order(expiration_date: :asc, created_at: :asc) }
   # 남은 중량이 있는 것만
-  scope :available, -> { where('remaining_weight > 0') }
+  scope :available, -> { where("remaining_weight > 0") }
 
   # 중량 차감
   def deduct_weight(amount)

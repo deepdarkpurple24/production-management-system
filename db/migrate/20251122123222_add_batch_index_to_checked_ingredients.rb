@@ -8,7 +8,7 @@ class AddBatchIndexToCheckedIngredients < ActiveRecord::Migration[8.1]
 
     # batch_index를 포함한 새로운 unique index 추가
     add_index :checked_ingredients,
-              [:production_log_id, :recipe_id, :ingredient_index, :batch_index],
+              [ :production_log_id, :recipe_id, :ingredient_index, :batch_index ],
               unique: true,
               name: 'index_checked_ingredients_uniqueness'
   end

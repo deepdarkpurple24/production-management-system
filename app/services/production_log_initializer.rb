@@ -38,7 +38,7 @@ class ProductionLogInitializer
       recipe_id: recipe.id,
       production_date: production_plan.production_date,
       ingredient_weights: ingredient_weights,
-      status: production_plan.finished_product.name.include?('기정떡') ? 'pending' : 'in_progress'
+      status: production_plan.finished_product.name.include?("기정떡") ? "pending" : "in_progress"
     )
 
     production_log.save
@@ -57,11 +57,11 @@ class ProductionLogInitializer
     weight_per_unit = fpr&.quantity || 0
 
     # 기정떡이거나 weight_per_unit이 0이면 빈 해시 반환
-    is_gijeongddeok = finished_product.name.include?('기정떡')
+    is_gijeongddeok = finished_product.name.include?("기정떡")
     return {} if is_gijeongddeok || weight_per_unit.zero?
 
     # 레시피 총 중량 계산
-    recipe_total = recipe.recipe_ingredients.where(row_type: ['ingredient', nil]).sum(:weight)
+    recipe_total = recipe.recipe_ingredients.where(row_type: [ "ingredient", nil ]).sum(:weight)
     recipe_total = recipe_total.zero? ? 1 : recipe_total
 
     # 배율 계산
@@ -71,7 +71,7 @@ class ProductionLogInitializer
     total_scaled = recipe_total * multiplier
 
     # 장비 최대 작업 중량 확인
-    max_work_capacity = recipe.recipe_equipments.where.not(work_capacity: [nil, 0]).maximum(:work_capacity)
+    max_work_capacity = recipe.recipe_equipments.where.not(work_capacity: [ nil, 0 ]).maximum(:work_capacity)
     max_work_capacity_g = max_work_capacity ? max_work_capacity * 1000 : nil
 
     # 배치 수 계산
@@ -84,7 +84,7 @@ class ProductionLogInitializer
     # ingredient_weights 해시 생성
     weights = {}
     batch_count.times do |batch_index|
-      recipe.recipe_ingredients.where(row_type: ['ingredient', nil]).each do |ri|
+      recipe.recipe_ingredients.where(row_type: [ "ingredient", nil ]).each do |ri|
         scaled_weight = (ri.weight.to_f * multiplier) / batch_count
         field_key = "batch_#{batch_index}_ri_#{ri.id}"
         weights[field_key] = scaled_weight.round(0).to_s

@@ -1,5 +1,5 @@
 class RecipesController < ApplicationController
-  before_action :set_recipe, only: [:show, :edit, :update, :destroy, :update_ingredient_positions]
+  before_action :set_recipe, only: [ :show, :edit, :update, :destroy, :update_ingredient_positions ]
 
   def index
     @recipes = Recipe.all.order(created_at: :desc)
@@ -28,7 +28,7 @@ class RecipesController < ApplicationController
     @recipe = Recipe.new(recipe_params)
 
     if @recipe.save
-      redirect_to recipes_path, notice: '레시피가 성공적으로 등록되었습니다.'
+      redirect_to recipes_path, notice: "레시피가 성공적으로 등록되었습니다."
     else
       @items = Item.all.order(:name)
       @ingredients = Ingredient.all.order(:name)
@@ -40,7 +40,7 @@ class RecipesController < ApplicationController
 
   def update
     if @recipe.update(recipe_params)
-      redirect_to recipes_path, notice: '레시피 정보가 수정되었습니다.'
+      redirect_to recipes_path, notice: "레시피 정보가 수정되었습니다."
     else
       @items = Item.all.order(:name)
       @ingredients = Ingredient.all.order(:name)
@@ -53,11 +53,11 @@ class RecipesController < ApplicationController
   def destroy
     # 완제품에서 사용 중인지 확인
     if @recipe.finished_products.any?
-      product_names = @recipe.finished_products.map(&:name).join(', ')
+      product_names = @recipe.finished_products.map(&:name).join(", ")
       redirect_to recipes_path, alert: "이 레시피는 다음 완제품에서 사용 중입니다: #{product_names}. 먼저 완제품에서 레시피를 제거해주세요."
     else
       @recipe.destroy
-      redirect_to recipes_path, notice: '레시피가 삭제되었습니다.'
+      redirect_to recipes_path, notice: "레시피가 삭제되었습니다."
     end
   end
 
@@ -79,8 +79,8 @@ class RecipesController < ApplicationController
       :name,
       :description,
       :notes,
-      recipe_ingredients_attributes: [:id, :source_type, :item_id, :referenced_ingredient_id, :weight, :is_main, :row_type, :notes, :position, :_destroy],
-      recipe_equipments_attributes: [:id, :equipment_id, :work_capacity, :work_capacity_unit, :position, :row_type, :process_id, :_destroy]
+      recipe_ingredients_attributes: [ :id, :source_type, :item_id, :referenced_ingredient_id, :weight, :is_main, :row_type, :notes, :position, :_destroy ],
+      recipe_equipments_attributes: [ :id, :equipment_id, :work_capacity, :work_capacity_unit, :position, :row_type, :process_id, :_destroy ]
     )
   end
 end

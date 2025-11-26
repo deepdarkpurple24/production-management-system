@@ -1,6 +1,6 @@
 class FinishedProductVersionsController < ApplicationController
   before_action :set_finished_product
-  before_action :set_version, only: [:destroy]
+  before_action :set_version, only: [ :destroy ]
 
   def index
     @versions = @finished_product.finished_product_versions.order(version_number: :desc)
@@ -8,7 +8,7 @@ class FinishedProductVersionsController < ApplicationController
 
   def destroy
     @version.destroy
-    redirect_to finished_product_finished_product_versions_path(@finished_product), notice: '수정내역이 삭제되었습니다.'
+    redirect_to finished_product_finished_product_versions_path(@finished_product), notice: "수정내역이 삭제되었습니다."
   end
 
   private

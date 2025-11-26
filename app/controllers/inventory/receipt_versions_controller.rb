@@ -1,6 +1,6 @@
 class Inventory::ReceiptVersionsController < ApplicationController
   before_action :set_receipt
-  before_action :set_version, only: [:destroy]
+  before_action :set_version, only: [ :destroy ]
 
   def index
     @versions = @receipt.receipt_versions.order(version_number: :desc)
@@ -8,7 +8,7 @@ class Inventory::ReceiptVersionsController < ApplicationController
 
   def destroy
     @version.destroy
-    redirect_to inventory_receipt_receipt_versions_path(@receipt), notice: '수정내역이 삭제되었습니다.'
+    redirect_to inventory_receipt_receipt_versions_path(@receipt), notice: "수정내역이 삭제되었습니다."
   end
 
   private

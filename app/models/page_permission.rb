@@ -7,21 +7,21 @@ class PagePermission < ApplicationRecord
 
   # 기본 페이지 목록 정의
   DEFAULT_PAGES = [
-    { page_key: 'home', name: '대시보드', description: '메인 대시보드 페이지' },
-    { page_key: 'inventory', name: '재고관리', description: '재고 관리 메뉴 전체' },
-    { page_key: 'inventory_items', name: '재고관리 > 품목관리', description: '품목 목록 및 관리' },
-    { page_key: 'inventory_receipts', name: '재고관리 > 입고', description: '입고 내역 관리' },
-    { page_key: 'inventory_shipments', name: '재고관리 > 출고', description: '출고 내역 관리' },
-    { page_key: 'inventory_stocks', name: '재고관리 > 재고현황', description: '현재 재고 현황 조회' },
-    { page_key: 'inventory_opened_items', name: '재고관리 > 개봉품', description: '개봉품 관리' },
-    { page_key: 'recipes', name: '레시피관리', description: '레시피 목록 및 관리' },
-    { page_key: 'ingredients', name: '재료관리', description: '재료 목록 및 관리' },
-    { page_key: 'finished_products', name: '완제품관리', description: '완제품 목록 및 관리' },
-    { page_key: 'production', name: '생산관리', description: '생산 관리 메뉴 전체' },
-    { page_key: 'production_plans', name: '생산관리 > 생산계획', description: '생산 계획 관리' },
-    { page_key: 'production_logs', name: '생산관리 > 반죽일지', description: '반죽일지 관리' },
-    { page_key: 'equipments', name: '장비관리', description: '장비 목록 및 관리' },
-    { page_key: 'settings', name: '설정', description: '시스템 설정' }
+    { page_key: "home", name: "대시보드", description: "메인 대시보드 페이지" },
+    { page_key: "inventory", name: "재고관리", description: "재고 관리 메뉴 전체" },
+    { page_key: "inventory_items", name: "재고관리 > 품목관리", description: "품목 목록 및 관리" },
+    { page_key: "inventory_receipts", name: "재고관리 > 입고", description: "입고 내역 관리" },
+    { page_key: "inventory_shipments", name: "재고관리 > 출고", description: "출고 내역 관리" },
+    { page_key: "inventory_stocks", name: "재고관리 > 재고현황", description: "현재 재고 현황 조회" },
+    { page_key: "inventory_opened_items", name: "재고관리 > 개봉품", description: "개봉품 관리" },
+    { page_key: "recipes", name: "레시피관리", description: "레시피 목록 및 관리" },
+    { page_key: "ingredients", name: "재료관리", description: "재료 목록 및 관리" },
+    { page_key: "finished_products", name: "완제품관리", description: "완제품 목록 및 관리" },
+    { page_key: "production", name: "생산관리", description: "생산 관리 메뉴 전체" },
+    { page_key: "production_plans", name: "생산관리 > 생산계획", description: "생산 계획 관리" },
+    { page_key: "production_logs", name: "생산관리 > 반죽일지", description: "반죽일지 관리" },
+    { page_key: "equipments", name: "장비관리", description: "장비 목록 및 관리" },
+    { page_key: "settings", name: "설정", description: "시스템 설정" }
   ].freeze
 
   # 기본 페이지 초기화

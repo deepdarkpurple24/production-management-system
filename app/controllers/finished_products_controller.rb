@@ -1,5 +1,5 @@
 class FinishedProductsController < ApplicationController
-  before_action :set_finished_product, only: [:show, :edit, :update, :destroy]
+  before_action :set_finished_product, only: [ :show, :edit, :update, :destroy ]
 
   def index
     @finished_products = FinishedProduct.all.order(created_at: :desc)
@@ -22,7 +22,7 @@ class FinishedProductsController < ApplicationController
     @finished_product = FinishedProduct.new(finished_product_params)
 
     if @finished_product.save
-      redirect_to finished_products_path, notice: '완제품이 성공적으로 등록되었습니다.'
+      redirect_to finished_products_path, notice: "완제품이 성공적으로 등록되었습니다."
     else
       @recipes = Recipe.all.order(:name)
       render :new, status: :unprocessable_entity
@@ -31,7 +31,7 @@ class FinishedProductsController < ApplicationController
 
   def update
     if @finished_product.update(finished_product_params)
-      redirect_to finished_products_path, notice: '완제품 정보가 수정되었습니다.'
+      redirect_to finished_products_path, notice: "완제품 정보가 수정되었습니다."
     else
       @recipes = Recipe.all.order(:name)
       render :edit, status: :unprocessable_entity
@@ -40,7 +40,7 @@ class FinishedProductsController < ApplicationController
 
   def destroy
     @finished_product.destroy
-    redirect_to finished_products_path, notice: '완제품이 삭제되었습니다.'
+    redirect_to finished_products_path, notice: "완제품이 삭제되었습니다."
   end
 
   private
@@ -56,7 +56,7 @@ class FinishedProductsController < ApplicationController
       :weight_unit,
       :description,
       :notes,
-      finished_product_recipes_attributes: [:id, :recipe_id, :quantity, :notes, :position, :_destroy]
+      finished_product_recipes_attributes: [ :id, :recipe_id, :quantity, :notes, :position, :_destroy ]
     )
   end
 end

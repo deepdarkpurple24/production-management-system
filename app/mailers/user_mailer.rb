@@ -7,7 +7,7 @@ class UserMailer < ApplicationMailer
 
     mail(
       to: user.email,
-      subject: '[생산관리시스템] 계정이 생성되었습니다'
+      subject: "[생산관리시스템] 계정이 생성되었습니다"
     )
   end
 end

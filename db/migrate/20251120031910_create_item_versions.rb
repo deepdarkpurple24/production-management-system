@@ -20,6 +20,6 @@ class CreateItemVersions < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :item_versions, [:item_id, :version_number]
+    add_index :item_versions, [ :item_id, :version_number ]
   end
 end

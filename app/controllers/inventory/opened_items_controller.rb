@@ -9,8 +9,8 @@ class Inventory::OpenedItemsController < ApplicationController
     @items_summary = OpenedItem
       .available
       .joins(:item)
-      .group('items.id', 'items.name')
-      .select('items.id as item_id, items.name as item_name, COUNT(*) as opened_count, SUM(opened_items.remaining_weight) as total_weight')
-      .order('items.name')
+      .group("items.id", "items.name")
+      .select("items.id as item_id, items.name as item_name, COUNT(*) as opened_count, SUM(opened_items.remaining_weight) as total_weight")
+      .order("items.name")
   end
 end

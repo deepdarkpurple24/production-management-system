@@ -21,6 +21,6 @@ class CreateReceiptVersions < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :receipt_versions, [:receipt_id, :version_number]
+    add_index :receipt_versions, [ :receipt_id, :version_number ]
   end
 end

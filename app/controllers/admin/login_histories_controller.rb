@@ -1,17 +1,17 @@
 class Admin::LoginHistoriesController < Admin::BaseController
   def index
-    @filter = params[:filter] || 'all'
+    @filter = params[:filter] || "all"
 
     @login_histories = LoginHistory.includes(:user).recent
 
     case @filter
-    when 'successful'
+    when "successful"
       @login_histories = @login_histories.successful
-    when 'failed'
+    when "failed"
       @login_histories = @login_histories.failed
-    when 'today'
+    when "today"
       @login_histories = @login_histories.today
-    when 'this_week'
+    when "this_week"
       @login_histories = @login_histories.this_week
     end
 

@@ -1,6 +1,6 @@
 class IngredientVersionsController < ApplicationController
   before_action :set_ingredient
-  before_action :set_version, only: [:destroy]
+  before_action :set_version, only: [ :destroy ]
 
   def index
     @versions = @ingredient.ingredient_versions.order(version_number: :desc)
@@ -8,7 +8,7 @@ class IngredientVersionsController < ApplicationController
 
   def destroy
     @version.destroy
-    redirect_to ingredient_ingredient_versions_path(@ingredient), notice: '수정내역이 삭제되었습니다.'
+    redirect_to ingredient_ingredient_versions_path(@ingredient), notice: "수정내역이 삭제되었습니다."
   end
 
   private

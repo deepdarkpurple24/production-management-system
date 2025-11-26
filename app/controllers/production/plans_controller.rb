@@ -1,15 +1,15 @@
 class Production::PlansController < ApplicationController
-  before_action :set_production_plan, only: [:edit, :update, :destroy]
+  before_action :set_production_plan, only: [ :edit, :update, :destroy ]
 
   def index
-    @view_type = params[:view] || 'monthly'
+    @view_type = params[:view] || "monthly"
     @date = params[:date] ? Date.parse(params[:date]) : Date.today
 
     case @view_type
-    when 'weekly'
+    when "weekly"
       @start_date = @date.beginning_of_week
       @end_date = @date.end_of_week
-    when 'daily'
+    when "daily"
       @start_date = @date
       @end_date = @date
     else # monthly
@@ -39,8 +39,8 @@ class Production::PlansController < ApplicationController
       # 생산계획 생성 시 반죽일지 자동 생성
       ProductionLogInitializer.create_logs_for_plan(@production_plan)
 
-      redirect_to production_plans_path(date: @production_plan.production_date, view: params[:view] || 'monthly'),
-                  notice: '생산 계획이 성공적으로 등록되었습니다.'
+      redirect_to production_plans_path(date: @production_plan.production_date, view: params[:view] || "monthly"),
+                  notice: "생산 계획이 성공적으로 등록되었습니다."
     else
       @finished_products = FinishedProduct.order(:name)
       render :new, status: :unprocessable_entity
@@ -63,8 +63,8 @@ class Production::PlansController < ApplicationController
         ProductionLogInitializer.create_logs_for_plan(@production_plan)
       end
 
-      redirect_to production_plans_path(date: @production_plan.production_date, view: params[:view] || 'monthly'),
-                  notice: '생산 계획이 성공적으로 수정되었습니다.'
+      redirect_to production_plans_path(date: @production_plan.production_date, view: params[:view] || "monthly"),
+                  notice: "생산 계획이 성공적으로 수정되었습니다."
     else
       @finished_products = FinishedProduct.order(:name)
       render :edit, status: :unprocessable_entity
@@ -74,8 +74,8 @@ class Production::PlansController < ApplicationController
   def destroy
     production_date = @production_plan.production_date
     @production_plan.destroy
-    redirect_to production_plans_path(date: production_date, view: params[:view] || 'monthly'),
-                notice: '생산 계획이 성공적으로 삭제되었습니다.'
+    redirect_to production_plans_path(date: production_date, view: params[:view] || "monthly"),
+                notice: "생산 계획이 성공적으로 삭제되었습니다."
   end
 
   private

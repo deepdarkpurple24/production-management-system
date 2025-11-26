@@ -1259,9 +1259,12 @@ bin/rails db:migrate
 - **CSRF Protection**: Enabled globally via csrf_meta_tags in layout
 - **Content Security Policy**: Configured via csp_meta_tag
 - **Authentication**: Devise-based email/password authentication
+- **Email Confirmation**: Devise :confirmable module (email verification required)
 - **Device-based Access Control**: Browser fingerprinting with SHA-256 hashing
 - **Login History Tracking**: Complete audit trail of all login attempts
 - **Authorization**: Admin-based role system (first user auto-admin)
+- **Rate Limiting**: Rack::Attack for brute force protection
+- **Session Timeout**: Devise :timeoutable (30 minutes inactivity)
 - **Brakeman**: Static security analysis scanner for Rails vulnerabilities
 - **Bundler Audit**: Checks for vulnerable gem dependencies
 
@@ -1278,26 +1281,37 @@ bin/rails db:migrate
 - Device management: Admins can activate/deactivate devices
 - Registration restriction: Only admins can create new users (after first user)
 - Auto-authorization: Devices used for registration automatically authorized
+- Email confirmation: Users must verify email before login (admin-created users skip this)
+- Session timeout: Auto-logout after 30 minutes of inactivity with 5-minute warning
+
+**Rate Limiting Configuration** (Rack::Attack):
+- Login attempts: 5 per 20 seconds (by IP and email)
+- Registration: 3 per hour (by IP)
+- Password reset: 3 per hour (by IP)
+- Email confirmation resend: 3 per hour (by IP)
+- General requests: 300 per 5 minutes (by IP)
+- Localhost automatically whitelisted
+- Custom 429 error page in Korean
+
+**Session Timeout Configuration**:
+- Timeout period: 30 minutes of inactivity
+- Warning: 5 minutes before expiration
+- Stimulus controller: session_timeout_controller.js
+- Activity detection: mouse, keyboard, scroll, touch events
+- User-friendly countdown timer with "Continue" button
 
 **Known Security Limitations**:
 - **SQLite**: Not recommended for high-concurrency production environments
 - **Device Fingerprinting**: Can be evaded by sophisticated attackers (browser fingerprinting is not foolproof)
-- **No Email Confirmation**: Devise confirmable module not enabled
-- **No Password Reset**: Devise recoverable module enabled but may need email configuration
-- **No Rate Limiting**: No protection against brute force login attempts (consider adding Rack::Attack)
 - **No Two-Factor Authentication**: Device-based authorization is single-factor
 - **Admin Deletion Protection**: Cannot delete last admin or self, but no audit trail for admin actions
 
 **Recommended Security Improvements**:
-1. Enable Devise confirmable module for email verification
-2. Configure email service for password resets
-3. Add Rack::Attack for rate limiting and brute force protection
-4. Consider adding two-factor authentication (TOTP)
-5. Add admin action audit logging
-6. Consider moving to PostgreSQL for production
-7. Implement session timeout for inactive users
-8. Add IP-based blocking for suspicious activity
-9. Regular security dependency updates (bundler-audit, brakeman)
+1. Consider adding two-factor authentication (TOTP)
+2. Add admin action audit logging
+3. Consider moving to PostgreSQL for production
+4. Implement IP-based blocking for repeated violations
+5. Regular security dependency updates (bundler-audit, brakeman)
 
 ## Performance Notes
 
@@ -1340,7 +1354,11 @@ Documentation:
 Configuration:
 - config/routes.rb - Application structure (includes authentication routes)
 - config/database.yml - Database configuration
-- config/initializers/devise.rb - Devise authentication configuration
+- config/initializers/devise.rb - Devise authentication configuration (timeout_in, confirmable)
+- config/initializers/rack_attack.rb - Rate limiting rules
+- config/locales/devise.ko.yml - Korean authentication messages
+- config/locales/ko.yml - Korean time/date formats
+- config/application.rb - i18n locale settings, Rack::Attack middleware
 - db/schema.rb - Database structure
 - Gemfile / package.json - Dependencies
 
@@ -1362,10 +1380,12 @@ Controllers:
 
 Frontend:
 - app/javascript/device_fingerprint.js - Browser fingerprinting for device identification
+- app/javascript/controllers/session_timeout_controller.js - Session timeout warning system
 - app/javascript/interactions.js - Global helpers
 - app/assets/stylesheets/application.bootstrap.scss - Design system
-- app/views/layouts/application.html.erb - Main layout (includes admin menu, flash messages)
+- app/views/layouts/application.html.erb - Main layout (admin menu, flash messages, session timeout)
 - app/views/devise/sessions/new.html.erb - Login page
+- app/views/devise/mailer/confirmation_instructions.html.erb - Email confirmation template
 - app/views/devise/registrations/new.html.erb - Registration page
 - app/views/admin/users/index.html.erb - User management interface
 - app/views/admin/users/show.html.erb - User detail (devices + login history)
@@ -1457,9 +1477,9 @@ const itemOptions = itemsData.map(item => `<option value="${item.id}">${item.nam
 
 ---
 
-Document Version: 1.7
-Last Updated: 2025-11-23
-Schema Version: 20251123075852
+Document Version: 1.8
+Last Updated: 2025-11-26
+Schema Version: 20251126131532
 Rails Version: 8.1.1
 Ruby Version: 3.4.7
 Node Version: 24.11.1
@@ -1469,6 +1489,26 @@ Created for: Future Claude instances to quickly understand and work with this co
 ---
 
 ## Changelog
+
+### Version 1.8 (2025-11-26)
+- **Security Enhancements**:
+  - Email Confirmation: Added Devise :confirmable module for email verification
+  - Rate Limiting: Implemented Rack::Attack for brute force protection
+  - Session Timeout: Added Devise :timeoutable with 30-minute inactivity logout
+  - Mass Assignment Fix: Secured admin/sub_admin privilege escalation vulnerability
+- **Internationalization**:
+  - Korean locale (ko) set as default
+  - Added config/locales/devise.ko.yml and config/locales/ko.yml
+- **Frontend**:
+  - Session timeout warning system with countdown timer (Stimulus controller)
+  - Activity detection for automatic session renewal
+- **Database**:
+  - Added confirmation fields to users table (confirmation_token, confirmed_at, etc.)
+  - Auto-confirmed existing users during migration
+- **Configuration**:
+  - config/initializers/rack_attack.rb: Rate limiting rules
+  - config/application.rb: i18n settings and Rack::Attack middleware
+- Schema updated to 20251126131532 (add_confirmable_to_users)
 
 ### Version 1.7 (2025-11-23)
 - Added comprehensive Authentication & Authorization System documentation

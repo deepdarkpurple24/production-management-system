@@ -23,6 +23,7 @@ class Inventory::ShipmentsController < ApplicationController
 
   def create
     @shipment = Shipment.new(shipment_params)
+    @shipment.requester = current_user.name  # 현재 로그인한 사용자 이름 자동 설정
 
     if @shipment.save
       redirect_to inventory_shipments_path, notice: "출고가 성공적으로 등록되었습니다."
@@ -57,6 +58,7 @@ class Inventory::ShipmentsController < ApplicationController
   end
 
   def shipment_params
-    params.require(:shipment).permit(:item_id, :shipment_date, :quantity, :purpose, :requester, :notes)
+    # requester는 자동으로 설정되므로 permit에서 제외
+    params.require(:shipment).permit(:item_id, :shipment_date, :quantity, :purpose, :notes)
   end
 end

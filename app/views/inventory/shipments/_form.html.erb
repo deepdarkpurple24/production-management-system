@@ -108,27 +108,22 @@
       <small class="text-muted">목록에서 선택하거나 새로운 목적을 직접 입력하세요</small>
     </div>
 
-    <!-- 출고 요청자 -->
+    <!-- 출고 요청자 (자동 입력) -->
     <div class="col-md-12">
       <label for="shipment_requester" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
         출고 요청자
       </label>
       <div class="input-group">
-        <%= f.text_field :requester,
-                         class: "form-control",
-                         list: "requester_list",
-                         placeholder: "선택하거나 직접 입력하세요",
-                         id: "shipment_requester" %>
-        <datalist id="requester_list">
-          <% @shipment_requesters.each do |requester| %>
-            <option value="<%= requester.name %>">
-          <% end %>
-        </datalist>
-        <%= link_to settings_system_path, class: "btn btn-outline-secondary", target: "_blank", title: "설정에서 관리" do %>
-          <i class="bi bi-gear"></i>
-        <% end %>
+        <input type="text"
+               value="<%= current_user.name %>"
+               class="form-control"
+               readonly
+               style="background-color: #f5f5f7; cursor: not-allowed;">
+        <span class="input-group-text" style="background-color: #f5f5f7;">
+          <i class="bi bi-person-check-fill text-success"></i>
+        </span>
       </div>
-      <small class="text-muted">목록에서 선택하거나 새로운 요청자를 직접 입력하세요</small>
+      <small class="text-muted">현재 로그인한 사용자가 자동으로 요청자로 등록됩니다</small>
     </div>
 
     <!-- 비고 -->

@@ -19,6 +19,7 @@ class Inventory::ReceiptsController < ApplicationController
 
   def create
     @receipt = Receipt.new(receipt_params)
+    @receipt.requester = current_user.name  # 현재 로그인한 사용자 이름 자동 설정
 
     if @receipt.save
       redirect_to inventory_receipts_path, notice: "입고가 성공적으로 등록되었습니다."

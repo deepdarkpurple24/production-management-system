@@ -63,6 +63,10 @@ class Receipt < ApplicationRecord
       change_list << "공급업체: '#{supplier_was}' → '#{supplier}'"
     end
 
+    if requester_changed?
+      change_list << "요청자: '#{requester_was}' → '#{requester}'"
+    end
+
     if notes_changed?
       change_list << "비고 변경"
     end
@@ -82,6 +86,7 @@ class Receipt < ApplicationRecord
       manufacturing_date: manufacturing_date_was || manufacturing_date,
       expiration_date: expiration_date_was || expiration_date,
       supplier: supplier_was || supplier,
+      requester: requester_was || requester,
       notes: notes_was || notes,
       changed_by: "System",
       changed_at: Time.current,

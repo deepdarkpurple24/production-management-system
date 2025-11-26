@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_26_053056) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_26_112506) do
   create_table "authorized_devices", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.string "authorization_token"
@@ -353,6 +353,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_26_053056) do
     t.json "receipt_data"
     t.date "receipt_date"
     t.integer "receipt_id", null: false
+    t.string "requester"
     t.string "supplier"
     t.decimal "unit_price", precision: 10, scale: 2
     t.decimal "unit_weight", precision: 10, scale: 2
@@ -371,6 +372,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_26_053056) do
     t.text "notes"
     t.decimal "quantity", precision: 10, scale: 2, null: false
     t.date "receipt_date", null: false
+    t.string "requester"
     t.string "supplier"
     t.decimal "unit_price", precision: 10, scale: 2
     t.decimal "unit_weight", precision: 10, scale: 2

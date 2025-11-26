@@ -1,21 +1,19 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  name: MyString
-  equipment_type: MyString
-  manufacturer: MyString
-  model_number: MyString
-  purchase_date: 2025-11-15
-  status: MyString
-  location: MyString
-  notes: MyText
+  name: Test Equipment One
+  manufacturer: Test Manufacturer
+  model_number: TM-001
+  purchase_date: 2025-01-15
+  status: 정상
+  location: Test Location A
+  notes: Test equipment one
 
 two:
-  name: MyString
-  equipment_type: MyString
-  manufacturer: MyString
-  model_number: MyString
-  purchase_date: 2025-11-15
-  status: MyString
-  location: MyString
-  notes: MyText
+  name: Test Equipment Two
+  manufacturer: Another Manufacturer
+  model_number: AM-002
+  purchase_date: 2025-02-20
+  status: 정상
+  location: Test Location B
+  notes: Test equipment two

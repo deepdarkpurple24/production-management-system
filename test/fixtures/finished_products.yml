@@ -1,15 +1,15 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  name: MyString
-  weight: 9.99
-  weight_unit: MyString
-  description: MyText
-  notes: MyText
+  name: Test Finished Product One
+  weight: 1000
+  weight_unit: g
+  description: Test finished product description one
+  notes: Test finished product notes one
 
 two:
-  name: MyString
-  weight: 9.99
-  weight_unit: MyString
-  description: MyText
-  notes: MyText
+  name: Test Finished Product Two
+  weight: 2000
+  weight_unit: g
+  description: Test finished product description two
+  notes: Test finished product notes two

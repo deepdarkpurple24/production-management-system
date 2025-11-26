@@ -1,38 +1,50 @@
 require "test_helper"
 
 class FinishedProductsControllerTest < ActionDispatch::IntegrationTest
-  test "should get index" do
-    get finished_products_index_url
-    assert_response :success
+  setup do
+    @finished_product = finished_products(:one)
+    @user = users(:one)
+    sign_in @user
   end
 
-  test "should get show" do
-    get finished_products_show_url
+  test "should get index" do
+    get finished_products_url
     assert_response :success
   end
 
   test "should get new" do
-    get finished_products_new_url
+    get new_finished_product_url
+    assert_response :success
+  end
+
+  test "should create finished_product" do
+    assert_difference("FinishedProduct.count") do
+      post finished_products_url, params: { finished_product: { name: "Test Product", description: "Test description" } }
+    end
+
+    assert_redirected_to finished_product_url(FinishedProduct.last)
+  end
+
+  test "should show finished_product" do
+    get finished_product_url(@finished_product)
     assert_response :success
   end
 
   test "should get edit" do
-    get finished_products_edit_url
+    get edit_finished_product_url(@finished_product)
     assert_response :success
   end
 
-  test "should get create" do
-    get finished_products_create_url
-    assert_response :success
+  test "should update finished_product" do
+    patch finished_product_url(@finished_product), params: { finished_product: { name: @finished_product.name } }
+    assert_redirected_to finished_product_url(@finished_product)
   end
 
-  test "should get update" do
-    get finished_products_update_url
-    assert_response :success
-  end
+  test "should destroy finished_product" do
+    assert_difference("FinishedProduct.count", -1) do
+      delete finished_product_url(@finished_product)
+    end
 
-  test "should get destroy" do
-    get finished_products_destroy_url
-    assert_response :success
+    assert_redirected_to finished_products_url
   end
 end

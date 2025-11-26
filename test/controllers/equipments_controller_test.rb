@@ -1,23 +1,50 @@
 require "test_helper"
 
 class EquipmentsControllerTest < ActionDispatch::IntegrationTest
-  test "should get index" do
-    get equipments_index_url
-    assert_response :success
+  setup do
+    @equipment = equipment(:one)
+    @user = users(:one)
+    sign_in @user
   end
 
-  test "should get show" do
-    get equipments_show_url
+  test "should get index" do
+    get equipments_url
     assert_response :success
   end
 
   test "should get new" do
-    get equipments_new_url
+    get new_equipment_url
+    assert_response :success
+  end
+
+  test "should create equipment" do
+    assert_difference("Equipment.count") do
+      post equipments_url, params: { equipment: { name: "Test Equipment" } }
+    end
+
+    assert_redirected_to equipment_url(Equipment.last)
+  end
+
+  test "should show equipment" do
+    get equipment_url(@equipment)
     assert_response :success
   end
 
   test "should get edit" do
-    get equipments_edit_url
+    get edit_equipment_url(@equipment)
     assert_response :success
+  end
+
+  test "should update equipment" do
+    patch equipment_url(@equipment), params: { equipment: { name: @equipment.name } }
+    assert_redirected_to equipment_url(@equipment)
+  end
+
+  test "should destroy equipment" do
+    assert_difference("Equipment.count", -1) do
+      delete equipment_url(@equipment)
+    end
+
+    assert_redirected_to equipments_url
   end
 end

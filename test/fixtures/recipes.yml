@@ -1,9 +1,11 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  name: MyString
-  description: MyText
+  name: Test Recipe One
+  description: Test recipe description one
+  notes: Test recipe notes one
 
 two:
-  name: MyString
-  description: MyText
+  name: Test Recipe Two
+  description: Test recipe description two
+  notes: Test recipe notes two

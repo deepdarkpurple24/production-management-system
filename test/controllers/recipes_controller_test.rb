@@ -22,7 +22,7 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
       post recipes_url, params: { recipe: { name: "Test Recipe", description: "Test description" } }
     end
 
-    assert_redirected_to recipe_url(Recipe.last)
+    assert_redirected_to recipes_url
   end
 
   test "should show recipe" do
@@ -37,14 +37,16 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
 
   test "should update recipe" do
     patch recipe_url(@recipe), params: { recipe: { name: @recipe.name } }
-    assert_redirected_to recipe_url(@recipe)
+    assert_redirected_to recipes_url
   end
 
-  test "should destroy recipe" do
-    assert_difference("Recipe.count", -1) do
+  test "should not destroy recipe when used in finished products" do
+    # Recipe :one is used in finished_product :one via fixture
+    assert_no_difference("Recipe.count") do
       delete recipe_url(@recipe)
     end
 
     assert_redirected_to recipes_url
+    assert_match /완제품에서 사용 중/, flash[:alert]
   end
 end

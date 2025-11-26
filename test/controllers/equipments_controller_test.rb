@@ -22,7 +22,7 @@ class EquipmentsControllerTest < ActionDispatch::IntegrationTest
       post equipments_url, params: { equipment: { name: "Test Equipment" } }
     end
 
-    assert_redirected_to equipment_url(Equipment.last)
+    assert_redirected_to equipments_url
   end
 
   test "should show equipment" do
@@ -37,7 +37,7 @@ class EquipmentsControllerTest < ActionDispatch::IntegrationTest
 
   test "should update equipment" do
     patch equipment_url(@equipment), params: { equipment: { name: @equipment.name } }
-    assert_redirected_to equipment_url(@equipment)
+    assert_redirected_to equipments_url
   end
 
   test "should destroy equipment" do

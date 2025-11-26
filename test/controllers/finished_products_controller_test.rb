@@ -22,7 +22,7 @@ class FinishedProductsControllerTest < ActionDispatch::IntegrationTest
       post finished_products_url, params: { finished_product: { name: "Test Product", description: "Test description" } }
     end
 
-    assert_redirected_to finished_product_url(FinishedProduct.last)
+    assert_redirected_to finished_products_url
   end
 
   test "should show finished_product" do
@@ -37,7 +37,7 @@ class FinishedProductsControllerTest < ActionDispatch::IntegrationTest
 
   test "should update finished_product" do
     patch finished_product_url(@finished_product), params: { finished_product: { name: @finished_product.name } }
-    assert_redirected_to finished_product_url(@finished_product)
+    assert_redirected_to finished_products_url
   end
 
   test "should destroy finished_product" do

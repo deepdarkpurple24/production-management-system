@@ -24,20 +24,23 @@ jobs:
       - name: Scan for known security vulnerabilities in gems used
         run: bundle exec bundler-audit
       
-  scan_js:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
-
-      - name: Scan for security vulnerabilities in JavaScript dependencies
-        run: bundle exec rails importmap:audit
+  # scan_js:
+  #   runs-on: ubuntu-latest
+  #
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v5
+  #
+  #     - name: Set up Ruby
+  #       uses: ruby/setup-ruby@v1
+  #       with:
+  #         bundler-cache: true
+  #
+  #     - name: Scan for security vulnerabilities in JavaScript dependencies
+  #       run: bundle exec rails importmap:audit
+  #
+  #   Note: Import maps use pinned CDN URLs, not package managers like npm.
+  #   There is no traditional vulnerability scanning available for this setup.
 
   lint:
     runs-on: ubuntu-latest

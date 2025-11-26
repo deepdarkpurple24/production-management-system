@@ -43,3 +43,6 @@
 
 # Ignore Claude Code session context (local development context)
 /.claude
+
+# Ignore webhook configuration with secrets
+/hooks.json

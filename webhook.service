@@ -1,0 +1,14 @@
+[Unit]
+Description=GitHub Webhook for Production Management System
+After=network.target
+
+[Service]
+Type=simple
+User=alche0124
+Group=alche0124
+ExecStart=/usr/bin/webhook -hooks /home/alche0124/Programs/production-management-system/hooks.json -verbose -port 9000
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target

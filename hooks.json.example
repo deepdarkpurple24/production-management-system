@@ -1,0 +1,34 @@
+[
+  {
+    "id": "deploy-production-management-system",
+    "execute-command": "/home/alche0124/Programs/production-management-system/deploy.sh",
+    "command-working-directory": "/home/alche0124/Programs/production-management-system",
+    "response-message": "Deployment started",
+    "pass-arguments-to-command": [],
+    "pass-environment-to-command": [],
+    "trigger-rule": {
+      "and": [
+        {
+          "match": {
+            "type": "payload-hash-sha256",
+            "secret": "YOUR_WEBHOOK_SECRET_HERE",
+            "parameter": {
+              "source": "header",
+              "name": "X-Hub-Signature-256"
+            }
+          }
+        },
+        {
+          "match": {
+            "type": "value",
+            "value": "refs/heads/main",
+            "parameter": {
+              "source": "payload",
+              "name": "ref"
+            }
+          }
+        }
+      ]
+    }
+  }
+]

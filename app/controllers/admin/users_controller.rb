@@ -47,6 +47,12 @@ class Admin::UsersController < Admin::BaseController
   def update
     @user = User.find(params[:id])
 
+    # Log params for debugging
+    Rails.logger.info "=== User Update Debug ==="
+    Rails.logger.info "User: #{@user.email}"
+    Rails.logger.info "Params: #{params[:user].inspect}"
+    Rails.logger.info "Before update - admin: #{@user.admin}, sub_admin: #{@user.sub_admin}"
+
     # Prevent changing master admin's admin status
     if @user.email == "alche0124@gmail.com" && params[:user][:admin] == "0"
       flash[:alert] = "마스터 관리자의 관리자 권한은 변경할 수 없습니다."
@@ -55,9 +61,12 @@ class Admin::UsersController < Admin::BaseController
     end
 
     if @user.update(user_params)
+      Rails.logger.info "After update - admin: #{@user.admin}, sub_admin: #{@user.sub_admin}"
       flash[:notice] = "사용자 정보가 업데이트되었습니다."
       redirect_to admin_user_path(@user)
     else
+      Rails.logger.error "Update failed: #{@user.errors.full_messages.join(', ')}"
+      flash.now[:alert] = "저장 실패: #{@user.errors.full_messages.join(', ')}"
       render :edit
     end
   end

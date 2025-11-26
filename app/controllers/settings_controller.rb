@@ -42,7 +42,8 @@ class SettingsController < ApplicationController
   end
 
   def create_requester
-    @shipment_requester = ShipmentRequester.new(shipment_requester_params)
+    # 현재 로그인한 사용자의 이름을 자동으로 사용
+    @shipment_requester = ShipmentRequester.new(name: current_user.name)
 
     if @shipment_requester.save
       redirect_to settings_system_path(tab: "inventory"), notice: "출고 요청자가 추가되었습니다."
@@ -345,9 +346,7 @@ class SettingsController < ApplicationController
     params.require(:shipment_purpose).permit(:name)
   end
 
-  def shipment_requester_params
-    params.require(:shipment_requester).permit(:name)
-  end
+  # shipment_requester_params는 더 이상 필요하지 않음 (현재 사용자 이름 자동 사용)
 
   def equipment_type_params
     params.require(:equipment_type).permit(:name)

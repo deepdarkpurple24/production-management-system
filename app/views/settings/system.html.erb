@@ -336,10 +336,18 @@
               </h5>
 
               <!-- 새 요청자 추가 폼 -->
-              <%= form_with(model: @shipment_requester, url: create_shipment_requester_path, local: true, class: "mb-4") do |f| %>
-                <div class="input-group">
-                  <%= f.text_field :name, class: "form-control", placeholder: "새 출고 요청자 입력 (예: 홍길동, 생산팀 등)", required: true %>
-                  <%= f.submit "추가", class: "btn-modern btn-modern-primary" %>
+              <%= form_with(url: create_shipment_requester_path, local: true, class: "mb-4") do |f| %>
+                <div class="d-flex align-items-center gap-3">
+                  <div class="flex-grow-1">
+                    <div class="alert alert-info mb-0 d-flex align-items-center" style="background-color: #e3f2fd; border-color: #90caf9; color: #1976d2;">
+                      <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
+                      <div>
+                        <strong><%= current_user.name %></strong>
+                        <small class="d-block text-muted" style="font-size: 0.875rem;">현재 로그인한 사용자</small>
+                      </div>
+                    </div>
+                  </div>
+                  <%= f.submit "내 이름을 요청자로 추가", class: "btn-modern btn-modern-primary" %>
                 </div>
                 <% if @shipment_requester.errors.any? %>
                   <div class="text-danger small mt-2">

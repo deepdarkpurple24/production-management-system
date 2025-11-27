@@ -453,5 +453,4 @@ class Production::LogsController < ApplicationController
       Rails.logger.error "생산 계획 수량 업데이트 중 오류 발생: #{e.message}"
     end
   end
-
 end

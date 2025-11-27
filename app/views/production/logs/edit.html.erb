@@ -116,28 +116,6 @@
               </div>
             </div>
 
-            <!-- 막걸리 관리 -->
-            <div class="card mb-3">
-              <div class="card-header" style="background-color: #f5f5f7;">
-                <h6 class="mb-0" style="font-weight: 500;">🍶 막걸리 관리</h6>
-              </div>
-              <div class="card-body">
-                <div class="row g-3">
-                  <div class="col-md-6">
-                    <%= form.label :makgeolli_consumption, "막걸리 소비량", class: "form-label" %>
-                    <div class="input-group">
-                      <%= form.number_field :makgeolli_consumption, step: 0.1, class: "form-control" %>
-                      <span class="input-group-text">mL</span>
-                    </div>
-                    <small class="form-text text-muted">입력 시 자동으로 재고 출고 처리됩니다.</small>
-                  </div>
-                  <div class="col-md-6">
-                    <%= form.label :makgeolli_expiry_date, "막걸리 유효기간", class: "form-label" %>
-                    <%= form.date_field :makgeolli_expiry_date, class: "form-control" %>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         <% end %>
 

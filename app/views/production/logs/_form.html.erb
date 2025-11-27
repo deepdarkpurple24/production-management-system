@@ -72,12 +72,11 @@
 
     <%
       # 카테고리별로 그룹화 (순서 보장)
-      category_order = ['production', 'temperature', 'ingredient', 'makgeolli', 'other']
+      category_order = ['production', 'temperature', 'ingredient', 'other']
       category_names = {
         'production' => { name: '📊 생산 정보', cols: 4 },
         'temperature' => { name: '🌡️ 온도 관리', cols: 4 },
         'ingredient' => { name: '📦 재료 투입량', cols: 4 },
-        'makgeolli' => { name: '🍶 막걸리 관리', cols: 6 },
         'other' => { name: '🔧 기타', cols: 4 }
       }
 
@@ -103,7 +102,7 @@
                     </button>
                   <% end %>
                   <%= form.number_field field.field_name,
-                                        step: field.field_name == 'dough_count' ? 0.5 : ((field.field_name.ends_with?('_temp') || ['steiva_amount', 'water_amount', 'makgeolli_consumption'].include?(field.field_name)) ? 0.1 : 1),
+                                        step: field.field_name == 'dough_count' ? 0.5 : ((field.field_name.ends_with?('_temp') || ['steiva_amount', 'water_amount'].include?(field.field_name)) ? 0.1 : 1),
                                         class: "form-control",
                                         id: "production_log_#{field.field_name}" %>
                   <% if field.field_name == 'dough_count' %>
@@ -120,25 +119,12 @@
                             'g'
                           when 'water_amount'
                             'L'
-                          when 'makgeolli_consumption'
-                            'mL'
                           else
                             ''
                           end %>
                     </span>
                   <% end %>
                 </div>
-                <% if field.field_name == 'makgeolli_consumption' %>
-                  <small class="form-text text-muted">입력 시 자동으로 재고 출고 처리됩니다.</small>
-                <% end %>
-              </div>
-            <% end %>
-
-            <% if category == 'makgeolli' %>
-              <div class="col-md-6">
-                <%= form.label :makgeolli_expiry_date, "막걸리 유효기간", class: "form-label" %>
-                <%= form.date_field :makgeolli_expiry_date,
-                                    class: "form-control" %>
               </div>
             <% end %>
           </div>

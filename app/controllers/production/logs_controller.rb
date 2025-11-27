@@ -147,9 +147,6 @@ class Production::LogsController < ApplicationController
       # 생산 계획 수량 자동 업데이트
       update_production_plan_quantity(@production_log)
 
-      # 막걸리 자동 출고 처리
-      process_makgeolli_shipment(@production_log)
-
       log_activity(:create, @production_log)
       redirect_to production_logs_path(status: @production_log.status), notice: "생산 일지가 성공적으로 등록되었습니다."
     else
@@ -176,7 +173,6 @@ class Production::LogsController < ApplicationController
   end
 
   def update
-    old_makgeolli_consumption = @production_log.makgeolli_consumption
     old_dough_count = @production_log.dough_count
     from_status = params[:from_status] || @production_log.status
 
@@ -184,11 +180,6 @@ class Production::LogsController < ApplicationController
       # 생산 계획 수량 자동 업데이트 (반죽 통수가 변경된 경우)
       if @production_log.dough_count != old_dough_count
         update_production_plan_quantity(@production_log)
-      end
-
-      # 막걸리 소모량이 변경되었으면 자동 출고 처리
-      if @production_log.makgeolli_consumption != old_makgeolli_consumption
-        process_makgeolli_shipment(@production_log, old_makgeolli_consumption)
       end
 
       log_activity(:update, @production_log)
@@ -393,7 +384,6 @@ class Production::LogsController < ApplicationController
       :dough_count, :fermentation_room_temp, :refrigeration_room_temp,
       :yeast_amount, :steiva_amount, :salt_amount, :sugar_amount,
       :water_amount, :water_temp, :flour_temp, :porridge_temp, :dough_temp,
-      :makgeolli_consumption, :makgeolli_expiry_date,
       # 재료 중량 저장
       ingredient_weights: {}
     )
@@ -465,37 +455,4 @@ class Production::LogsController < ApplicationController
     end
   end
 
-  def process_makgeolli_shipment(production_log, old_consumption = nil)
-    return unless production_log.makgeolli_consumption.present? && production_log.makgeolli_consumption > 0
-
-    # 막걸리 품목 찾기 (이름에 "막걸리"가 포함된 품목)
-    makgeolli_item = Item.where("name LIKE ?", "%막걸리%").first
-
-    unless makgeolli_item
-      flash[:warning] = "막걸리 품목을 찾을 수 없어 자동 출고 처리를 건너뜁니다. 품목 관리에서 막걸리를 등록해주세요."
-      return
-    end
-
-    # 생산일지 ID를 포함한 고유 식별자
-    reference_note = "[생산일지##{production_log.id}]"
-
-    # 기존 출고 내역 찾기 (notes에 생산일지 ID가 포함된 것)
-    shipment = Shipment.where(item: makgeolli_item)
-                       .where("notes LIKE ?", "%#{reference_note}%")
-                       .first_or_initialize
-
-    shipment.shipment_date = production_log.production_date
-    shipment.quantity = production_log.makgeolli_consumption
-    shipment.notes = "#{reference_note} #{production_log.finished_product.name} 생산 자동 출고"
-    shipment.purpose = "생산"
-
-    if shipment.save
-      flash[:success] = "막걸리 #{production_log.makgeolli_consumption}L가 자동으로 출고 처리되었습니다." if flash[:notice]
-    else
-      flash[:warning] = "막걸리 자동 출고 처리 실패: #{shipment.errors.full_messages.join(', ')}"
-    end
-  rescue => e
-    Rails.logger.error "막걸리 자동 출고 처리 중 오류 발생: #{e.message}"
-    flash[:warning] = "막걸리 자동 출고 처리 중 오류가 발생했습니다: #{e.message}"
-  end
 end

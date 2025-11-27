@@ -207,19 +207,7 @@ class DeviceAuthorizationsController < ApplicationController
         <div class="card">
           #{success ? '<div class="icon">✅</div>' : '<div class="icon">❌</div>'}
           <div class="title #{success ? 'success' : 'error'}">#{message}</div>
-          #{if success && user_name
-            <<~INFO
-              <div class="device-info">
-                <strong>#{user_name}</strong>님의<br>
-                <strong>#{device_name}</strong> 디바이스
-              </div>
-              <div class="message">
-                사용자가 이제 해당 디바이스에서<br>로그인할 수 있습니다.
-              </div>
-            INFO
-          else
-            '<div class="message">다시 시도하거나 관리자에게 문의하세요.</div>'
-          end}
+          #{success && user_name ? "<div class=\"device-info\"><strong>#{user_name}</strong>님의<br><strong>#{device_name}</strong> 디바이스</div><div class=\"message\">사용자가 이제 해당 디바이스에서<br>로그인할 수 있습니다.</div>" : '<div class="message">다시 시도하거나 관리자에게 문의하세요.</div>'}
           <div class="note">이 창을 닫아도 됩니다.</div>
         </div>
       </body>

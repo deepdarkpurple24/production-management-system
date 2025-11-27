@@ -24,6 +24,7 @@ class ActivityLog < ApplicationRecord
     "FinishedProduct" => "완제품",
     "ProductionPlan" => "생산계획",
     "ProductionLog" => "생산일지",
+    "OpenedItem" => "개봉품",
     "User" => "사용자"
   }.freeze
 

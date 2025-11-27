@@ -26,6 +26,7 @@ class IngredientsController < ApplicationController
     @ingredient = Ingredient.new(ingredient_params)
 
     if @ingredient.save
+      log_activity(:create, @ingredient)
       redirect_to ingredients_path, notice: "재료가 성공적으로 등록되었습니다."
     else
       @items = Item.all.order(:name)
@@ -37,6 +38,7 @@ class IngredientsController < ApplicationController
 
   def update
     if @ingredient.update(ingredient_params)
+      log_activity(:update, @ingredient)
       redirect_to ingredients_path, notice: "재료 정보가 수정되었습니다."
     else
       @items = Item.all.order(:name)
@@ -47,6 +49,7 @@ class IngredientsController < ApplicationController
   end
 
   def destroy
+    log_activity(:destroy, @ingredient)
     @ingredient.destroy
     redirect_to ingredients_path, notice: "재료가 삭제되었습니다."
   end

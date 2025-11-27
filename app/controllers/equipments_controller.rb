@@ -15,6 +15,7 @@ class EquipmentsController < ApplicationController
   def create
     @equipment = Equipment.new(equipment_params)
     if @equipment.save
+      log_activity(:create, @equipment)
       redirect_to equipments_path, notice: "장비가 성공적으로 등록되었습니다."
     else
       render :new, status: :unprocessable_entity
@@ -26,6 +27,7 @@ class EquipmentsController < ApplicationController
 
   def update
     if @equipment.update(equipment_params)
+      log_activity(:update, @equipment)
       redirect_to equipments_path, notice: "장비가 성공적으로 수정되었습니다."
     else
       render :edit, status: :unprocessable_entity
@@ -33,6 +35,7 @@ class EquipmentsController < ApplicationController
   end
 
   def destroy
+    log_activity(:destroy, @equipment)
     @equipment.destroy
     redirect_to equipments_path, notice: "장비가 성공적으로 삭제되었습니다."
   end

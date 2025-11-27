@@ -42,6 +42,9 @@ class Admin::UsersController < Admin::BaseController
       # Send invitation email with temporary password
       UserMailer.invitation(@user, temporary_password).deliver_now
 
+      # 활동 로그 기록
+      log_activity(:create, @user, details: { admin: @user.admin, sub_admin: @user.sub_admin })
+
       flash[:notice] = "사용자가 생성되었습니다. 초대 이메일이 발송되었습니다."
       redirect_to admin_user_path(@user)
     else
@@ -86,6 +89,10 @@ class Admin::UsersController < Admin::BaseController
 
     if @user.update(user_params)
       Rails.logger.info "After update - admin: #{@user.admin}, sub_admin: #{@user.sub_admin}"
+
+      # 활동 로그 기록
+      log_activity(:update, @user, details: { admin: @user.admin, sub_admin: @user.sub_admin })
+
       flash[:notice] = "사용자 정보가 업데이트되었습니다."
       redirect_to admin_user_path(@user)
     else
@@ -111,6 +118,9 @@ class Admin::UsersController < Admin::BaseController
       redirect_to admin_users_path
       return
     end
+
+    # 활동 로그 기록 (삭제 전에 기록)
+    log_activity(:destroy, @user, details: { email: @user.email, admin: @user.admin })
 
     @user.destroy
     flash[:notice] = "사용자가 삭제되었습니다."

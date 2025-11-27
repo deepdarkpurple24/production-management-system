@@ -109,12 +109,12 @@ class DeviceAuthorizationsController < ApplicationController
     device = AuthorizedDevice.find_by(authorization_token: params[:token])
 
     unless device
-      redirect_to new_user_session_path, alert: "유효하지 않은 승인 링크입니다."
+      render_approval_result(success: false, message: "유효하지 않은 승인 링크입니다.")
       return
     end
 
     unless device.authorization_token_valid?
-      redirect_to new_user_session_path, alert: "승인 링크가 만료되었습니다. (24시간 유효)"
+      render_approval_result(success: false, message: "승인 링크가 만료되었습니다. (24시간 유효)")
       return
     end
 
@@ -133,6 +133,99 @@ class DeviceAuthorizationsController < ApplicationController
       reason: nil
     )
 
-    redirect_to new_user_session_path, notice: "디바이스가 승인되었습니다. 이제 로그인할 수 있습니다."
+    render_approval_result(
+      success: true,
+      message: "디바이스가 승인되었습니다!",
+      user_name: device.user.name || device.user.email,
+      device_name: device.device_name
+    )
+  end
+
+  private
+
+  def render_approval_result(success:, message:, user_name: nil, device_name: nil)
+    html = <<~HTML
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>디바이스 승인 - 생산관리시스템</title>
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+          }
+          .card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+          }
+          .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+          }
+          .title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 12px;
+          }
+          .message {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 24px;
+          }
+          .device-info {
+            background: #f7f7f9;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            color: #555;
+          }
+          .note {
+            font-size: 13px;
+            color: #888;
+          }
+          .success { color: #10b981; }
+          .error { color: #ef4444; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          #{success ? '<div class="icon">✅</div>' : '<div class="icon">❌</div>'}
+          <div class="title #{success ? 'success' : 'error'}">#{message}</div>
+          #{if success && user_name
+            <<~INFO
+              <div class="device-info">
+                <strong>#{user_name}</strong>님의<br>
+                <strong>#{device_name}</strong> 디바이스
+              </div>
+              <div class="message">
+                사용자가 이제 해당 디바이스에서<br>로그인할 수 있습니다.
+              </div>
+            INFO
+          else
+            '<div class="message">다시 시도하거나 관리자에게 문의하세요.</div>'
+          end}
+          <div class="note">이 창을 닫아도 됩니다.</div>
+        </div>
+      </body>
+      </html>
+    HTML
+
+    render html: html.html_safe, layout: false
   end
 end

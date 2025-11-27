@@ -139,12 +139,8 @@ class Production::LogsController < ApplicationController
       # 새로 생성
       @production_log = ProductionLog.new(production_log_params)
 
-      # 기정떡은 바로 작업완료, 나머지는 작업중으로 시작
-      if @production_log.finished_product&.name&.include?("기정떡")
-        @production_log.status = "completed"
-      else
-        @production_log.status = "in_progress"
-      end
+      # 모든 반죽일지는 작업중으로 시작 (기정떡 포함)
+      @production_log.status = "in_progress"
     end
 
     if @production_log.save
@@ -245,12 +241,8 @@ class Production::LogsController < ApplicationController
     @production_log.recipe_id = recipe_id
     @production_log.production_date = params[:production_date] ? Date.parse(params[:production_date]) : Date.today
 
-    # 기정떡이 아니면 작업중으로 시작
-    if @production_log.finished_product&.name&.include?("기정떡")
-      @production_log.status = "pending"  # 기정떡은 일단 pending으로 시작
-    else
-      @production_log.status = "in_progress"
-    end
+    # 모든 반죽일지는 작업중으로 시작 (기정떡 포함)
+    @production_log.status = "in_progress"
 
     if @production_log.save
       render json: {
@@ -408,9 +400,6 @@ class Production::LogsController < ApplicationController
   end
 
   def update_work_status(production_log)
-    # 기정떡은 작업 단계 변경 안 함 (항상 completed)
-    return if production_log.finished_product&.name&.include?("기정떡")
-
     # production_log의 레시피만 사용 (단일 레시피)
     recipe = production_log.recipe
     return if recipe.nil?
@@ -420,7 +409,7 @@ class Production::LogsController < ApplicationController
     fpr = production_log.finished_product.finished_product_recipes.find_by(recipe_id: recipe.id)
     weight_per_unit = fpr&.quantity || 0
 
-    # 기정떡이 아니고 weight_per_unit이 있는 경우에만 배치 계산
+    # weight_per_unit이 있는 경우에만 배치 계산
     if weight_per_unit > 0 && production_log.production_plan.present?
       recipe_total = recipe.recipe_ingredients.where(row_type: [ "ingredient", nil ]).sum(:weight)
       recipe_total = recipe_total.zero? ? 1 : recipe_total

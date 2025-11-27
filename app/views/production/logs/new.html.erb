@@ -73,56 +73,28 @@
         <% if @production_log.finished_product&.name&.include?('기정떡') %>
           <div class="gijeongddeok-fields-section mb-4">
             <h5 class="mb-3" style="color: #1d1d1f; font-weight: 600;">
-              <i class="bi bi-clipboard-data me-2"></i>기정떡 생산 정보
+              <i class="bi bi-thermometer-half me-2"></i>온도 관리
             </h5>
 
             <div class="card mb-3">
-              <div class="card-header" style="background-color: #f5f5f7;">
-                <h6 class="mb-0" style="font-weight: 500;">📝 생산 정보</h6>
-              </div>
               <div class="card-body">
                 <div class="row g-3">
                   <% @gijeongddeok_fields.each do |field| %>
-                    <% next if field.field_name == 'makgeolli_consumption' %>
                     <div class="col-md-4">
                       <%= form.label field.field_name, field.label, class: "form-label" %>
                       <div class="input-group">
-                        <% if field.field_name == 'dough_count' %>
-                          <button type="button" class="btn btn-outline-secondary" onclick="adjustValue('production_log_<%= field.field_name %>', -0.5)">
-                            <i class="bi bi-dash"></i>
-                          </button>
-                        <% end %>
                         <%= form.number_field field.field_name,
-                                              step: field.field_name == 'dough_count' ? 0.5 : 0.1,
+                                              step: 0.1,
                                               class: "form-control",
                                               id: "production_log_#{field.field_name}",
-                                              value: @production_log.send(field.field_name) || @gijeongddeok_default.send(field.field_name) %>
-                        <% if field.field_name == 'dough_count' %>
-                          <button type="button" class="btn btn-outline-secondary" onclick="adjustValue('production_log_<%= field.field_name %>', 0.5)">
-                            <i class="bi bi-plus"></i>
-                          </button>
-                          <span class="input-group-text">통</span>
-                        <% else %>
-                          <span class="input-group-text">
-                            <%= case field.field_name
-                                when /temp$/
-                                  '°C'
-                                when 'yeast_amount', 'salt_amount', 'sugar_amount', 'steiva_amount'
-                                  'g'
-                                when 'water_amount'
-                                  'L'
-                                else
-                                  ''
-                                end %>
-                          </span>
-                        <% end %>
+                                              value: @production_log.send(field.field_name) || @gijeongddeok_default.read_field(field.field_name) %>
+                        <span class="input-group-text"><%= field.unit.presence || '°C' %></span>
                       </div>
                     </div>
                   <% end %>
                 </div>
               </div>
             </div>
-
           </div>
         <% end %>
 

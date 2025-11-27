@@ -84,23 +84,11 @@
                         <div class="input-group" style="width: auto; max-width: 250px;">
                           <%= f.number_field field.field_name,
                                             value: @gijeongddeok_default.read_field(field.field_name),
-                                            step: (field.field_name.ends_with?('_temp') || ['steiva_amount', 'water_amount', 'makgeolli_consumption'].include?(field.field_name)) ? 0.1 : 1,
+                                            step: 0.1,
                                             class: "form-control",
-                                            placeholder: field.category == 'temperature' ? "예: 25.0" : (field.field_name == 'makgeolli_consumption' ? "예: 2500.0" : (field.field_name == 'water_amount' ? "예: 1.5" : (field.field_name == 'steiva_amount' ? "예: 10.5" : "예: 100"))) %>
+                                            placeholder: "예: 25.0" %>
                           <span class="input-group-text">
-                            <%= field.unit.presence ||
-                                (case field.field_name
-                                when /temp$/
-                                  '°C'
-                                when 'yeast_amount', 'salt_amount', 'sugar_amount', 'steiva_amount'
-                                  'g'
-                                when 'water_amount'
-                                  'L'
-                                when 'makgeolli_consumption'
-                                  'mL'
-                                else
-                                  ''
-                                end) %>
+                            <%= field.unit.presence || '°C' %>
                           </span>
                         </div>
                         <%= link_to destroy_gijeongddeok_field_path(field),
@@ -137,10 +125,7 @@
                       <%= f.label :category, "카테고리", class: "form-label" %>
                       <%= f.select :category,
                                    options_for_select([
-                                     ['온도', 'temperature'],
-                                     ['재료', 'ingredient'],
-                                     ['막걸리', 'makgeolli'],
-                                     ['기타', 'other']
+                                     ['온도', 'temperature']
                                    ]),
                                    { include_blank: "선택" },
                                    class: "form-select",
@@ -150,15 +135,9 @@
                       <%= f.label :unit, "단위", class: "form-label" %>
                       <%= f.select :unit,
                                    options_for_select([
-                                     ['°C', '°C'],
-                                     ['g', 'g'],
-                                     ['Kg', 'Kg'],
-                                     ['L', 'L'],
-                                     ['mL', 'mL'],
-                                     ['개', '개'],
-                                     ['없음', '']
-                                   ]),
-                                   { include_blank: "선택" },
+                                     ['°C', '°C']
+                                   ], '°C'),
+                                   {},
                                    class: "form-select" %>
                     </div>
                   </div>

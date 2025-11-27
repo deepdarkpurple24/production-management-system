@@ -380,10 +380,9 @@ class Production::LogsController < ApplicationController
   def production_log_params
     params.require(:production_log).permit(
       :production_plan_id, :finished_product_id, :recipe_id, :production_date, :production_time, :notes,
-      # 기정떡 전용 필드
+      # 기정떡 전용 필드 (온도 관리)
       :dough_count, :fermentation_room_temp, :refrigeration_room_temp,
-      :yeast_amount, :steiva_amount, :salt_amount, :sugar_amount,
-      :water_amount, :water_temp, :flour_temp, :porridge_temp, :dough_temp,
+      :water_temp, :flour_temp, :porridge_temp, :dough_temp,
       # 재료 중량 저장
       ingredient_weights: {}
     )

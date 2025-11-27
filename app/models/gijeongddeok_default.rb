@@ -9,8 +9,7 @@ class GijeongddeokDefault < ApplicationRecord
   STANDARD_FIELDS = %w[
     fermentation_room_temp refrigeration_room_temp
     water_temp flour_temp porridge_temp dough_temp
-    yeast_amount steiva_amount salt_amount sugar_amount
-    water_amount dough_count makgeolli_consumption
+    dough_count
   ].freeze
 
   # 커스텀 필드인지 확인

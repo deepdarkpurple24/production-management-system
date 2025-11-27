@@ -22,6 +22,7 @@ class Inventory::ReceiptsController < ApplicationController
     @receipt.requester = current_user.name  # 현재 로그인한 사용자 이름 자동 설정
 
     if @receipt.save
+      log_activity(:create, @receipt)
       redirect_to inventory_receipts_path, notice: "입고가 성공적으로 등록되었습니다."
     else
       @items = Item.all.order(:name)
@@ -31,6 +32,7 @@ class Inventory::ReceiptsController < ApplicationController
 
   def update
     if @receipt.update(receipt_params)
+      log_activity(:update, @receipt)
       redirect_to inventory_receipts_path, notice: "입고 정보가 수정되었습니다."
     else
       @items = Item.all.order(:name)
@@ -39,6 +41,7 @@ class Inventory::ReceiptsController < ApplicationController
   end
 
   def destroy
+    log_activity(:destroy, @receipt)
     @receipt.destroy
     redirect_to inventory_receipts_path, notice: "입고 기록이 삭제되었습니다."
   end

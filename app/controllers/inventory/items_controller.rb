@@ -18,6 +18,7 @@ class Inventory::ItemsController < ApplicationController
     @item = Item.new(item_params)
 
     if @item.save
+      log_activity(:create, @item)
       respond_to do |format|
         format.html { redirect_to inventory_items_path, notice: "품목이 성공적으로 등록되었습니다." }
         format.json { render json: { success: true, item: { id: @item.id, name: @item.name, suppliers: @item.suppliers } } }
@@ -37,6 +38,7 @@ class Inventory::ItemsController < ApplicationController
 
   def update
     if @item.update(item_params)
+      log_activity(:update, @item)
       redirect_to inventory_items_path, notice: "품목이 성공적으로 수정되었습니다."
     else
       render :edit, status: :unprocessable_entity
@@ -44,6 +46,7 @@ class Inventory::ItemsController < ApplicationController
   end
 
   def destroy
+    log_activity(:destroy, @item)
     @item.destroy
     redirect_to inventory_items_path, notice: "품목이 성공적으로 삭제되었습니다."
   end

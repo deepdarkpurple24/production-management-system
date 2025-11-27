@@ -154,6 +154,7 @@ class Production::LogsController < ApplicationController
       # 막걸리 자동 출고 처리
       process_makgeolli_shipment(@production_log)
 
+      log_activity(:create, @production_log)
       redirect_to production_logs_path(status: @production_log.status), notice: "생산 일지가 성공적으로 등록되었습니다."
     else
       @production_plans = ProductionPlan
@@ -194,6 +195,7 @@ class Production::LogsController < ApplicationController
         process_makgeolli_shipment(@production_log, old_makgeolli_consumption)
       end
 
+      log_activity(:update, @production_log)
       redirect_to production_logs_path(status: from_status, date: @production_log.production_date), notice: "생산 일지가 성공적으로 수정되었습니다."
     else
       @production_plans = ProductionPlan
@@ -211,6 +213,7 @@ class Production::LogsController < ApplicationController
   def destroy
     from_status = params[:from_status] || "pending"
     production_date = @production_log.production_date
+    log_activity(:destroy, @production_log)
     @production_log.destroy
     redirect_to production_logs_path(status: from_status, date: production_date), notice: "생산 일지가 성공적으로 삭제되었습니다."
   end

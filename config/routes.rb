@@ -14,6 +14,7 @@ Rails.application.routes.draw do
       end
     end
     resources :login_histories, only: [ :index ]
+    resources :activity_logs, only: [ :index ]
   end
 
   # Device authorization routes

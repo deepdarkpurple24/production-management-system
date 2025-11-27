@@ -73,4 +73,15 @@ class ApplicationController < ActionController::Base
   def page_allowed?(page_key)
     PagePermission.allowed?(page_key, current_user)
   end
+
+  # 활동 로그 기록 헬퍼
+  def log_activity(action, target, details: nil)
+    ActivityLog.log(
+      user: current_user,
+      action: action,
+      target: target,
+      request: request,
+      details: details
+    )
+  end
 end

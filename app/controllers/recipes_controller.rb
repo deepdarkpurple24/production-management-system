@@ -28,6 +28,7 @@ class RecipesController < ApplicationController
     @recipe = Recipe.new(recipe_params)
 
     if @recipe.save
+      log_activity(:create, @recipe)
       redirect_to recipes_path, notice: "레시피가 성공적으로 등록되었습니다."
     else
       @items = Item.all.order(:name)
@@ -40,6 +41,7 @@ class RecipesController < ApplicationController
 
   def update
     if @recipe.update(recipe_params)
+      log_activity(:update, @recipe)
       redirect_to recipes_path, notice: "레시피 정보가 수정되었습니다."
     else
       @items = Item.all.order(:name)
@@ -56,6 +58,7 @@ class RecipesController < ApplicationController
       product_names = @recipe.finished_products.map(&:name).join(", ")
       redirect_to recipes_path, alert: "이 레시피는 다음 완제품에서 사용 중입니다: #{product_names}. 먼저 완제품에서 레시피를 제거해주세요."
     else
+      log_activity(:destroy, @recipe)
       @recipe.destroy
       redirect_to recipes_path, notice: "레시피가 삭제되었습니다."
     end

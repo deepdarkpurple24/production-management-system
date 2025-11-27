@@ -38,6 +38,7 @@ class Production::PlansController < ApplicationController
     if @production_plan.save
       # 생산계획 생성 시 반죽일지 자동 생성
       ProductionLogInitializer.create_logs_for_plan(@production_plan)
+      log_activity(:create, @production_plan)
 
       redirect_to production_plans_path(date: @production_plan.production_date, view: params[:view] || "monthly"),
                   notice: "생산 계획이 성공적으로 등록되었습니다."
@@ -63,6 +64,7 @@ class Production::PlansController < ApplicationController
         ProductionLogInitializer.create_logs_for_plan(@production_plan)
       end
 
+      log_activity(:update, @production_plan)
       redirect_to production_plans_path(date: @production_plan.production_date, view: params[:view] || "monthly"),
                   notice: "생산 계획이 성공적으로 수정되었습니다."
     else
@@ -73,6 +75,7 @@ class Production::PlansController < ApplicationController
 
   def destroy
     production_date = @production_plan.production_date
+    log_activity(:destroy, @production_plan)
     @production_plan.destroy
     redirect_to production_plans_path(date: production_date, view: params[:view] || "monthly"),
                 notice: "생산 계획이 성공적으로 삭제되었습니다."

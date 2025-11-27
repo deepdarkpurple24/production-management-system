@@ -123,6 +123,7 @@
                 <ul class="dropdown-menu dropdown-menu-end">
                   <li><%= link_to admin_users_path, class: "dropdown-item #{'active' if controller_name == 'users' && controller_path.start_with?('admin')}" do %><i class="bi bi-people me-2"></i>사용자 관리<% end %></li>
                   <li><%= link_to admin_login_histories_path, class: "dropdown-item #{'active' if controller_name == 'login_histories'}" do %><i class="bi bi-clock-history me-2"></i>로그인 이력<% end %></li>
+                  <li><%= link_to admin_activity_logs_path, class: "dropdown-item #{'active' if controller_name == 'activity_logs'}" do %><i class="bi bi-activity me-2"></i>활동 로그<% end %></li>
                 </ul>
               </li>
             <% end %>

@@ -24,6 +24,7 @@ class Inventory::ShipmentsController < ApplicationController
     @shipment.requester = current_user.name  # 현재 로그인한 사용자 이름 자동 설정
 
     if @shipment.save
+      log_activity(:create, @shipment)
       redirect_to inventory_shipments_path, notice: "출고가 성공적으로 등록되었습니다."
     else
       @items = Item.all.order(:name)
@@ -34,6 +35,7 @@ class Inventory::ShipmentsController < ApplicationController
 
   def update
     if @shipment.update(shipment_params)
+      log_activity(:update, @shipment)
       redirect_to inventory_shipments_path, notice: "출고 정보가 수정되었습니다."
     else
       @items = Item.all.order(:name)
@@ -43,6 +45,7 @@ class Inventory::ShipmentsController < ApplicationController
   end
 
   def destroy
+    log_activity(:destroy, @shipment)
     @shipment.destroy
     redirect_to inventory_shipments_path, notice: "출고 기록이 삭제되었습니다."
   end

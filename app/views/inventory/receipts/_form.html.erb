@@ -483,14 +483,25 @@
               loadSuppliers(data.item.id);
             }
 
-            alert('품목이 선택되었습니다: ' + data.item.name);
+            if (window.toast) {
+              window.toast.success('품목이 선택되었습니다: ' + data.item.name);
+            }
           } else {
-            alert(data.error || '바코드를 찾을 수 없습니다.');
+            // 바코드는 인식되었지만 등록된 품목이 없는 경우
+            if (window.toast) {
+              window.toast.warning('바코드 [' + barcode + ']에 해당하는 품목이 등록되어 있지 않습니다. 품목을 먼저 등록해주세요.');
+            } else {
+              alert('바코드 [' + barcode + ']에 해당하는 품목이 등록되어 있지 않습니다.\n품목을 먼저 등록해주세요.');
+            }
           }
         })
         .catch(error => {
           console.error('바코드 검색 에러:', error);
-          alert('바코드 검색 중 오류가 발생했습니다.');
+          if (window.toast) {
+            window.toast.error('바코드 검색 중 오류가 발생했습니다.');
+          } else {
+            alert('바코드 검색 중 오류가 발생했습니다.');
+          }
         });
     }
 

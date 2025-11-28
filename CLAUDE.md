@@ -15,6 +15,29 @@ This document provides a comprehensive overview of the Production Management Sys
 **Language**: Korean (한국어)
 **Domain**: Food/Bakery production management (특히 제빵/제과 관련)
 
+## Deployment Environment (배포 환경)
+
+⚠️ **IMPORTANT**: 이 프로젝트는 다음과 같은 환경에서 운영됩니다:
+
+- **Production Server**: 별도의 Ubuntu 서버 (현재 개발 PC와 다른 컴퓨터)
+- **Container**: Docker (docker-compose)
+- **Reverse Proxy / CDN**: Cloudflare Tunnel
+- **Database**: PostgreSQL 17 (Docker container)
+- **Backup**: Supabase (일일 자동 백업, 3 AM KST)
+
+**개발 환경 (현재 PC - Windows)**:
+- 이 폴더는 개발용이며, 코드 수정 후 git push하면 서버에서 pull하여 배포
+- 서버 배포 명령어는 서버에서 직접 실행해야 함
+- CSS 빌드는 로컬에서 `yarn build:css` 후 커밋
+
+**서버 배포 절차** (Ubuntu 서버에서 실행):
+```bash
+cd ~/production-management-system
+git pull
+docker-compose down
+docker-compose up -d --build
+```
+
 ## Technology Stack
 
 ### Backend

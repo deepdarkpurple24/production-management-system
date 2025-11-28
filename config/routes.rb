@@ -15,6 +15,51 @@ Rails.application.routes.draw do
     end
     resources :login_histories, only: [ :index ]
     resources :activity_logs, only: [ :index ]
+
+    # 관리자 설정 페이지
+    get "settings", to: "settings#index", as: "settings"
+    patch "settings/system", to: "settings#update_system", as: "settings_update_system"
+
+    # 출고 목적 관리
+    post "settings/purposes", to: "settings#create_purpose", as: "settings_create_purpose"
+    delete "settings/purposes/:id", to: "settings#destroy_purpose", as: "settings_destroy_purpose"
+    patch "settings/purposes/update_positions", to: "settings#update_purpose_positions", as: "settings_update_purpose_positions"
+
+    # 장비 구분 관리
+    post "settings/equipment_types", to: "settings#create_equipment_type", as: "settings_create_equipment_type"
+    delete "settings/equipment_types/:id", to: "settings#destroy_equipment_type", as: "settings_destroy_equipment_type"
+    patch "settings/equipment_types/update_positions", to: "settings#update_equipment_type_positions", as: "settings_update_equipment_type_positions"
+
+    # 장비 모드 관리
+    post "settings/equipment_modes", to: "settings#create_equipment_mode", as: "settings_create_equipment_mode"
+    delete "settings/equipment_modes/:id", to: "settings#destroy_equipment_mode", as: "settings_destroy_equipment_mode"
+    patch "settings/equipment_modes/update_positions", to: "settings#update_equipment_mode_positions", as: "settings_update_equipment_mode_positions"
+    get "settings/equipment_modes/:equipment_type_id", to: "settings#get_equipment_modes", as: "settings_get_equipment_modes"
+
+    # 공정 관리
+    post "settings/recipe_processes", to: "settings#create_recipe_process", as: "settings_create_recipe_process"
+    delete "settings/recipe_processes/:id", to: "settings#destroy_recipe_process", as: "settings_destroy_recipe_process"
+    patch "settings/recipe_processes/update_positions", to: "settings#update_recipe_process_positions", as: "settings_update_recipe_process_positions"
+
+    # 기정떡 기본값 관리
+    patch "settings/gijeongddeok_defaults", to: "settings#update_gijeongddeok_defaults", as: "settings_update_gijeongddeok_defaults"
+    post "settings/gijeongddeok_fields", to: "settings#create_gijeongddeok_field", as: "settings_create_gijeongddeok_field"
+    delete "settings/gijeongddeok_fields/:id", to: "settings#destroy_gijeongddeok_field", as: "settings_destroy_gijeongddeok_field"
+    patch "settings/gijeongddeok_fields/update_positions", to: "settings#update_gijeongddeok_field_positions", as: "settings_update_gijeongddeok_field_positions"
+
+    # 품목 카테고리 관리
+    post "settings/item_categories", to: "settings#create_item_category", as: "settings_create_item_category"
+    delete "settings/item_categories/:id", to: "settings#destroy_item_category", as: "settings_destroy_item_category"
+    patch "settings/item_categories/update_positions", to: "settings#update_item_category_positions", as: "settings_update_item_category_positions"
+
+    # 보관위치 관리
+    post "settings/storage_locations", to: "settings#create_storage_location", as: "settings_create_storage_location"
+    delete "settings/storage_locations/:id", to: "settings#destroy_storage_location", as: "settings_destroy_storage_location"
+    patch "settings/storage_locations/update_positions", to: "settings#update_storage_location_positions", as: "settings_update_storage_location_positions"
+
+    # 페이지 권한 관리
+    patch "settings/page_permissions/:id", to: "settings#update_page_permission", as: "settings_update_page_permission"
+    patch "settings/page_permissions", to: "settings#update_page_permissions_batch", as: "settings_update_page_permissions_batch"
   end
 
   # Device authorization routes
@@ -45,34 +90,9 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   root "home#index"
 
-  # 설정 페이지
-  get "settings", to: "settings#index", as: "settings"
-  get "settings/system", to: "settings#system", as: "settings_system"
-  post "settings/purposes", to: "settings#create_purpose", as: "create_shipment_purpose"
-  delete "settings/purposes/:id", to: "settings#destroy_purpose", as: "destroy_shipment_purpose"
-  patch "settings/purposes/update_positions", to: "settings#update_purpose_positions", as: "update_purpose_positions"
-  post "settings/equipment_types", to: "settings#create_equipment_type", as: "create_equipment_type"
-  delete "settings/equipment_types/:id", to: "settings#destroy_equipment_type", as: "destroy_equipment_type"
-  patch "settings/equipment_types/update_positions", to: "settings#update_equipment_type_positions", as: "update_equipment_type_positions"
-  post "settings/equipment_modes", to: "settings#create_equipment_mode", as: "create_equipment_mode"
-  delete "settings/equipment_modes/:id", to: "settings#destroy_equipment_mode", as: "destroy_equipment_mode"
-  patch "settings/equipment_modes/update_positions", to: "settings#update_equipment_mode_positions", as: "update_equipment_mode_positions"
-  get "settings/equipment_modes/:equipment_type_id", to: "settings#get_equipment_modes", as: "get_equipment_modes"
-  post "settings/recipe_processes", to: "settings#create_recipe_process", as: "create_recipe_process"
-  delete "settings/recipe_processes/:id", to: "settings#destroy_recipe_process", as: "destroy_recipe_process"
-  patch "settings/recipe_processes/update_positions", to: "settings#update_recipe_process_positions", as: "update_recipe_process_positions"
-  patch "settings/gijeongddeok_defaults", to: "settings#update_gijeongddeok_defaults", as: "update_gijeongddeok_defaults"
-  post "settings/gijeongddeok_fields", to: "settings#create_gijeongddeok_field", as: "create_gijeongddeok_field"
-  delete "settings/gijeongddeok_fields/:id", to: "settings#destroy_gijeongddeok_field", as: "destroy_gijeongddeok_field"
-  patch "settings/gijeongddeok_fields/update_positions", to: "settings#update_gijeongddeok_field_positions", as: "update_gijeongddeok_field_positions"
-  post "settings/item_categories", to: "settings#create_item_category", as: "create_item_category"
-  delete "settings/item_categories/:id", to: "settings#destroy_item_category", as: "destroy_item_category"
-  patch "settings/item_categories/update_positions", to: "settings#update_item_category_positions", as: "update_item_category_positions"
-  post "settings/storage_locations", to: "settings#create_storage_location", as: "create_storage_location"
-  delete "settings/storage_locations/:id", to: "settings#destroy_storage_location", as: "destroy_storage_location"
-  patch "settings/storage_locations/update_positions", to: "settings#update_storage_location_positions", as: "update_storage_location_positions"
-  patch "settings/page_permissions/:id", to: "settings#update_page_permission", as: "update_page_permission"
-  patch "settings/page_permissions", to: "settings#update_page_permissions_batch", as: "update_page_permissions_batch"
+  # 기존 설정 페이지 리다이렉트 (관리자 설정으로 이동)
+  get "settings", to: redirect("/admin/settings")
+  get "settings/system", to: redirect("/admin/settings")
 
   # 각 모듈 메인 페이지
   get "production", to: "production#index", as: "production"

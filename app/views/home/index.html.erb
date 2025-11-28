@@ -1,15 +1,6 @@
 <!-- Hero Section -->
 <div class="hero-section">
   <div class="container position-relative">
-    <!-- 설정 버튼 (관리자만) -->
-    <% if current_user&.admin? %>
-      <div class="position-absolute top-0 end-0 mt-3">
-        <%= link_to settings_path, class: "btn-modern btn-modern-outline" do %>
-          <i class="bi bi-gear me-2"></i>설정
-        <% end %>
-      </div>
-    <% end %>
-
     <h1>생산관리 통합 시스템</h1>
     <p class="lead">제조업의 모든 프로세스를 하나로</p>
     <div class="divider"></div>

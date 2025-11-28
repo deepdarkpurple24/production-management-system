@@ -28,12 +28,12 @@ class BarcodeScanner {
               <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-0" style="background: #000;">
-              <div id="scannerContainer" style="position: relative; width: 100%; height: 250px; overflow: hidden;">
+              <div id="scannerContainer" style="position: relative; width: 100%; height: 280px; overflow: hidden;">
                 <video id="scannerVideo" style="width: 100%; height: 100%; object-fit: cover;" playsinline autoplay muted></video>
                 <canvas id="scannerCanvas" style="display: none;"></canvas>
                 <!-- 스캔 가이드라인 -->
                 <div id="scanGuide" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                            width: 85%; height: 80px; border: 3px solid rgba(0, 122, 255, 0.9);
+                            width: 90%; height: 140px; border: 3px solid rgba(0, 122, 255, 0.9);
                             border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);">
                   <div style="position: absolute; top: -28px; left: 50%; transform: translateX(-50%);
                               color: white; font-size: 13px; white-space: nowrap; text-shadow: 0 1px 3px rgba(0,0,0,0.9);

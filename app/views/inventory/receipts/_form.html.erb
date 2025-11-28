@@ -488,10 +488,10 @@
             }
           } else {
             // 바코드는 인식되었지만 등록된 품목이 없는 경우
-            if (window.toast) {
-              window.toast.warning('바코드 [' + barcode + ']에 해당하는 품목이 등록되어 있지 않습니다. 품목을 먼저 등록해주세요.');
-            } else {
-              alert('바코드 [' + barcode + ']에 해당하는 품목이 등록되어 있지 않습니다.\n품목을 먼저 등록해주세요.');
+            var message = '등록되지 않은 품목입니다.\n\n품목 등록 페이지로 이동하시겠습니까?';
+            if (confirm(message)) {
+              // 품목 등록 페이지로 이동 (바코드 값 전달)
+              window.location.href = '/inventory/items/new?barcode=' + encodeURIComponent(barcode);
             }
           }
         })

@@ -182,6 +182,22 @@
 <!-- Tooltip 초기화 및 공급업체 추가/제거 기능 -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // URL 파라미터에서 바코드 값 읽어오기
+    var urlParams = new URLSearchParams(window.location.search);
+    var barcodeFromUrl = urlParams.get('barcode');
+    if (barcodeFromUrl) {
+      var barcodeInput = document.getElementById('item_barcode_input');
+      if (barcodeInput) {
+        barcodeInput.value = barcodeFromUrl;
+        // 바코드 필드에 포커스
+        barcodeInput.focus();
+        // 사용자에게 안내 메시지 표시
+        if (window.toast) {
+          window.toast.info('바코드가 자동으로 입력되었습니다. 품목 정보를 입력해주세요.');
+        }
+      }
+    }
+
     // Tooltip 초기화
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {

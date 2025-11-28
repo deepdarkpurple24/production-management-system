@@ -5,13 +5,13 @@ class SystemSetting < ApplicationRecord
 
   # 기본값 정의
   DEFAULTS = {
-    'session_timeout_minutes' => '2',
-    'session_warning_seconds' => '30'
+    "session_timeout_minutes" => "2",
+    "session_warning_seconds" => "30"
   }.freeze
 
   DESCRIPTIONS = {
-    'session_timeout_minutes' => '세션 타임아웃 시간 (분)',
-    'session_warning_seconds' => '로그아웃 경고 표시 시간 (초)'
+    "session_timeout_minutes" => "세션 타임아웃 시간 (분)",
+    "session_warning_seconds" => "로그아웃 경고 표시 시간 (초)"
   }.freeze
 
   # 설정값 가져오기 (없으면 기본값 반환)
@@ -30,12 +30,12 @@ class SystemSetting < ApplicationRecord
 
   # 세션 타임아웃 (분)
   def self.session_timeout_minutes
-    get('session_timeout_minutes').to_i
+    get("session_timeout_minutes").to_i
   end
 
   # 세션 경고 시간 (초)
   def self.session_warning_seconds
-    get('session_warning_seconds').to_i
+    get("session_warning_seconds").to_i
   end
 
   # 세션 경고 시간 (분 단위, JavaScript용)

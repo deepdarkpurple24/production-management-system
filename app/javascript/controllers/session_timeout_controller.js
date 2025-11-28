@@ -4,8 +4,8 @@ import { Controller } from "@hotwired/stimulus"
 // Warns users before their session expires due to inactivity
 export default class extends Controller {
   static values = {
-    timeout: { type: Number, default: 30 }, // minutes
-    warningTime: { type: Number, default: 5 } // minutes before timeout to show warning
+    timeout: { type: Number, default: 2 }, // minutes
+    warningTime: { type: Number, default: 0.5 } // minutes before timeout to show warning (30 seconds)
   }
 
   connect() {

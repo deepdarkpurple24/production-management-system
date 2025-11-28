@@ -24,17 +24,10 @@
       <div class="input-group">
         <input type="text" id="barcode_input" class="form-control" placeholder="바코드 번호를 입력하거나 스캔하세요">
         <button type="button" class="btn btn-outline-primary" id="barcode_scan_btn">
-          <i class="bi bi-camera"></i> 바코드 스캔
+          <i class="bi bi-upc-scan"></i> 스캔
         </button>
       </div>
       <small class="text-muted">바코드를 입력하거나 스캔하면 품목이 자동으로 선택됩니다</small>
-      <!-- 카메라 프리뷰 영역 -->
-      <div id="barcode_scanner" style="display: none; margin-top: 10px;">
-        <div id="barcode_camera" style="width: 100%; max-width: 640px;"></div>
-        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="barcode_scan_stop">
-          <i class="bi bi-x-circle"></i> 스캔 중지
-        </button>
-      </div>
     </div>
 
     <!-- 품목 선택 -->
@@ -452,9 +445,6 @@
     // 바코드 기능
     var barcodeInput = document.getElementById('barcode_input');
     var barcodeScanBtn = document.getElementById('barcode_scan_btn');
-    var barcodeScanner = document.getElementById('barcode_scanner');
-    var barcodeScanStop = document.getElementById('barcode_scan_stop');
-    var isScanning = false;
 
     // 바코드로 품목 검색 함수
     function searchItemByBarcode(barcode) {
@@ -520,70 +510,14 @@
       });
     }
 
-    // 바코드 스캔 시작
+    // 바코드 스캔 시작 (새로운 모달 방식)
     if (barcodeScanBtn) {
       barcodeScanBtn.addEventListener('click', function() {
-        if (isScanning) {
-          return;
-        }
-
-        barcodeScanner.style.display = 'block';
-        isScanning = true;
-
-        Quagga.init({
-          inputStream: {
-            name: "Live",
-            type: "LiveStream",
-            target: document.querySelector('#barcode_camera'),
-            constraints: {
-              width: 640,
-              height: 480,
-              facingMode: "environment"
-            }
-          },
-          decoder: {
-            readers: [
-              "ean_reader",
-              "ean_8_reader",
-              "code_128_reader",
-              "code_39_reader",
-              "upc_reader",
-              "upc_e_reader"
-            ]
-          }
-        }, function(err) {
-          if (err) {
-            console.error('QuaggaJS 초기화 에러:', err);
-            alert('카메라를 시작할 수 없습니다: ' + err);
-            stopBarcodeScanning();
-            return;
-          }
-          Quagga.start();
-        });
-
-        Quagga.onDetected(function(result) {
-          var code = result.codeResult.code;
-          console.log('바코드 감지:', code);
-          barcodeInput.value = code;
-          searchItemByBarcode(code);
-          stopBarcodeScanning();
+        window.openBarcodeScanner('barcode_input', function(barcode) {
+          // 바코드 스캔 성공 시 품목 검색
+          searchItemByBarcode(barcode);
         });
       });
-    }
-
-    // 바코드 스캔 중지
-    if (barcodeScanStop) {
-      barcodeScanStop.addEventListener('click', function() {
-        stopBarcodeScanning();
-      });
-    }
-
-    function stopBarcodeScanning() {
-      if (isScanning) {
-        Quagga.stop();
-        barcodeScanner.style.display = 'none';
-        isScanning = false;
-      }
     }
   });
 </script>

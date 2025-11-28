@@ -11,6 +11,8 @@ class BarcodeScanner {
     this.isScanning = false;
     this.canvas = null;
     this.video = null;
+    this.scanAttempts = 0;
+    this.maxAttempts = 3;
   }
 
   // 모달 HTML 생성
@@ -26,31 +28,36 @@ class BarcodeScanner {
               <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-0" style="background: #000;">
-              <div id="scannerContainer" style="position: relative; width: 100%; height: 200px; overflow: hidden;">
+              <div id="scannerContainer" style="position: relative; width: 100%; height: 250px; overflow: hidden;">
                 <video id="scannerVideo" style="width: 100%; height: 100%; object-fit: cover;" playsinline autoplay muted></video>
                 <canvas id="scannerCanvas" style="display: none;"></canvas>
                 <!-- 스캔 가이드라인 -->
-                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                            width: 80%; height: 60px; border: 2px solid rgba(0, 122, 255, 0.8);
-                            border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);">
-                  <div style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
-                              color: white; font-size: 12px; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">
+                <div id="scanGuide" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                            width: 85%; height: 80px; border: 3px solid rgba(0, 122, 255, 0.9);
+                            border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);">
+                  <div style="position: absolute; top: -28px; left: 50%; transform: translateX(-50%);
+                              color: white; font-size: 13px; white-space: nowrap; text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+                              background: rgba(0,0,0,0.5); padding: 2px 10px; border-radius: 4px;">
                     바코드를 가이드라인 안에 맞춰주세요
                   </div>
+                  <!-- 스캔 라인 애니메이션 -->
+                  <div id="scanLine" style="position: absolute; top: 0; left: 5%; width: 90%; height: 2px;
+                              background: linear-gradient(90deg, transparent, #00ff00, transparent);
+                              animation: scanAnimation 2s ease-in-out infinite;"></div>
                 </div>
                 <!-- 로딩 표시 -->
-                <div id="scannerLoading" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none;">
-                  <div class="spinner-border text-primary" role="status">
+                <div id="scannerLoading" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; z-index: 10;">
+                  <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
                     <span class="visually-hidden">Loading...</span>
                   </div>
                 </div>
               </div>
             </div>
-            <div class="modal-footer justify-content-center py-2" style="background: #f8f9fa; border: none;">
-              <button type="button" id="captureBtn" class="btn btn-primary px-4" style="border-radius: 20px;">
+            <div class="modal-footer justify-content-center py-3" style="background: #f8f9fa; border: none;">
+              <button type="button" id="captureBtn" class="btn btn-primary px-4 py-2" style="border-radius: 25px; font-size: 16px;">
                 <i class="bi bi-camera-fill me-2"></i>스캔
               </button>
-              <button type="button" class="btn btn-outline-secondary px-3" data-bs-dismiss="modal" style="border-radius: 20px;">
+              <button type="button" class="btn btn-outline-secondary px-4 py-2" data-bs-dismiss="modal" style="border-radius: 25px;">
                 취소
               </button>
             </div>
@@ -63,6 +70,16 @@ class BarcodeScanner {
           </div>
         </div>
       </div>
+      <style>
+        @keyframes scanAnimation {
+          0%, 100% { top: 5px; opacity: 1; }
+          50% { top: calc(100% - 7px); opacity: 0.7; }
+        }
+        #scanGuide.scanning {
+          border-color: #00ff00 !important;
+          box-shadow: 0 0 0 9999px rgba(0,0,0,0.4), 0 0 20px rgba(0,255,0,0.3) !important;
+        }
+      </style>
     `;
 
     // 기존 모달 제거
@@ -113,12 +130,14 @@ class BarcodeScanner {
     loading.style.display = 'block';
 
     try {
-      // 후면 카메라 우선 사용
+      // 후면 카메라 우선 사용, 높은 해상도 요청
       const constraints = {
         video: {
           facingMode: { ideal: 'environment' },
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: 1920, min: 1280 },
+          height: { ideal: 1080, min: 720 },
+          focusMode: { ideal: 'continuous' },
+          exposureMode: { ideal: 'continuous' }
         }
       };
 
@@ -128,6 +147,7 @@ class BarcodeScanner {
       video.onloadedmetadata = () => {
         loading.style.display = 'none';
         this.isScanning = true;
+        console.log('카메라 해상도:', video.videoWidth, 'x', video.videoHeight);
       };
     } catch (error) {
       console.error('카메라 접근 오류:', error);
@@ -143,6 +163,7 @@ class BarcodeScanner {
       this.videoStream = null;
     }
     this.isScanning = false;
+    this.scanAttempts = 0;
   }
 
   // 캡처 후 스캔
@@ -153,11 +174,15 @@ class BarcodeScanner {
 
     const captureBtn = document.getElementById('captureBtn');
     const loading = document.getElementById('scannerLoading');
+    const scanGuide = document.getElementById('scanGuide');
 
     // 버튼 비활성화 및 로딩 표시
     captureBtn.disabled = true;
     captureBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>분석 중...';
     loading.style.display = 'block';
+    scanGuide.classList.add('scanning');
+
+    this.scanAttempts = 0;
 
     try {
       // 캔버스에 현재 프레임 캡처
@@ -170,14 +195,78 @@ class BarcodeScanner {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // QuaggaJS로 바코드 디코딩
-      const imageData = canvas.toDataURL('image/jpeg', 0.9);
+      // 여러 설정으로 스캔 시도
+      const result = await this.tryMultipleScans(canvas);
+
+      loading.style.display = 'none';
+      scanGuide.classList.remove('scanning');
+      captureBtn.disabled = false;
+      captureBtn.innerHTML = '<i class="bi bi-camera-fill me-2"></i>스캔';
+
+      if (result) {
+        this.handleSuccess(result);
+      } else {
+        this.showError('바코드를 인식할 수 없습니다. 바코드가 선명하게 보이도록 조정 후 다시 시도해주세요.');
+      }
+    } catch (error) {
+      console.error('스캔 오류:', error);
+      loading.style.display = 'none';
+      scanGuide.classList.remove('scanning');
+      captureBtn.disabled = false;
+      captureBtn.innerHTML = '<i class="bi bi-camera-fill me-2"></i>스캔';
+      this.showError('스캔 중 오류가 발생했습니다.');
+    }
+  }
+
+  // 여러 설정으로 스캔 시도
+  async tryMultipleScans(canvas) {
+    const configurations = [
+      // 기본 설정
+      { patchSize: 'medium', halfSample: false, size: 1200 },
+      // 큰 패치 사이즈
+      { patchSize: 'large', halfSample: false, size: 1200 },
+      // 작은 패치 사이즈
+      { patchSize: 'small', halfSample: false, size: 1000 },
+      // halfSample 활성화
+      { patchSize: 'medium', halfSample: true, size: 800 },
+      // x-large 패치
+      { patchSize: 'x-large', halfSample: false, size: 1400 },
+    ];
+
+    for (const config of configurations) {
+      console.log('스캔 시도:', config);
+      const result = await this.scanWithConfig(canvas, config);
+      if (result) {
+        console.log('스캔 성공:', result);
+        return result;
+      }
+    }
+
+    // 이미지 전처리 후 재시도
+    console.log('이미지 전처리 후 재시도...');
+    const processedCanvas = this.preprocessImage(canvas);
+    for (const config of configurations.slice(0, 3)) {
+      const result = await this.scanWithConfig(processedCanvas, config);
+      if (result) {
+        console.log('전처리 후 스캔 성공:', result);
+        return result;
+      }
+    }
+
+    return null;
+  }
+
+  // 특정 설정으로 스캔
+  scanWithConfig(canvas, config) {
+    return new Promise((resolve) => {
+      const imageData = canvas.toDataURL('image/jpeg', 0.95);
 
       Quagga.decodeSingle({
         src: imageData,
         numOfWorkers: 0,
         inputStream: {
-          size: 800
+          size: config.size,
+          singleChannel: false
         },
         decoder: {
           readers: [
@@ -187,33 +276,98 @@ class BarcodeScanner {
             'code_39_reader',
             'upc_reader',
             'upc_e_reader',
-            'i2of5_reader'
-          ]
+            'i2of5_reader',
+            'codabar_reader'
+          ],
+          multiple: false
         },
         locate: true,
         locator: {
-          halfSample: false,
-          patchSize: 'medium'
+          halfSample: config.halfSample,
+          patchSize: config.patchSize
         }
       }, (result) => {
-        loading.style.display = 'none';
-        captureBtn.disabled = false;
-        captureBtn.innerHTML = '<i class="bi bi-camera-fill me-2"></i>스캔';
-
         if (result && result.codeResult && result.codeResult.code) {
-          const barcode = result.codeResult.code;
-          this.handleSuccess(barcode);
+          // 신뢰도 검사 (선택적)
+          const code = result.codeResult.code;
+          // EAN-13 바코드 체크섬 검증
+          if (this.validateBarcode(code)) {
+            resolve(code);
+          } else {
+            console.log('바코드 검증 실패:', code);
+            resolve(null);
+          }
         } else {
-          this.showError('바코드를 인식할 수 없습니다. 바코드를 가이드라인 안에 맞추고 다시 시도해주세요.');
+          resolve(null);
         }
       });
-    } catch (error) {
-      console.error('스캔 오류:', error);
-      loading.style.display = 'none';
-      captureBtn.disabled = false;
-      captureBtn.innerHTML = '<i class="bi bi-camera-fill me-2"></i>스캔';
-      this.showError('스캔 중 오류가 발생했습니다.');
+    });
+  }
+
+  // 바코드 유효성 검사
+  validateBarcode(code) {
+    if (!code || code.length < 8) return false;
+
+    // EAN-13 체크섬 검증
+    if (code.length === 13) {
+      let sum = 0;
+      for (let i = 0; i < 12; i++) {
+        const digit = parseInt(code[i], 10);
+        sum += (i % 2 === 0) ? digit : digit * 3;
+      }
+      const checkDigit = (10 - (sum % 10)) % 10;
+      return checkDigit === parseInt(code[12], 10);
     }
+
+    // EAN-8 체크섬 검증
+    if (code.length === 8) {
+      let sum = 0;
+      for (let i = 0; i < 7; i++) {
+        const digit = parseInt(code[i], 10);
+        sum += (i % 2 === 0) ? digit * 3 : digit;
+      }
+      const checkDigit = (10 - (sum % 10)) % 10;
+      return checkDigit === parseInt(code[7], 10);
+    }
+
+    // 다른 형식은 기본적으로 허용
+    return true;
+  }
+
+  // 이미지 전처리 (대비 향상)
+  preprocessImage(sourceCanvas) {
+    const canvas = document.createElement('canvas');
+    canvas.width = sourceCanvas.width;
+    canvas.height = sourceCanvas.height;
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(sourceCanvas, 0, 0);
+
+    // 이미지 데이터 가져오기
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    // 그레이스케일 변환 및 대비 향상
+    for (let i = 0; i < data.length; i += 4) {
+      // 그레이스케일
+      const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+
+      // 대비 향상 (1.5배)
+      const contrast = 1.5;
+      const factor = (259 * (contrast * 100 + 255)) / (255 * (259 - contrast * 100));
+      const newGray = Math.min(255, Math.max(0, factor * (gray - 128) + 128));
+
+      // 이진화 (threshold)
+      const threshold = 128;
+      const binary = newGray > threshold ? 255 : 0;
+
+      data[i] = binary;
+      data[i + 1] = binary;
+      data[i + 2] = binary;
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    return canvas;
   }
 
   // 성공 처리

@@ -156,9 +156,31 @@ export default class extends Controller {
       window.toast.warning('비활성으로 인해 로그아웃되었습니다', '세션 만료')
     }
 
-    // Redirect to sign out
+    // Sign out using DELETE method (Devise requirement)
     setTimeout(() => {
-      window.location.href = '/users/sign_out'
+      const form = document.createElement('form')
+      form.method = 'POST'
+      form.action = '/users/sign_out'
+
+      // Add CSRF token
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+      if (csrfToken) {
+        const csrfInput = document.createElement('input')
+        csrfInput.type = 'hidden'
+        csrfInput.name = 'authenticity_token'
+        csrfInput.value = csrfToken
+        form.appendChild(csrfInput)
+      }
+
+      // Add _method for DELETE
+      const methodInput = document.createElement('input')
+      methodInput.type = 'hidden'
+      methodInput.name = '_method'
+      methodInput.value = 'delete'
+      form.appendChild(methodInput)
+
+      document.body.appendChild(form)
+      form.submit()
     }, 2000)
   }
 }

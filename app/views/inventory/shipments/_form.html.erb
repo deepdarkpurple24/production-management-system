@@ -140,7 +140,7 @@
 
 <!-- Flatpickr 초기화 및 바코드 기능 -->
 <script>
-  document.addEventListener('turbo:load', function() {
+  function initShipmentForm() {
     // Flatpickr 초기화 (날짜 + 시간)
     var shipmentDateInput = document.getElementById('shipment_date_input');
     var currentValue = shipmentDateInput ? shipmentDateInput.value : null;
@@ -213,12 +213,20 @@
 
     // 바코드 스캔 시작 (새로운 모달 방식)
     if (barcodeScanBtn) {
-      barcodeScanBtn.addEventListener('click', function() {
+      // 기존 이벤트 리스너 제거 후 추가 (중복 방지)
+      barcodeScanBtn.replaceWith(barcodeScanBtn.cloneNode(true));
+      var newBarcodeScanBtn = document.getElementById('barcode_scan_btn');
+      newBarcodeScanBtn.addEventListener('click', function() {
         window.openBarcodeScanner('barcode_input', function(barcode) {
           // 바코드 스캔 성공 시 품목 검색
           searchItemByBarcode(barcode);
         });
       });
     }
-  });
+  }
+
+  // Turbo 환경 지원
+  document.addEventListener('turbo:load', initShipmentForm);
+  // 일반 페이지 로드 (Turbo 없는 경우)
+  document.addEventListener('DOMContentLoaded', initShipmentForm);
 </script>

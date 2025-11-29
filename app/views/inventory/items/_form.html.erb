@@ -181,7 +181,8 @@
 
 <!-- Tooltip 초기화 및 공급업체 추가/제거 기능 -->
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  // Turbo 환경과 일반 환경 모두 지원
+  function initItemForm() {
     // URL 파라미터에서 바코드 값 읽어오기
     var urlParams = new URLSearchParams(window.location.search);
     var barcodeFromUrl = urlParams.get('barcode');
@@ -244,9 +245,17 @@
     var itemBarcodeScanBtn = document.getElementById('item_barcode_scan_btn');
 
     if (itemBarcodeScanBtn) {
-      itemBarcodeScanBtn.addEventListener('click', function() {
+      // 기존 이벤트 리스너 제거 후 추가 (중복 방지)
+      itemBarcodeScanBtn.replaceWith(itemBarcodeScanBtn.cloneNode(true));
+      var newBarcodeScanBtn = document.getElementById('item_barcode_scan_btn');
+      newBarcodeScanBtn.addEventListener('click', function() {
         window.openBarcodeScanner('item_barcode_input');
       });
     }
-  });
+  }
+
+  // Turbo 환경 지원
+  document.addEventListener('turbo:load', initItemForm);
+  // 일반 페이지 로드 (Turbo 없는 경우)
+  document.addEventListener('DOMContentLoaded', initItemForm);
 </script>

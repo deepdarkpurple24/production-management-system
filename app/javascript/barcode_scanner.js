@@ -306,10 +306,13 @@ class BarcodeScanner {
 
   // 바코드 유효성 검사
   validateBarcode(code) {
-    if (!code || code.length < 8) return false;
+    if (!code || code.length < 1) return false;
 
-    // EAN-13 체크섬 검증
-    if (code.length === 13) {
+    // 숫자로만 구성된 바코드인지 확인
+    const isNumericOnly = /^\d+$/.test(code);
+
+    // EAN-13 체크섬 검증 (13자리 숫자 바코드)
+    if (isNumericOnly && code.length === 13) {
       let sum = 0;
       for (let i = 0; i < 12; i++) {
         const digit = parseInt(code[i], 10);
@@ -319,8 +322,8 @@ class BarcodeScanner {
       return checkDigit === parseInt(code[12], 10);
     }
 
-    // EAN-8 체크섬 검증
-    if (code.length === 8) {
+    // EAN-8 체크섬 검증 (8자리 숫자 바코드)
+    if (isNumericOnly && code.length === 8) {
       let sum = 0;
       for (let i = 0; i < 7; i++) {
         const digit = parseInt(code[i], 10);
@@ -330,8 +333,24 @@ class BarcodeScanner {
       return checkDigit === parseInt(code[7], 10);
     }
 
-    // 다른 형식은 기본적으로 허용
-    return true;
+    // UPC-A 체크섬 검증 (12자리 숫자 바코드)
+    if (isNumericOnly && code.length === 12) {
+      let sum = 0;
+      for (let i = 0; i < 11; i++) {
+        const digit = parseInt(code[i], 10);
+        sum += (i % 2 === 0) ? digit * 3 : digit;
+      }
+      const checkDigit = (10 - (sum % 10)) % 10;
+      return checkDigit === parseInt(code[11], 10);
+    }
+
+    // Code 39, Code 128 등 영문+숫자 바코드는 기본적으로 허용
+    // 최소 길이만 검사
+    if (code.length >= 1) {
+      return true;
+    }
+
+    return false;
   }
 
   // 이미지 전처리 (대비 향상)

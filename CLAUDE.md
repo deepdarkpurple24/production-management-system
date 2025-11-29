@@ -23,6 +23,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Development**: Windows (현재 PC)
 - **Workflow**: 로컬 수정 → `git push` → 서버에서 `git pull` & `docker-compose up -d --build`
 
+## 🤖 Claude Code 작업 규칙
+
+**코드 작업 완료 시 자동으로 git commit & push 실행**
+- 기능 구현, 버그 수정 등 코드 변경이 완료되면 자동으로 커밋하고 push
+- 서버에서 변경사항을 pull 받아 배포할 수 있도록 함
+
 ## Quick Commands
 
 ```bash
@@ -88,4 +94,4 @@ app/assets/stylesheets/             # SCSS 소스
 
 ---
 
-**Version**: 2.0 | **Updated**: 2025-11-28
+**Version**: 2.1 | **Updated**: 2025-11-29

@@ -934,3 +934,39 @@ input[type="number"] {
   appearance: textfield;
 }
 
+// ===================================
+// 반죽일지 재료 체크 스타일
+// Visual feedback for ingredient checking
+// ===================================
+
+.ingredient-row {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.25s ease;
+
+  &:hover {
+    background-color: rgba(0, 102, 204, 0.05) !important;
+  }
+
+  &.ingredient-checked {
+    background-color: #d4edda !important;
+
+    td {
+      background-color: #d4edda !important;
+    }
+
+    &:hover {
+      background-color: #c3e6cb !important;
+
+      td {
+        background-color: #c3e6cb !important;
+      }
+    }
+  }
+
+  .check-indicator,
+  .uncheck-indicator {
+    transition: opacity 0.2s ease;
+  }
+}
+

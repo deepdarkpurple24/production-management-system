@@ -190,21 +190,27 @@
                             is_checked = checked_ing.present?
                             expiration_date = checked_ing&.expiration_date
                           %>
-                          <tr class="ingredient-row"
+                          <tr class="ingredient-row <%= is_checked ? 'ingredient-checked' : '' %>"
                               data-recipe-id="<%= recipe.id %>"
                               data-ingredient-index="<%= ri.position %>"
                               data-batch-index="<%= batch_index %>"
                               data-checked="<%= is_checked %>"
-                              style="cursor: pointer; user-select: none; <%= is_checked ? 'background-color: #c8e6c9;' : '' %>">
-                            <td style="padding: 0.5rem 1rem; color: #1d1d1f; <%= is_checked ? 'background-color: #c8e6c9;' : '' %>">
+                              style="cursor: pointer; user-select: none; transition: all 0.2s ease;">
+                            <td style="padding: 0.5rem 1rem; color: #1d1d1f; position: relative;">
+                              <span class="check-indicator" style="<%= is_checked ? '' : 'display: none;' %>">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                              </span>
+                              <span class="uncheck-indicator" style="<%= is_checked ? 'display: none;' : '' %>">
+                                <i class="bi bi-circle text-muted me-2"></i>
+                              </span>
                               <%= ri.display_name %>
                             </td>
-                            <td class="text-end" style="padding: 0.5rem 1rem; color: #1d1d1f; font-weight: 500; <%= is_checked ? 'background-color: #c8e6c9;' : '' %>">
+                            <td class="text-end" style="padding: 0.5rem 1rem; color: #1d1d1f; font-weight: 500;">
                               <%= number_with_delimiter(display_weight) %>
                               <input type="hidden" name="production_log[ingredient_weights][<%= field_key %>]"
                                      value="<%= display_weight %>">
                             </td>
-                            <td class="text-center expiration-date-cell" style="padding: 0.5rem 1rem; color: #6e6e73; font-size: 0.85rem; <%= is_checked ? 'background-color: #c8e6c9;' : '' %>">
+                            <td class="text-center expiration-date-cell" style="padding: 0.5rem 1rem; color: #6e6e73; font-size: 0.85rem;">
                               <% if expiration_date %>
                                 <%= expiration_date.strftime('%y.%m.%d') %>
                               <% else %>
@@ -275,14 +281,11 @@
     }
   }
 
-  // 재료 행 더블클릭/더블탭 - 재료 투입 완료 표시 (이벤트 위임 사용)
+  // 재료 행 싱글클릭 - 재료 투입 완료 표시 (이벤트 위임 사용)
   (function() {
-    const CHECKED_COLOR = '#c8e6c9';
     const productionLogId = <%= @production_log.id %>;
-    let lastTapTime = 0;
-    let lastTapTarget = null;
 
-    async function toggleRowColor(row) {
+    async function toggleIngredientCheck(row) {
       const isChecked = row.dataset.checked === 'true';
       const recipeId = row.dataset.recipeId;
       const ingredientIndex = row.dataset.ingredientIndex;
@@ -310,18 +313,35 @@
         const data = await response.json();
 
         if (data.success) {
-          // 현재 클릭한 행만 업데이트 (특정 배치만)
-          const cells = row.querySelectorAll('td');
+          // 체크 상태 업데이트
+          row.dataset.checked = newCheckedState ? 'true' : 'false';
+
+          // CSS 클래스 토글
           if (newCheckedState) {
-            cells.forEach(cell => {
-              cell.style.backgroundColor = CHECKED_COLOR;
-            });
-            row.dataset.checked = 'true';
+            row.classList.add('ingredient-checked');
           } else {
-            cells.forEach(cell => {
-              cell.style.backgroundColor = '';
-            });
-            row.dataset.checked = 'false';
+            row.classList.remove('ingredient-checked');
+          }
+
+          // 체크 아이콘 토글
+          const checkIndicator = row.querySelector('.check-indicator');
+          const uncheckIndicator = row.querySelector('.uncheck-indicator');
+          if (checkIndicator && uncheckIndicator) {
+            checkIndicator.style.display = newCheckedState ? '' : 'none';
+            uncheckIndicator.style.display = newCheckedState ? 'none' : '';
+          }
+
+          // 유통기한 업데이트
+          if (data.expiration_date) {
+            const expirationCell = row.querySelector('.expiration-date-cell');
+            if (expirationCell) {
+              expirationCell.innerHTML = data.expiration_date;
+            }
+          } else if (!newCheckedState) {
+            const expirationCell = row.querySelector('.expiration-date-cell');
+            if (expirationCell) {
+              expirationCell.innerHTML = '<span style="color: #c7c7cc;">-</span>';
+            }
           }
 
           // 상태 변경 시 알림 (선택사항)
@@ -338,35 +358,30 @@
       }
     }
 
-    document.addEventListener('dblclick', function(e) {
+    // 싱글클릭으로 변경 (PC)
+    document.addEventListener('click', function(e) {
       if (e.target.tagName === 'INPUT') return;
       const row = e.target.closest('.ingredient-row');
       if (row) {
         e.preventDefault();
-        toggleRowColor(row);
+        toggleIngredientCheck(row);
       }
     });
 
+    // 모바일 터치 지원 (싱글탭)
     document.addEventListener('touchend', function(e) {
       if (e.target.tagName === 'INPUT') return;
       const row = e.target.closest('.ingredient-row');
-      if (!row) return;
-
-      const currentTime = new Date().getTime();
-      const tapLength = currentTime - lastTapTime;
-
-      if (tapLength < 300 && tapLength > 0 && lastTapTarget === row) {
+      if (row) {
         e.preventDefault();
-        toggleRowColor(row);
+        toggleIngredientCheck(row);
       }
-
-      lastTapTime = currentTime;
-      lastTapTarget = row;
     });
 
-    // 페이지 로드 시 체크 상태는 서버 렌더링으로 이미 설정되어 있음
-    // data-checked 속성과 인라인 스타일이 서버에서 올바르게 렌더링되므로
-    // 별도의 복원 로직이 필요하지 않음
+    // 페이지 로드 시 체크된 행에 배경색 적용
+    document.querySelectorAll('.ingredient-row[data-checked="true"]').forEach(row => {
+      row.classList.add('ingredient-checked');
+    });
   })();
 
   // 작업완료 버튼 핸들러

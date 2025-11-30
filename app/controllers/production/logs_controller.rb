@@ -358,7 +358,7 @@ class Production::LogsController < ApplicationController
     end
 
     # 모든 배치가 완료되었는지 확인하여 status 업데이트
-    # (이 로직은 필요에 따라 조정 가능)
+    check_all_batches_completed(@production_log)
 
     if @production_log.save
       render json: {
@@ -435,6 +435,48 @@ class Production::LogsController < ApplicationController
     else
       # 일부 재료만 체크되면 작업 중으로
       production_log.status = "in_progress"
+    end
+  end
+
+  def check_all_batches_completed(production_log)
+    # production_log의 레시피에서 배치 개수 계산
+    recipe = production_log.recipe
+    return if recipe.nil?
+
+    # 배치 개수 계산 (update_work_status와 동일한 로직)
+    fpr = production_log.finished_product.finished_product_recipes.find_by(recipe_id: recipe.id)
+    weight_per_unit = fpr&.quantity || 0
+
+    if weight_per_unit > 0 && production_log.production_plan.present?
+      recipe_total = recipe.recipe_ingredients.where(row_type: [ "ingredient", nil ]).sum(:weight)
+      recipe_total = recipe_total.zero? ? 1 : recipe_total
+      multiplier = (production_log.production_plan.quantity.to_f * weight_per_unit) / recipe_total
+      total_scaled = recipe_total * multiplier
+
+      # 장비 최대 작업 중량 확인
+      max_work_capacity = recipe.recipe_equipments.where.not(work_capacity: [ nil, 0 ]).maximum(:work_capacity)
+      max_work_capacity_g = max_work_capacity ? max_work_capacity * 1000 : nil
+
+      if max_work_capacity_g && max_work_capacity_g > 0 && total_scaled > max_work_capacity_g
+        batch_count = (total_scaled / max_work_capacity_g).ceil
+      else
+        batch_count = 1
+      end
+    else
+      batch_count = 1
+    end
+
+    # 모든 배치가 완료되었는지 확인
+    completed_batches = production_log.batch_completion_times&.keys&.map(&:to_i) || []
+
+    if completed_batches.length >= batch_count
+      # 모든 배치가 완료되면 status를 completed로 변경
+      production_log.status = "completed"
+      Rails.logger.info "모든 배치(#{batch_count}개)가 완료되어 작업완료 상태로 변경됨"
+    else
+      # 일부 배치만 완료되면 in_progress 유지
+      production_log.status = "in_progress"
+      Rails.logger.info "#{completed_batches.length}/#{batch_count} 배치 완료, 작업중 상태 유지"
     end
   end
 

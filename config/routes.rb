@@ -128,7 +128,7 @@ Rails.application.routes.draw do
 
   namespace :production do
     resources :plans do
-      resources :results, only: [:create, :update, :destroy] do
+      resources :results, only: [ :create, :update, :destroy ] do
         collection do
           post :process_packaging
         end
@@ -144,7 +144,7 @@ Rails.application.routes.draw do
       end
     end
     # 생산품관리 (별도 페이지)
-    resources :product_management, only: [:index]
+    resources :product_management, only: [ :index ]
   end
 
   # 레시피 관리

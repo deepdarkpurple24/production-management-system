@@ -1,7 +1,7 @@
 module Production
   class ResultsController < ApplicationController
     before_action :set_production_plan
-    before_action :set_production_result, only: [:update, :destroy]
+    before_action :set_production_result, only: [ :update, :destroy ]
 
     # POST /production/plans/:production_plan_id/results
     def create
@@ -9,10 +9,10 @@ module Production
 
       respond_to do |format|
         if @production_result.save
-          format.html { redirect_to production_plans_path(view: 'daily', date: @production_plan.production_date), notice: "생산 실적이 등록되었습니다." }
+          format.html { redirect_to production_plans_path(view: "daily", date: @production_plan.production_date), notice: "생산 실적이 등록되었습니다." }
           format.json { render json: @production_result, status: :created }
         else
-          format.html { redirect_to production_plans_path(view: 'daily', date: @production_plan.production_date), alert: @production_result.errors.full_messages.join(", ") }
+          format.html { redirect_to production_plans_path(view: "daily", date: @production_plan.production_date), alert: @production_result.errors.full_messages.join(", ") }
           format.json { render json: @production_result.errors, status: :unprocessable_entity }
         end
       end
@@ -22,10 +22,10 @@ module Production
     def update
       respond_to do |format|
         if @production_result.update(production_result_params)
-          format.html { redirect_to production_plans_path(view: 'daily', date: @production_plan.production_date), notice: "생산 실적이 수정되었습니다." }
+          format.html { redirect_to production_plans_path(view: "daily", date: @production_plan.production_date), notice: "생산 실적이 수정되었습니다." }
           format.json { render json: @production_result }
         else
-          format.html { redirect_to production_plans_path(view: 'daily', date: @production_plan.production_date), alert: @production_result.errors.full_messages.join(", ") }
+          format.html { redirect_to production_plans_path(view: "daily", date: @production_plan.production_date), alert: @production_result.errors.full_messages.join(", ") }
           format.json { render json: @production_result.errors, status: :unprocessable_entity }
         end
       end
@@ -36,7 +36,7 @@ module Production
       @production_result.destroy
 
       respond_to do |format|
-        format.html { redirect_to production_plans_path(view: 'daily', date: @production_plan.production_date), notice: "생산 실적이 삭제되었습니다." }
+        format.html { redirect_to production_plans_path(view: "daily", date: @production_plan.production_date), notice: "생산 실적이 삭제되었습니다." }
         format.json { head :no_content }
       end
     end
@@ -46,7 +46,7 @@ module Production
       results_to_process = @production_plan.production_results.where(packaging_processed: false).where("good_quantity > 0")
 
       if results_to_process.empty?
-        redirect_to production_plans_path(view: 'daily', date: @production_plan.production_date), alert: "처리할 포장재 출고가 없습니다."
+        redirect_to production_plans_path(view: "daily", date: @production_plan.production_date), alert: "처리할 포장재 출고가 없습니다."
         return
       end
 
@@ -57,9 +57,9 @@ module Production
           end
         end
 
-        redirect_to production_plans_path(view: 'daily', date: @production_plan.production_date), notice: "포장재 출고가 완료되었습니다."
+        redirect_to production_plans_path(view: "daily", date: @production_plan.production_date), notice: "포장재 출고가 완료되었습니다."
       rescue => e
-        redirect_to production_plans_path(view: 'daily', date: @production_plan.production_date), alert: "포장재 출고 처리 중 오류가 발생했습니다: #{e.message}"
+        redirect_to production_plans_path(view: "daily", date: @production_plan.production_date), alert: "포장재 출고 처리 중 오류가 발생했습니다: #{e.message}"
       end
     end
 
@@ -93,7 +93,7 @@ module Production
         shipment.shipment_items.create!(
           item_id: material[:item].id,
           quantity: material[:quantity],
-          unit: material[:item].unit || '개',
+          unit: material[:item].unit || "개",
           notes: material[:material_type]
         )
       end

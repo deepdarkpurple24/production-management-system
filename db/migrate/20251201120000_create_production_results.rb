@@ -12,6 +12,6 @@ class CreateProductionResults < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :production_results, [:production_plan_id, :packaging_unit_id], unique: true, name: 'idx_prod_results_plan_unit'
+    add_index :production_results, [ :production_plan_id, :packaging_unit_id ], unique: true, name: 'idx_prod_results_plan_unit'
   end
 end

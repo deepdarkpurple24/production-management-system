@@ -86,6 +86,91 @@
     </div>
   </div>
 
+  <!-- 포장 단위 목록 -->
+  <div class="mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <label class="form-label mb-0">포장 단위</label>
+      <button type="button" class="btn btn-sm btn-outline-primary" id="add-packaging-unit-btn">
+        <i class="bi bi-box-seam me-1"></i>포장 단위 추가
+      </button>
+    </div>
+    <small class="text-muted d-block mb-2">각 포장 단위(예: 30개입, 16개입)와 사용하는 포장재를 등록하세요.</small>
+
+    <div id="packaging-units-container">
+      <%= f.fields_for :packaging_units do |pu_fields| %>
+        <div class="card mb-3 packaging-unit-card" data-index="<%= pu_fields.index %>">
+          <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+            <div class="d-flex align-items-center gap-2 flex-grow-1">
+              <i class="bi bi-box-seam text-primary"></i>
+              <%= pu_fields.text_field :name, class: "form-control form-control-sm", style: "max-width: 150px;", placeholder: "예: 30개입", required: true %>
+              <span class="text-muted">-</span>
+              <div class="input-group input-group-sm" style="max-width: 150px;">
+                <%= pu_fields.number_field :pieces_per_unit, class: "form-control form-control-sm", placeholder: "개수", required: true, min: 1 %>
+                <span class="input-group-text">개/박스</span>
+              </div>
+              <%= pu_fields.hidden_field :position %>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-sm btn-outline-secondary add-material-btn">
+                <i class="bi bi-plus-circle me-1"></i>포장재
+              </button>
+              <%= pu_fields.hidden_field :_destroy, class: "destroy-field" %>
+              <button type="button" class="btn btn-sm btn-outline-danger remove-packaging-unit-btn">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card-body py-2">
+            <table class="table table-sm table-bordered mb-0 materials-table">
+              <thead style="background-color: #f8f9fa;">
+                <tr>
+                  <th style="width: 120px;">포장재 유형</th>
+                  <th>포장재 품목</th>
+                  <th style="width: 120px;">박스당 수량</th>
+                  <th>비고</th>
+                  <th style="width: 50px;"></th>
+                </tr>
+              </thead>
+              <tbody class="materials-tbody">
+                <%= pu_fields.fields_for :packaging_unit_materials do |pm_fields| %>
+                  <tr class="material-row">
+                    <td>
+                      <%= pm_fields.select :material_type,
+                          options_for_select([['내포장재', '내포장재'], ['외포장재', '외포장재'], ['기타', '기타']], pm_fields.object.material_type),
+                          { include_blank: "선택" },
+                          class: "form-select form-select-sm" %>
+                      <%= pm_fields.hidden_field :position %>
+                    </td>
+                    <td>
+                      <%= pm_fields.collection_select :item_id, @packaging_items, :id, :name,
+                          { include_blank: "포장재 선택" },
+                          { class: "form-select form-select-sm", required: true } %>
+                    </td>
+                    <td>
+                      <%= pm_fields.number_field :quantity_per_unit, step: 0.01, class: "form-control form-control-sm text-end", value: pm_fields.object.quantity_per_unit || 1, required: true, min: 0.01 %>
+                    </td>
+                    <td>
+                      <%= pm_fields.text_field :notes, class: "form-control form-control-sm" %>
+                    </td>
+                    <td class="text-center">
+                      <%= pm_fields.hidden_field :_destroy, class: "material-destroy-field" %>
+                      <button type="button" class="btn btn-sm btn-outline-danger remove-material-btn">
+                        <i class="bi bi-x"></i>
+                      </button>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+            <% if pu_fields.object.packaging_unit_materials.empty? %>
+              <p class="text-muted small mb-0 mt-2 no-materials-msg">포장재를 추가하려면 위 '포장재' 버튼을 클릭하세요.</p>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
   <!-- 설명 -->
   <div class="mb-3">
     <label for="finished_product_description" class="form-label">설명</label>
@@ -250,5 +335,149 @@ document.addEventListener('turbo:load', function() {
 
   initializeSortable();
   calculateTotalWeight();
+
+  // ===== 포장 단위 관리 =====
+  let packagingUnitIndex = <%= finished_product.packaging_units.length %>;
+  const packagingItemsData = <%= (@packaging_items || []).map { |i| { id: i.id, name: i.name } }.to_json.html_safe %>;
+
+  // 포장 단위 추가
+  const addPackagingUnitBtn = document.getElementById('add-packaging-unit-btn');
+  if (addPackagingUnitBtn) {
+    addPackagingUnitBtn.addEventListener('click', function() {
+      const container = document.getElementById('packaging-units-container');
+
+      const newUnit = `
+        <div class="card mb-3 packaging-unit-card" data-index="${packagingUnitIndex}">
+          <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+            <div class="d-flex align-items-center gap-2 flex-grow-1">
+              <i class="bi bi-box-seam text-primary"></i>
+              <input type="text" class="form-control form-control-sm" style="max-width: 150px;"
+                     name="finished_product[packaging_units_attributes][${packagingUnitIndex}][name]"
+                     placeholder="예: 30개입" required>
+              <span class="text-muted">-</span>
+              <div class="input-group input-group-sm" style="max-width: 150px;">
+                <input type="number" class="form-control form-control-sm"
+                       name="finished_product[packaging_units_attributes][${packagingUnitIndex}][pieces_per_unit]"
+                       placeholder="개수" required min="1">
+                <span class="input-group-text">개/박스</span>
+              </div>
+              <input type="hidden" name="finished_product[packaging_units_attributes][${packagingUnitIndex}][position]" value="${packagingUnitIndex}">
+            </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-sm btn-outline-secondary add-material-btn">
+                <i class="bi bi-plus-circle me-1"></i>포장재
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-danger remove-packaging-unit-btn">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card-body py-2">
+            <table class="table table-sm table-bordered mb-0 materials-table">
+              <thead style="background-color: #f8f9fa;">
+                <tr>
+                  <th style="width: 120px;">포장재 유형</th>
+                  <th>포장재 품목</th>
+                  <th style="width: 120px;">박스당 수량</th>
+                  <th>비고</th>
+                  <th style="width: 50px;"></th>
+                </tr>
+              </thead>
+              <tbody class="materials-tbody">
+              </tbody>
+            </table>
+            <p class="text-muted small mb-0 mt-2 no-materials-msg">포장재를 추가하려면 위 '포장재' 버튼을 클릭하세요.</p>
+          </div>
+        </div>
+      `;
+
+      container.insertAdjacentHTML('beforeend', newUnit);
+      packagingUnitIndex++;
+    });
+  }
+
+  // 포장재 추가 (이벤트 위임)
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.add-material-btn')) {
+      const card = e.target.closest('.packaging-unit-card');
+      const unitIndex = card.dataset.index;
+      const tbody = card.querySelector('.materials-tbody');
+      const noMaterialsMsg = card.querySelector('.no-materials-msg');
+
+      // 현재 포장재 개수로 materialIndex 결정
+      const materialIndex = tbody.querySelectorAll('.material-row').length;
+
+      const itemOptions = packagingItemsData.map(item =>
+        `<option value="${item.id}">${item.name}</option>`
+      ).join('');
+
+      const newRow = `
+        <tr class="material-row">
+          <td>
+            <select class="form-select form-select-sm"
+                    name="finished_product[packaging_units_attributes][${unitIndex}][packaging_unit_materials_attributes][${materialIndex}][material_type]">
+              <option value="">선택</option>
+              <option value="내포장재">내포장재</option>
+              <option value="외포장재">외포장재</option>
+              <option value="기타">기타</option>
+            </select>
+            <input type="hidden" name="finished_product[packaging_units_attributes][${unitIndex}][packaging_unit_materials_attributes][${materialIndex}][position]" value="${materialIndex}">
+          </td>
+          <td>
+            <select class="form-select form-select-sm"
+                    name="finished_product[packaging_units_attributes][${unitIndex}][packaging_unit_materials_attributes][${materialIndex}][item_id]" required>
+              <option value="">포장재 선택</option>
+              ${itemOptions}
+            </select>
+          </td>
+          <td>
+            <input type="number" step="0.01" class="form-control form-control-sm text-end"
+                   name="finished_product[packaging_units_attributes][${unitIndex}][packaging_unit_materials_attributes][${materialIndex}][quantity_per_unit]"
+                   value="1" required min="0.01">
+          </td>
+          <td>
+            <input type="text" class="form-control form-control-sm"
+                   name="finished_product[packaging_units_attributes][${unitIndex}][packaging_unit_materials_attributes][${materialIndex}][notes]">
+          </td>
+          <td class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-danger remove-material-btn">
+              <i class="bi bi-x"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+
+      tbody.insertAdjacentHTML('beforeend', newRow);
+
+      // 안내 메시지 숨기기
+      if (noMaterialsMsg) {
+        noMaterialsMsg.style.display = 'none';
+      }
+    }
+
+    // 포장 단위 삭제
+    if (e.target.closest('.remove-packaging-unit-btn')) {
+      const card = e.target.closest('.packaging-unit-card');
+      const destroyField = card.querySelector('.destroy-field');
+      if (destroyField) {
+        destroyField.value = '1';
+        card.style.display = 'none';
+      } else {
+        card.remove();
+      }
+    }
+
+    // 포장재 삭제
+    if (e.target.closest('.remove-material-btn')) {
+      const row = e.target.closest('.material-row');
+      const destroyField = row.querySelector('.material-destroy-field');
+      if (destroyField) {
+        destroyField.value = '1';
+        row.style.display = 'none';
+      } else {
+        row.remove();
+      }
+    }
+  });
 });
 </script>

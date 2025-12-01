@@ -12,10 +12,12 @@ class FinishedProductsController < ApplicationController
     @finished_product = FinishedProduct.new
     @finished_product.finished_product_recipes.build
     @recipes = Recipe.all.order(:name)
+    @packaging_items = Item.all.order(:name)  # 포장재 품목
   end
 
   def edit
     @recipes = Recipe.all.order(:name)
+    @packaging_items = Item.all.order(:name)  # 포장재 품목
   end
 
   def create
@@ -26,6 +28,7 @@ class FinishedProductsController < ApplicationController
       redirect_to finished_products_path, notice: "완제품이 성공적으로 등록되었습니다."
     else
       @recipes = Recipe.all.order(:name)
+      @packaging_items = Item.all.order(:name)
       render :new, status: :unprocessable_entity
     end
   end
@@ -36,6 +39,7 @@ class FinishedProductsController < ApplicationController
       redirect_to finished_products_path, notice: "완제품 정보가 수정되었습니다."
     else
       @recipes = Recipe.all.order(:name)
+      @packaging_items = Item.all.order(:name)
       render :edit, status: :unprocessable_entity
     end
   end
@@ -59,7 +63,11 @@ class FinishedProductsController < ApplicationController
       :weight_unit,
       :description,
       :notes,
-      finished_product_recipes_attributes: [ :id, :recipe_id, :quantity, :notes, :position, :_destroy ]
+      finished_product_recipes_attributes: [ :id, :recipe_id, :quantity, :notes, :position, :_destroy ],
+      packaging_units_attributes: [
+        :id, :name, :pieces_per_unit, :notes, :position, :_destroy,
+        packaging_unit_materials_attributes: [ :id, :item_id, :material_type, :quantity_per_unit, :position, :notes, :_destroy ]
+      ]
     )
   end
 end

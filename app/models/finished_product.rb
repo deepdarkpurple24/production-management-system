@@ -5,8 +5,10 @@ class FinishedProduct < ApplicationRecord
   has_many :production_plans, dependent: :destroy
   has_many :production_logs, dependent: :destroy
   has_many :finished_product_versions, -> { order(version_number: :desc) }, dependent: :destroy
+  has_many :packaging_units, -> { order(position: :asc) }, dependent: :destroy
 
   accepts_nested_attributes_for :finished_product_recipes, allow_destroy: true
+  accepts_nested_attributes_for :packaging_units, allow_destroy: true
 
   validates :name, presence: true
   validates :weight, numericality: { greater_than: 0 }, allow_nil: true

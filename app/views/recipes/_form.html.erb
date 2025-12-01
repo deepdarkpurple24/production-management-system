@@ -215,7 +215,7 @@
                 </td>
                 <td>
                   <%= equipment_fields.select :work_capacity_unit,
-                      options_for_select(['Kg', 'g', 'L', 'mL', '개'], equipment_fields.object.work_capacity_unit),
+                      options_for_select(['Kg', 'g', 'L', 'mL', '개', '롤'], equipment_fields.object.work_capacity_unit),
                       { include_blank: "선택" },
                       class: "form-select form-select-sm" %>
                 </td>

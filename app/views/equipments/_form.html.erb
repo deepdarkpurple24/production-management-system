@@ -84,7 +84,7 @@
         용량 단위
       </label>
       <%= f.select :capacity_unit,
-                   options_for_select(['Kg', 'g', 'L', 'mL', '개'], @equipment.capacity_unit),
+                   options_for_select(['Kg', 'g', 'L', 'mL', '개', '롤'], @equipment.capacity_unit),
                    { include_blank: "선택" },
                    class: "form-select" %>
     </div>

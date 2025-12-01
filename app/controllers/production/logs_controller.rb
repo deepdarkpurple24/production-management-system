@@ -380,6 +380,38 @@ class Production::LogsController < ApplicationController
     end
   end
 
+  def update_batch_time
+    @production_log = ProductionLog.find(params[:id])
+    batch_index = params[:batch_index].to_s
+    completion_time = params[:completion_time]
+
+    # batch_completion_times를 Hash로 초기화 (없는 경우)
+    @production_log.batch_completion_times ||= {}
+
+    # 해당 배치의 완료 시간 업데이트
+    begin
+      parsed_time = Time.parse(completion_time)
+      @production_log.batch_completion_times[batch_index] = parsed_time.to_s
+
+      # 첫 번째 배치(0)인 경우 production_time도 업데이트
+      if batch_index == "0"
+        @production_log.production_time = parsed_time
+      end
+
+      if @production_log.save
+        render json: {
+          success: true,
+          batch_index: batch_index,
+          completion_time: parsed_time.strftime("%m-%d %H:%M")
+        }
+      else
+        render json: { success: false, errors: @production_log.errors.full_messages }, status: :unprocessable_entity
+      end
+    rescue ArgumentError => e
+      render json: { success: false, errors: [ "잘못된 날짜/시간 형식입니다." ] }, status: :unprocessable_entity
+    end
+  end
+
   private
 
   def set_production_log

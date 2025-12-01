@@ -97,7 +97,7 @@
         중량 단위
       </label>
       <%= f.select :unit_weight_unit,
-                   options_for_select(['Kg', 'g', 'L', 'mL'], receipt.unit_weight_unit),
+                   options_for_select(['Kg', 'g', 'L', 'mL', '개', '롤'], receipt.unit_weight_unit),
                    { include_blank: "선택" },
                    { class: "form-select", id: "receipt_unit_weight_unit" } %>
       <small class="text-muted">중량 단위</small>

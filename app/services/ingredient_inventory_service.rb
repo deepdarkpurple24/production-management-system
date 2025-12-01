@@ -412,8 +412,8 @@ class IngredientInventoryService
 
   # 단위를 그램으로 변환
   # @param weight [Float] 중량
-  # @param unit [String] 단위 (Kg, g, L, mL, 개)
-  # @return [Float] 그램 단위 중량
+  # @param unit [String] 단위 (Kg, g, L, mL, 개, 롤)
+  # @return [Float] 그램 단위 중량 (개/롤은 개수 그대로 반환)
   def self.convert_to_grams(weight, unit)
     return 15000.0 unless weight # 기본값 15kg
 
@@ -426,6 +426,8 @@ class IngredientInventoryService
       weight * 1000 # 물 기준 밀도
     when "mL"
       weight
+    when "개", "롤"
+      weight # 개수 단위는 변환 없이 그대로 반환
     else
       weight * 1000 # 기본값: Kg로 간주
     end

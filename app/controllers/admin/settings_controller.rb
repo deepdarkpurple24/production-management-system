@@ -23,7 +23,7 @@ class Admin::SettingsController < Admin::BaseController
     @page_permissions = PagePermission.ordered
 
     # 0.5통 추가 재료 설정용 재료 품목 목록
-    @ingredient_items = Item.where(item_type: "재료").order(:name)
+    @ingredient_items = Item.order(:name)
   end
 
   # 시스템 설정 업데이트
@@ -325,7 +325,7 @@ class Admin::SettingsController < Admin::BaseController
     @gijeongddeok_default = GijeongddeokDefault.instance
     @gijeongddeok_fields = GijeongddeokFieldOrder.all
     @page_permissions = PagePermission.ordered
-    @ingredient_items = Item.where(item_type: "재료").order(:name)
+    @ingredient_items = Item.order(:name)
   end
 
   def shipment_purpose_params

@@ -141,6 +141,7 @@ Rails.application.routes.draw do
       member do
         patch :update_ingredient_check
         patch :complete_work
+        patch :update_batch_time
       end
     end
     # 생산품관리 (별도 페이지)

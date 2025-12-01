@@ -24,7 +24,7 @@
     <div class="col-md-3">
       <label for="ingredient_production_unit" class="form-label">단위 <span class="text-danger">*</span></label>
       <%= f.select :production_unit,
-                   options_for_select(['Kg', 'g', 'L', 'mL', '개'], ingredient.production_unit),
+                   options_for_select(['Kg', 'g', 'L', 'mL', '개', '롤'], ingredient.production_unit),
                    { include_blank: "선택" },
                    class: "form-select",
                    required: true %>
@@ -117,7 +117,7 @@
               </td>
               <td>
                 <%= item_fields.select :unit,
-                    options_for_select(['Kg', 'g', 'L', 'mL', '개'], item_fields.object.unit),
+                    options_for_select(['Kg', 'g', 'L', 'mL', '개', '롤'], item_fields.object.unit),
                     { include_blank: "선택" },
                     class: "form-select form-select-sm" %>
               </td>

@@ -194,17 +194,15 @@
                       <% running_subtotal = 0.0 %>
                       <% recipe.recipe_ingredients.order(:position).each do |ri| %>
                         <% if ri.row_type == 'subtotal' %>
-                          <% scaled_subtotal = (running_subtotal * multiplier) / batch_count %>
                           <tr>
                             <td style="padding: 0.5rem 1rem; font-weight: 600; color: #1d1d1f; background-color: #d6d8db;">소계</td>
                             <td class="text-end" style="padding: 0.5rem 1rem; font-weight: 600; color: #0071e3; background-color: #d6d8db;">
-                              <%= number_with_delimiter(scaled_subtotal.round(0)) %>
+                              <%= number_with_delimiter(running_subtotal.round(0)) %>
                             </td>
                             <td style="padding: 0.5rem 1rem; background-color: #d6d8db;"></td>
                           </tr>
                           <% running_subtotal = 0.0 %>
                         <% else %>
-                          <% running_subtotal += ri.weight.to_f %>
                           <%
                             if is_gijeongddeok
                               # 기정떡: 분할 단위로 계산 (0.5 또는 1.0)
@@ -217,6 +215,8 @@
                             # 소수점 처리: 10g 미만은 소수점 2자리, 그 외는 정수
                             display_weight = scaled_weight < 10 ? scaled_weight.round(2) : scaled_weight.round(0)
                             is_checked = checked_items.include?([ri.position, batch_index])
+                            # 소계용: scaled_weight 누적
+                            running_subtotal += scaled_weight
                           %>
                           <tr class="ingredient-row"
                               data-recipe-id="<%= recipe.id %>"
@@ -242,10 +242,14 @@
                     <tfoot>
                       <tr>
                         <td style="padding: 0.6rem 1rem; font-weight: 700; color: #1d1d1f; background-color: #d6d8db; border-top: 1px solid #ced4da;">
-                          <%= recipe.name %>무게
+                          총 무게
                         </td>
                         <td class="text-end" style="padding: 0.6rem 1rem; color: #0071e3; font-weight: 700; font-size: 1rem; background-color: #d6d8db; border-top: 1px solid #ced4da;">
-                          <%= number_with_delimiter((total_scaled / batch_count).round(0)) %>
+                          <% if is_gijeongddeok %>
+                            <%= number_with_delimiter(total_scaled.round(0)) %>
+                          <% else %>
+                            <%= number_with_delimiter((total_scaled / batch_count).round(0)) %>
+                          <% end %>
                         </td>
                         <td style="padding: 0.6rem 1rem; background-color: #d6d8db; border-top: 1px solid #ced4da;"></td>
                       </tr>

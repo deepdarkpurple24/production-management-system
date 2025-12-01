@@ -115,6 +115,7 @@ Rails.application.routes.draw do
     resources :items do
       collection do
         get :find_by_barcode
+        get :search_by_name
       end
       member do
         get :suppliers

@@ -100,6 +100,31 @@ class Inventory::ItemsController < ApplicationController
     end
   end
 
+  # 품목명으로 검색 (자동완성용, JSON)
+  def search_by_name
+    query = params[:q]&.strip
+
+    if query.blank? || query.length < 1
+      render json: { items: [] }
+      return
+    end
+
+    items = Item.where("name ILIKE ?", "%#{query}%")
+                .order(:name)
+                .limit(10)
+
+    render json: {
+      items: items.map { |item|
+        {
+          id: item.id,
+          name: item.name,
+          category: item.category,
+          barcode: item.barcode
+        }
+      }
+    }
+  end
+
   # 바코드로 품목 검색 (JSON)
   def find_by_barcode
     barcode = params[:barcode]&.strip

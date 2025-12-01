@@ -45,7 +45,15 @@
       <label for="item_name" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
         품목명 <span class="text-danger">*</span>
       </label>
-      <%= f.text_field :name, class: "form-control", placeholder: "예: 밀가루", required: true %>
+      <div class="position-relative">
+        <%= f.text_field :name, class: "form-control", placeholder: "예: 밀가루", required: true, id: "item_name_input", autocomplete: "off" %>
+        <div id="item-name-suggestions" class="position-absolute w-100" style="z-index: 1000; display: none;">
+          <div class="list-group shadow-sm" style="max-height: 250px; overflow-y: auto; border-radius: 8px;">
+            <!-- 자동완성 결과가 여기에 표시됩니다 -->
+          </div>
+        </div>
+      </div>
+      <small class="text-muted">기존 품목과 중복되지 않도록 입력하세요. 같은 품목이라도 회사가 다르면 "품목명(회사명)"으로 등록하세요.</small>
     </div>
 
     <!-- 카테고리 -->
@@ -197,6 +205,111 @@
           window.toast.info('바코드가 자동으로 입력되었습니다. 품목 정보를 입력해주세요.');
         }
       }
+    }
+
+    // 품목명 자동완성 기능
+    var nameInput = document.getElementById('item_name_input');
+    var suggestionsContainer = document.getElementById('item-name-suggestions');
+    var suggestionsList = suggestionsContainer ? suggestionsContainer.querySelector('.list-group') : null;
+    var debounceTimer = null;
+
+    if (nameInput && suggestionsContainer && suggestionsList) {
+      // 입력 이벤트 처리
+      nameInput.addEventListener('input', function() {
+        var query = this.value.trim();
+
+        // 이전 타이머 취소
+        clearTimeout(debounceTimer);
+
+        if (query.length < 1) {
+          suggestionsContainer.style.display = 'none';
+          return;
+        }
+
+        // 300ms 디바운스
+        debounceTimer = setTimeout(function() {
+          fetch('/inventory/items/search_by_name?q=' + encodeURIComponent(query))
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+              suggestionsList.innerHTML = '';
+
+              if (data.items && data.items.length > 0) {
+                // 헤더 추가
+                var header = document.createElement('div');
+                header.className = 'list-group-item list-group-item-warning py-2';
+                header.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i><strong>유사한 기존 품목이 있습니다</strong>';
+                suggestionsList.appendChild(header);
+
+                data.items.forEach(function(item) {
+                  var itemEl = document.createElement('a');
+                  itemEl.href = '#';
+                  itemEl.className = 'list-group-item list-group-item-action py-2';
+                  itemEl.innerHTML = '<div class="d-flex justify-content-between align-items-center">' +
+                    '<div>' +
+                      '<strong>' + escapeHtml(item.name) + '</strong>' +
+                      (item.category ? ' <span class="badge bg-secondary">' + escapeHtml(item.category) + '</span>' : '') +
+                    '</div>' +
+                    '<span class="text-muted small">이미 등록됨</span>' +
+                  '</div>' +
+                  (item.barcode ? '<small class="text-muted">바코드: ' + escapeHtml(item.barcode) + '</small>' : '');
+
+                  // 클릭 시 품목명 필드에 입력 (참고용)
+                  itemEl.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    nameInput.value = item.name;
+                    suggestionsContainer.style.display = 'none';
+                    nameInput.focus();
+                  });
+
+                  suggestionsList.appendChild(itemEl);
+                });
+
+                // 안내 메시지 추가
+                var footer = document.createElement('div');
+                footer.className = 'list-group-item py-2 text-muted small';
+                footer.innerHTML = '<i class="bi bi-info-circle me-1"></i>다른 회사 제품이라면 "' + escapeHtml(query) + '(회사명)" 형식으로 등록하세요';
+                suggestionsList.appendChild(footer);
+
+                suggestionsContainer.style.display = 'block';
+              } else {
+                suggestionsContainer.style.display = 'none';
+              }
+            })
+            .catch(function(error) {
+              console.error('품목 검색 오류:', error);
+              suggestionsContainer.style.display = 'none';
+            });
+        }, 300);
+      });
+
+      // 포커스 아웃 시 드롭다운 숨기기 (약간의 딜레이로 클릭 이벤트 허용)
+      nameInput.addEventListener('blur', function() {
+        setTimeout(function() {
+          suggestionsContainer.style.display = 'none';
+        }, 200);
+      });
+
+      // 포커스 시 다시 표시 (결과가 있으면)
+      nameInput.addEventListener('focus', function() {
+        if (suggestionsList.children.length > 0 && this.value.trim().length >= 1) {
+          suggestionsContainer.style.display = 'block';
+        }
+      });
+
+      // ESC 키로 닫기
+      nameInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          suggestionsContainer.style.display = 'none';
+        }
+      });
+    }
+
+    // HTML 이스케이프 함수
+    function escapeHtml(text) {
+      if (!text) return '';
+      var div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
     }
 
     // Tooltip 초기화

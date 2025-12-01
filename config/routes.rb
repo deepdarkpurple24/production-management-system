@@ -94,6 +94,9 @@ Rails.application.routes.draw do
   get "settings", to: redirect("/admin/settings")
   get "settings/system", to: redirect("/admin/settings")
 
+  # 장비 모드 API (재료 등록 등에서 사용)
+  get "settings/equipment_modes/:equipment_type_id", to: "settings#get_equipment_modes", as: "settings_get_equipment_modes"
+
   # 각 모듈 메인 페이지
   get "production", to: "production#index", as: "production"
   get "inventory", to: "inventory#index", as: "inventory"

@@ -12,15 +12,17 @@ class IngredientInventoryService
 
     Rails.logger.info "=== IngredientInventoryService.check_ingredient 시작 ==="
     Rails.logger.info "RecipeIngredient ID: #{recipe_ingredient.id}, Position: #{recipe_ingredient.position}"
+    Rails.logger.info "source_type: #{recipe_ingredient.source_type}"
     Rails.logger.info "Batch Index: #{batch_index}, Used Weight: #{used_weight}g"
 
-    # RecipeIngredient가 Ingredient를 참조하는지 확인
-    if recipe_ingredient.referenced_ingredient.present?
+    # source_type을 기준으로 처리 방식 결정
+    # source_type == "ingredient"이고 referenced_ingredient가 있는 경우에만 Referenced Ingredient 처리
+    if recipe_ingredient.source_type == "ingredient" && recipe_ingredient.referenced_ingredient.present?
       Rails.logger.info "Referenced Ingredient 감지: #{recipe_ingredient.referenced_ingredient.name}"
       return process_referenced_ingredient(production_log, recipe_ingredient, batch_index, used_weight)
     end
 
-    # 기존 로직: Item 직접 사용
+    # source_type == "item" 또는 source_type이 없는 경우: Item 직접 사용
     item = recipe_ingredient.item
     Rails.logger.info "Item 조회: #{item.present? ? "#{item.name} (ID: #{item.id})" : "없음"}"
 

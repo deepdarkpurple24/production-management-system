@@ -296,7 +296,8 @@ class Production::LogsController < ApplicationController
         @production_log,
         recipe_ingredient,
         batch_index,
-        used_weight
+        used_weight,
+        current_user
       )
 
       Rails.logger.info "서비스 결과: success=#{result[:success]}, errors=#{result[:errors].inspect}"

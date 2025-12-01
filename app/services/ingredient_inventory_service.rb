@@ -6,8 +6,9 @@ class IngredientInventoryService
   # @param recipe_ingredient [RecipeIngredient] 레시피 재료
   # @param batch_index [Integer] 배치 인덱스
   # @param used_weight [Float] 사용한 중량 (그램)
+  # @param current_user [User] 현재 로그인 사용자 (출고 요청자용)
   # @return [Hash] { success: true/false, checked_ingredient: CheckedIngredient, errors: [] }
-  def self.check_ingredient(production_log, recipe_ingredient, batch_index, used_weight)
+  def self.check_ingredient(production_log, recipe_ingredient, batch_index, used_weight, current_user = nil)
     result = { success: false, checked_ingredient: nil, errors: [] }
 
     Rails.logger.info "=== IngredientInventoryService.check_ingredient 시작 ==="
@@ -19,7 +20,7 @@ class IngredientInventoryService
     # source_type == "ingredient"이고 referenced_ingredient가 있는 경우에만 Referenced Ingredient 처리
     if recipe_ingredient.source_type == "ingredient" && recipe_ingredient.referenced_ingredient.present?
       Rails.logger.info "Referenced Ingredient 감지: #{recipe_ingredient.referenced_ingredient.name}"
-      return process_referenced_ingredient(production_log, recipe_ingredient, batch_index, used_weight)
+      return process_referenced_ingredient(production_log, recipe_ingredient, batch_index, used_weight, current_user)
     end
 
     # source_type == "item" 또는 source_type이 없는 경우: Item 직접 사용
@@ -34,7 +35,7 @@ class IngredientInventoryService
     end
 
     # process_item_deduction 호출
-    result = process_item_deduction(production_log, recipe_ingredient, item, used_weight, batch_index)
+    result = process_item_deduction(production_log, recipe_ingredient, item, used_weight, batch_index, current_user)
 
     if result[:success]
       Rails.logger.info "=== IngredientInventoryService.check_ingredient 완료 (성공) ==="
@@ -73,8 +74,9 @@ class IngredientInventoryService
   # @param recipe_ingredient [RecipeIngredient] 레시피 재료
   # @param batch_index [Integer] 배치 인덱스
   # @param used_weight [Float] 사용한 중량 (그램)
+  # @param current_user [User] 현재 로그인 사용자 (출고 요청자용)
   # @return [Hash] { success: true/false, checked_ingredient: CheckedIngredient, errors: [] }
-  def self.process_referenced_ingredient(production_log, recipe_ingredient, batch_index, used_weight)
+  def self.process_referenced_ingredient(production_log, recipe_ingredient, batch_index, used_weight, current_user = nil)
     result = { success: false, checked_ingredient: nil, errors: [] }
     ingredient = recipe_ingredient.referenced_ingredient
 
@@ -109,7 +111,7 @@ class IngredientInventoryService
         Rails.logger.info "    실제 사용량: #{actual_used_weight.round(2)}g"
 
         # 해당 품목에 대해 재고 차감 (CheckedIngredient 생성하지 않음, 출고 처리 포함)
-        item_result = process_item_deduction_only(item, actual_used_weight, production_log)
+        item_result = process_item_deduction_only(item, actual_used_weight, production_log, current_user)
 
         unless item_result[:success]
           result[:errors].concat(item_result[:errors])
@@ -151,8 +153,9 @@ class IngredientInventoryService
   # @param item [Item] 품목
   # @param used_weight [Float] 사용한 중량 (그램)
   # @param production_log [ProductionLog] 반죽일지 (출고 처리용)
+  # @param current_user [User] 현재 로그인 사용자 (출고 요청자용)
   # @return [Hash] { success: true/false, opened_item: OpenedItem, errors: [] }
-  def self.process_item_deduction_only(item, used_weight, production_log)
+  def self.process_item_deduction_only(item, used_weight, production_log, current_user = nil)
     result = { success: false, opened_item: nil, errors: [] }
 
     # FIFO: 유통기한이 있는 입고품은 유통기한 순, 없는 입고품은 입고일 순
@@ -169,7 +172,7 @@ class IngredientInventoryService
     end
 
     # 개봉품 찾기 또는 생성 (새 개봉품 생성 시 출고 처리 포함)
-    opened_item = find_or_create_opened_item(item, available_receipts.first, used_weight, production_log)
+    opened_item = find_or_create_opened_item(item, available_receipts.first, used_weight, production_log, current_user)
 
     unless opened_item
       error_msg = "#{item.name}의 개봉품을 생성할 수 없습니다."
@@ -267,8 +270,9 @@ class IngredientInventoryService
   # @param item [Item] 품목
   # @param used_weight [Float] 사용한 중량 (그램)
   # @param batch_index [Integer] 배치 인덱스
+  # @param current_user [User] 현재 로그인 사용자 (출고 요청자용)
   # @return [Hash] { success: true/false, checked_ingredient: CheckedIngredient, errors: [] }
-  def self.process_item_deduction(production_log, recipe_ingredient, item, used_weight, batch_index)
+  def self.process_item_deduction(production_log, recipe_ingredient, item, used_weight, batch_index, current_user = nil)
     result = { success: false, checked_ingredient: nil, errors: [] }
 
     # FIFO: 유통기한이 있는 입고품은 유통기한 순, 없는 입고품은 입고일 순
@@ -286,7 +290,7 @@ class IngredientInventoryService
     end
 
     # 개봉품 찾기 또는 생성 (새 개봉품 생성 시 출고 처리 포함)
-    opened_item = find_or_create_opened_item(item, available_receipts.first, used_weight, production_log)
+    opened_item = find_or_create_opened_item(item, available_receipts.first, used_weight, production_log, current_user)
 
     unless opened_item
       error_msg = "#{item.name}의 개봉품을 생성할 수 없습니다."
@@ -338,8 +342,9 @@ class IngredientInventoryService
   # @param receipt [Receipt] 입고품
   # @param required_weight [Float] 필요한 중량
   # @param production_log [ProductionLog] 반죽일지 (출고 처리용, optional)
+  # @param current_user [User] 현재 로그인 사용자 (출고 요청자용)
   # @return [OpenedItem, nil]
-  def self.find_or_create_opened_item(item, receipt, required_weight, production_log = nil)
+  def self.find_or_create_opened_item(item, receipt, required_weight, production_log = nil, current_user = nil)
     Rails.logger.info "  > find_or_create_opened_item: 필요 중량=#{required_weight}g"
 
     # 1. 기존 개봉품이 있으면 사용 (유통기한 순으로 정렬)
@@ -382,7 +387,7 @@ class IngredientInventoryService
     # 4. 새 개봉품 생성 시 출고 처리 (1개 출고)
     if opened_item && production_log
       Rails.logger.info "  > 새 개봉품 생성됨. 출고 처리 중..."
-      create_shipment(item, receipt, production_log)
+      create_shipment(item, receipt, production_log, current_user)
     end
 
     opened_item
@@ -395,7 +400,8 @@ class IngredientInventoryService
   # @param item [Item] 품목
   # @param receipt [Receipt] 입고품
   # @param production_log [ProductionLog] 반죽일지
-  def self.create_shipment(item, receipt, production_log)
+  # @param current_user [User] 현재 로그인 사용자 (출고 요청자용)
+  def self.create_shipment(item, receipt, production_log, current_user = nil)
     # 생산 사용 목적 찾기 또는 생성
     purpose = ShipmentPurpose.find_or_create_by!(name: "생산 사용") do |p|
       p.position = ShipmentPurpose.maximum(:position).to_i + 1
@@ -405,8 +411,8 @@ class IngredientInventoryService
       item: item,
       quantity: 1, # 1개 출고
       shipment_date: Date.today,
-      purpose: purpose,
-      requester: nil, # 추후 로그인 사용자로 설정
+      purpose: purpose.name,
+      requester: current_user&.name || "시스템",
       notes: "반죽일지 ##{production_log.id} - 자동 출고"
     )
   end

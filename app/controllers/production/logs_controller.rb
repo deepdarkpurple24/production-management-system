@@ -93,18 +93,26 @@ class Production::LogsController < ApplicationController
       end
 
     when "in_progress"
-      @production_logs = ProductionLog
+      all_logs = ProductionLog
         .includes(:finished_product, :production_plan, :recipe)
         .where(status: "in_progress")
         .where("production_date = ? OR dough_date = ?", @selected_date, @selected_date)
         .order(created_at: :desc)
 
+      # 1차 반죽 (반죽일이 선택된 날짜) vs 2차 반죽 (생산일이 선택된 날짜)
+      @dough_logs = all_logs.select { |log| log.dough_date == @selected_date }
+      @production_logs = all_logs.select { |log| log.production_date == @selected_date && log.dough_date != @selected_date }
+
     when "completed"
-      @production_logs = ProductionLog
+      all_logs = ProductionLog
         .includes(:finished_product, :production_plan, :recipe)
         .where(status: "completed")
         .where("production_date = ? OR dough_date = ?", @selected_date, @selected_date)
         .order(created_at: :desc)
+
+      # 1차 반죽 (반죽일이 선택된 날짜) vs 2차 반죽 (생산일이 선택된 날짜)
+      @dough_logs = all_logs.select { |log| log.dough_date == @selected_date }
+      @production_logs = all_logs.select { |log| log.production_date == @selected_date && log.dough_date != @selected_date }
     end
   end
 

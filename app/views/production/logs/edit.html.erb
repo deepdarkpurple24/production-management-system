@@ -192,6 +192,16 @@
                     </thead>
                     <tbody>
                       <% running_subtotal = 0.0 %>
+                      <% has_subtotal = recipe.recipe_ingredients.exists?(row_type: 'subtotal') %>
+                      <% is_before_subtotal = true %>
+                      <% if has_subtotal %>
+                        <!-- 1차 반죽 헤더 -->
+                        <tr class="section-header">
+                          <td colspan="3" style="padding: 0.4rem 1rem; font-weight: 600; color: #fff; background-color: #5b9bd5; font-size: 0.85rem;">
+                            <i class="bi bi-1-circle me-2"></i>1차 반죽 (반죽일: <%= @production_log.dough_date&.strftime('%m/%d') || '-' %>)
+                          </td>
+                        </tr>
+                      <% end %>
                       <% recipe.recipe_ingredients.order(:position).each do |ri| %>
                         <% if ri.row_type == 'subtotal' %>
                           <tr>
@@ -201,7 +211,14 @@
                             </td>
                             <td style="padding: 0.5rem 1rem; background-color: #d6d8db;"></td>
                           </tr>
+                          <!-- 2차 반죽 헤더 -->
+                          <tr class="section-header">
+                            <td colspan="3" style="padding: 0.4rem 1rem; font-weight: 600; color: #fff; background-color: #ed7d31; font-size: 0.85rem;">
+                              <i class="bi bi-2-circle me-2"></i>2차 반죽 (생산일: <%= @production_log.production_date&.strftime('%m/%d') || '-' %>)
+                            </td>
+                          </tr>
                           <% running_subtotal = 0.0 %>
+                          <% is_before_subtotal = false %>
                         <% else %>
                           <%
                             if is_gijeongddeok

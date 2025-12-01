@@ -375,13 +375,36 @@
               expirationCell.innerHTML = '<span style="color: #c7c7cc;">-</span>';
             }
           }
-          console.log('체크 상태 저장 완료');
         } else {
-          // 서버 저장 실패 시 에러 메시지 표시 (UI는 유지)
-          console.warn('서버 저장 실패:', data.errors);
+          // 서버 저장 실패 시 UI 원복 및 에러 메시지 표시
+          row.dataset.checked = isChecked ? 'true' : 'false';
+          if (isChecked) {
+            row.classList.add('ingredient-checked');
+          } else {
+            row.classList.remove('ingredient-checked');
+          }
+          if (checkIndicator && uncheckIndicator) {
+            checkIndicator.style.display = isChecked ? '' : 'none';
+            uncheckIndicator.style.display = isChecked ? 'none' : '';
+          }
+
+          // 에러 메시지 표시
+          const errorMsg = data.errors ? data.errors.join('\n') : '알 수 없는 오류가 발생했습니다.';
+          alert('재료 체크 실패\n\n' + errorMsg + '\n\n해당 품목의 입고 처리를 먼저 진행해주세요.');
         }
       } catch (error) {
-        console.error('서버 통신 오류:', error);
+        // 네트워크 오류 시 UI 원복
+        row.dataset.checked = isChecked ? 'true' : 'false';
+        if (isChecked) {
+          row.classList.add('ingredient-checked');
+        } else {
+          row.classList.remove('ingredient-checked');
+        }
+        if (checkIndicator && uncheckIndicator) {
+          checkIndicator.style.display = isChecked ? '' : 'none';
+          uncheckIndicator.style.display = isChecked ? 'none' : '';
+        }
+        alert('서버 통신 오류가 발생했습니다.\n네트워크 연결을 확인해주세요.');
       }
     }
 

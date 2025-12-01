@@ -89,24 +89,54 @@ class IngredientInventoryService
 
     Rails.logger.info "펼쳐진 품목 수: #{item_usages.size}"
 
+    # 품목이 없으면 (모두 other 타입인 경우) 바로 성공 처리
+    if item_usages.empty?
+      Rails.logger.info "재고 관리 대상 품목 없음 - CheckedIngredient만 생성"
+      checked_ingredient = production_log.checked_ingredients.create!(
+        recipe_id: recipe_ingredient.recipe_id,
+        ingredient_index: recipe_ingredient.position,
+        batch_index: batch_index,
+        used_weight: used_weight
+      )
+      result[:success] = true
+      result[:checked_ingredient] = checked_ingredient
+      return result
+    end
+
     ActiveRecord::Base.transaction do
-      # 각 품목에 대해 재고 차감
+      first_opened_item = nil
+
+      # 각 품목에 대해 재고 차감 (CheckedIngredient 생성 없이)
       item_usages.each do |item, actual_used_weight|
         Rails.logger.info "  품목: #{item.name}"
         Rails.logger.info "    실제 사용량: #{actual_used_weight.round(2)}g"
 
-        # 해당 품목에 대해 재고 차감
-        item_result = process_item_deduction(production_log, recipe_ingredient, item, actual_used_weight, batch_index)
+        # 해당 품목에 대해 재고 차감 (CheckedIngredient 생성하지 않음)
+        item_result = process_item_deduction_only(item, actual_used_weight)
 
         unless item_result[:success]
           result[:errors].concat(item_result[:errors])
           raise ActiveRecord::Rollback
         end
 
-        # 첫 번째 품목의 CheckedIngredient를 대표로 저장
-        result[:checked_ingredient] ||= item_result[:checked_ingredient]
+        # 첫 번째 품목의 개봉품 정보 저장
+        first_opened_item ||= item_result[:opened_item]
       end
 
+      # CheckedIngredient는 한 번만 생성 (첫 번째 품목의 개봉품 정보 사용)
+      Rails.logger.info "  CheckedIngredient 생성 중..."
+      checked_ingredient = production_log.checked_ingredients.create!(
+        recipe_id: recipe_ingredient.recipe_id,
+        ingredient_index: recipe_ingredient.position,
+        batch_index: batch_index,
+        used_weight: used_weight,
+        expiration_date: first_opened_item&.expiration_date,
+        receipt_id: first_opened_item&.receipt_id,
+        opened_item_id: first_opened_item&.id
+      )
+      Rails.logger.info "  CheckedIngredient 생성 완료: ID=#{checked_ingredient.id}"
+
+      result[:checked_ingredient] = checked_ingredient
       result[:success] = true
       Rails.logger.info "=== Referenced Ingredient 처리 완료 ==="
     end
@@ -116,6 +146,59 @@ class IngredientInventoryService
     error_msg = "Referenced Ingredient 처리 중 예외 발생: #{e.class.name} - #{e.message}"
     Rails.logger.error error_msg
     Rails.logger.error e.backtrace.first(5).join("\n")
+    result[:errors] << error_msg
+    result
+  end
+
+  # 재고 차감만 수행 (CheckedIngredient 생성 없음) - Referenced Ingredient용
+  # @param item [Item] 품목
+  # @param used_weight [Float] 사용한 중량 (그램)
+  # @return [Hash] { success: true/false, opened_item: OpenedItem, errors: [] }
+  def self.process_item_deduction_only(item, used_weight)
+    result = { success: false, opened_item: nil, errors: [] }
+
+    # FIFO: 유통기한이 있는 입고품은 유통기한 순, 없는 입고품은 입고일 순
+    available_receipts = item.receipts
+      .order(Arel.sql("CASE WHEN expiration_date IS NULL THEN 1 ELSE 0 END"), :expiration_date, :receipt_date)
+
+    Rails.logger.info "    사용 가능한 입고품 수: #{available_receipts.count}"
+
+    if available_receipts.empty?
+      error_msg = "#{item.name}의 입고 내역이 없습니다. 품목 입고를 먼저 진행해주세요."
+      Rails.logger.error "    #{error_msg}"
+      result[:errors] << error_msg
+      return result
+    end
+
+    # 개봉품 찾기 또는 생성
+    opened_item = find_or_create_opened_item(item, available_receipts.first, used_weight)
+
+    unless opened_item
+      error_msg = "#{item.name}의 개봉품을 생성할 수 없습니다."
+      Rails.logger.error "    #{error_msg}"
+      result[:errors] << error_msg
+      return result
+    end
+
+    Rails.logger.info "    개봉품: ID=#{opened_item.id}, 남은 중량=#{opened_item.remaining_weight}g"
+
+    # 개봉품에서 중량 차감
+    if opened_item.remaining_weight < used_weight
+      error_msg = "#{item.name} 개봉품의 남은 중량(#{opened_item.remaining_weight}g)이 사용량(#{used_weight}g)보다 적습니다."
+      Rails.logger.error "    #{error_msg}"
+      result[:errors] << error_msg
+      return result
+    end
+
+    Rails.logger.info "    개봉품에서 #{used_weight}g 차감 중..."
+    opened_item.deduct_weight(used_weight)
+
+    result[:success] = true
+    result[:opened_item] = opened_item
+    result
+  rescue => e
+    error_msg = "#{item.name} 재고 차감 중 예외 발생: #{e.class.name} - #{e.message}"
+    Rails.logger.error "    #{error_msg}"
     result[:errors] << error_msg
     result
   end
@@ -148,7 +231,12 @@ class IngredientInventoryService
 
       Rails.logger.info "#{'  ' * depth}  - #{ingredient_item.source_type}: #{item_quantity_g}g × #{multiplier.round(4)} = #{scaled_quantity.round(2)}g"
 
-      if ingredient_item.source_type == "item" && ingredient_item.item
+      if ingredient_item.source_type == "other"
+        # 기타(other)인 경우: 재고 관리 제외 (물 등)
+        Rails.logger.info "#{'  ' * depth}    → 기타(other): #{ingredient_item.custom_name} - 재고 관리 제외"
+        next
+
+      elsif ingredient_item.source_type == "item" && ingredient_item.item
         # Item인 경우: 결과에 추가 (같은 item이면 합산)
         item = ingredient_item.item
         result[item] ||= 0

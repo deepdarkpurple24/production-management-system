@@ -100,26 +100,44 @@
 
         <% if recipe.present? && plan.present? %>
           <%
+            # 기정떡 여부 확인
+            is_gijeongddeok = @production_log.finished_product&.name&.include?('기정떡')
+
             # 레시피 배율 계산
             fpr = @production_log.finished_product.finished_product_recipes.find_by(recipe_id: recipe.id)
             weight_per_unit = fpr&.quantity || 0
-            show_recipe_ingredients = weight_per_unit > 0
+
+            # 기정떡은 항상 레시피 재료 표시
+            show_recipe_ingredients = is_gijeongddeok || weight_per_unit > 0
           %>
           <% if show_recipe_ingredients %>
             <%
               recipe_total = recipe.recipe_ingredients.where(row_type: ['ingredient', nil]).sum(:weight)
               recipe_total = recipe_total.zero? ? 1 : recipe_total
-              multiplier = (plan.quantity.to_f * weight_per_unit) / recipe_total
-              total_scaled = recipe_total * multiplier
 
-              # 장비 최대 작업 중량 확인
-              max_work_capacity = recipe.recipe_equipments.where.not(work_capacity: [nil, 0]).maximum(:work_capacity)
-              max_work_capacity_g = max_work_capacity ? max_work_capacity * 1000 : nil
-
-              if max_work_capacity_g && max_work_capacity_g > 0 && total_scaled > max_work_capacity_g
-                batch_count = (total_scaled / max_work_capacity_g).ceil
+              if is_gijeongddeok
+                # 기정떡: 분할 설정에 따라 배치 수 결정
+                split_count = plan.split_count || 1
+                split_unit = plan.split_unit || 1.0
+                batch_count = (plan.quantity * split_count).to_i
+                batch_count = 1 if batch_count < 1
+                # 기정떡은 배율 없이 분할 단위로 계산
+                multiplier = split_unit
+                total_scaled = recipe_total * split_unit
               else
-                batch_count = 1
+                # 일반 제품: 기존 로직
+                multiplier = (plan.quantity.to_f * weight_per_unit) / recipe_total
+                total_scaled = recipe_total * multiplier
+
+                # 장비 최대 작업 중량 확인
+                max_work_capacity = recipe.recipe_equipments.where.not(work_capacity: [nil, 0]).maximum(:work_capacity)
+                max_work_capacity_g = max_work_capacity ? max_work_capacity * 1000 : nil
+
+                if max_work_capacity_g && max_work_capacity_g > 0 && total_scaled > max_work_capacity_g
+                  batch_count = (total_scaled / max_work_capacity_g).ceil
+                else
+                  batch_count = 1
+                end
               end
             %>
 
@@ -187,9 +205,16 @@
                         <% else %>
                           <% running_subtotal += ri.weight.to_f %>
                           <%
-                            scaled_weight = (ri.weight.to_f * multiplier) / batch_count
+                            if is_gijeongddeok
+                              # 기정떡: 분할 단위로 계산 (0.5 또는 1.0)
+                              scaled_weight = ri.weight.to_f * split_unit
+                            else
+                              # 일반 제품: 배율로 계산
+                              scaled_weight = (ri.weight.to_f * multiplier) / batch_count
+                            end
                             field_key = "batch_#{batch_index}_ri_#{ri.id}"
-                            display_weight = scaled_weight.round(0)
+                            # 소수점 처리: 10g 미만은 소수점 2자리, 그 외는 정수
+                            display_weight = scaled_weight < 10 ? scaled_weight.round(2) : scaled_weight.round(0)
                             is_checked = checked_items.include?([ri.position, batch_index])
                           %>
                           <tr class="ingredient-row"

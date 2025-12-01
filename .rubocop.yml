@@ -3,6 +3,10 @@ inherit_gem: { rubocop-rails-omakase: rubocop.yml }
 
 # Overwrite or add rules to create your own house style
 #
-# # Use `[a, [b, c]]` not `[ a, [ b, c ] ]`
-# Layout/SpaceInsideArrayLiteralBrackets:
-#   Enabled: false
+# Use `[ a, [ b, c ] ]` style (with spaces inside array brackets)
+Layout/SpaceInsideArrayLiteralBrackets:
+  EnforcedStyle: space
+
+# Use double quotes for strings
+Style/StringLiterals:
+  EnforcedStyle: double_quotes

@@ -442,7 +442,7 @@ class IngredientInventoryService
     Shipment.create!(
       item: item,
       quantity: 1, # 1개 출고
-      shipment_date: Date.today,
+      shipment_date: Time.current,
       purpose: purpose.name,
       requester: current_user&.name || "시스템",
       notes: "반죽일지 ##{production_log.id} - 자동 출고"

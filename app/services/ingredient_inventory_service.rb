@@ -185,15 +185,15 @@ class IngredientInventoryService
   def self.process_item_deduction(production_log, recipe_ingredient, item, used_weight, batch_index)
     result = { success: false, checked_ingredient: nil, errors: [] }
 
-    # FIFO: 유통기한이 짧은 입고품부터 찾기
+    # FIFO: 유통기한이 있는 입고품은 유통기한 순, 없는 입고품은 입고일 순
+    # 유통기한이 있는 것을 먼저 사용하고, 없는 것은 나중에 사용
     available_receipts = item.receipts
-      .where("expiration_date IS NOT NULL")
-      .order(expiration_date: :asc, receipt_date: :asc)
+      .order(Arel.sql("CASE WHEN expiration_date IS NULL THEN 1 ELSE 0 END"), :expiration_date, :receipt_date)
 
     Rails.logger.info "    사용 가능한 입고품 수: #{available_receipts.count}"
 
     if available_receipts.empty?
-      error_msg = "#{item.name}의 입고 내역이 없습니다."
+      error_msg = "#{item.name}의 입고 내역이 없습니다. 품목 입고를 먼저 진행해주세요."
       Rails.logger.error "    #{error_msg}"
       result[:errors] << error_msg
       return result

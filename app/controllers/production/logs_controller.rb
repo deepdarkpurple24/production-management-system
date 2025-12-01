@@ -273,13 +273,13 @@ class Production::LogsController < ApplicationController
     if checked
       # 사용한 중량 가져오기
       # 1. ingredient_weights에 저장된 값이 있으면 사용
-      # 2. 없으면 recipe_ingredient.weight를 기본값으로 사용
+      # 2. 없으면 배율 적용된 중량 계산
       field_key = "batch_#{batch_index}_ri_#{recipe_ingredient.id}"
       used_weight = @production_log.ingredient_weights&.dig(field_key)&.to_f
 
-      # ingredient_weights에 값이 없으면 recipe_ingredient의 기본 중량 사용
+      # ingredient_weights에 값이 없으면 배율 적용된 중량 계산
       if used_weight.nil? || used_weight <= 0
-        used_weight = recipe_ingredient.weight.to_f
+        used_weight = calculate_scaled_weight(@production_log, recipe, recipe_ingredient)
       end
 
       if used_weight <= 0
@@ -517,6 +517,47 @@ class Production::LogsController < ApplicationController
     end
 
     batch_count
+  end
+
+  # 배율 적용된 중량 계산 (edit.html.erb와 동일한 로직)
+  def calculate_scaled_weight(production_log, recipe, recipe_ingredient)
+    # 기정떡 여부 확인
+    is_gijeongddeok = production_log.finished_product&.name&.include?("기정떡")
+
+    fpr = production_log.finished_product&.finished_product_recipes&.find_by(recipe_id: recipe.id)
+    weight_per_unit = fpr&.quantity || 0
+    recipe_total = recipe.recipe_ingredients.where(row_type: ["ingredient", nil]).sum(:weight)
+    recipe_total = recipe_total.zero? ? 1 : recipe_total
+
+    if is_gijeongddeok && production_log.production_plan.present?
+      plan = production_log.production_plan
+      split_unit = plan.split_unit || 1.0
+
+      # 기정떡: 분할 단위로 계산
+      scaled_weight = recipe_ingredient.weight.to_f * split_unit
+
+      # 0.5통일 때 추가 재료 반영
+      if split_unit == 0.5 && recipe_ingredient.item.present?
+        extra_ingredients = GijeongddeokDefault.instance.half_batch_extra_ingredients || []
+        extra = extra_ingredients.find { |e| e["item_id"].to_i == recipe_ingredient.item.id }
+        scaled_weight += extra["weight"].to_f if extra
+      end
+
+      Rails.logger.info "기정떡 중량 계산: weight=#{recipe_ingredient.weight}, split_unit=#{split_unit}, scaled_weight=#{scaled_weight}"
+      scaled_weight
+    elsif production_log.production_plan.present? && weight_per_unit > 0
+      # 일반 제품: 배율로 계산
+      plan = production_log.production_plan
+      multiplier = (plan.quantity.to_f * weight_per_unit) / recipe_total
+      batch_count = calculate_batch_count(production_log, recipe)
+
+      scaled_weight = (recipe_ingredient.weight.to_f * multiplier) / batch_count
+      Rails.logger.info "일반 중량 계산: weight=#{recipe_ingredient.weight}, multiplier=#{multiplier}, batch_count=#{batch_count}, scaled_weight=#{scaled_weight}"
+      scaled_weight
+    else
+      # 기본값: 원래 중량
+      recipe_ingredient.weight.to_f
+    end
   end
 
   def update_production_plan_quantity(production_log)

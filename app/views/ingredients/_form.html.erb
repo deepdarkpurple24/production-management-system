@@ -232,11 +232,11 @@ document.addEventListener('turbo:load', function() {
     if (otherDiv) otherDiv.style.display = sourceType === 'other' ? 'block' : 'none';
   }
 
-  // 기존 행들의 source type select에 이벤트 리스너 추가
-  document.querySelectorAll('.source-type-select').forEach(select => {
-    select.addEventListener('change', function() {
-      handleSourceTypeChange(this);
-    });
+  // 이벤트 위임: source type 변경 이벤트를 document 레벨에서 처리
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('source-type-select')) {
+      handleSourceTypeChange(e.target);
+    }
   });
 
   // 데이터 준비
@@ -308,15 +308,7 @@ document.addEventListener('turbo:load', function() {
 
       tbody.insertAdjacentHTML('beforeend', newRow);
 
-      // 새로 추가된 행의 source-type-select에 이벤트 리스너 추가
-      const newRows = tbody.querySelectorAll('tr.item-row');
-      const lastRow = newRows[newRows.length - 1];
-      const sourceTypeSelect = lastRow.querySelector('.source-type-select');
-      if (sourceTypeSelect) {
-        sourceTypeSelect.addEventListener('change', function() {
-          handleSourceTypeChange(this);
-        });
-      }
+      // 이벤트 위임을 사용하므로 개별 이벤트 리스너 추가 불필요
 
       itemIndex++;
       calculateTotals();

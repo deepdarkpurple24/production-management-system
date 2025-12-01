@@ -10,7 +10,26 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_26_131532) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_28_060000) do
+  create_table "activity_logs", force: :cascade do |t|
+    t.string "action", null: false
+    t.string "browser"
+    t.datetime "created_at", null: false
+    t.text "details"
+    t.string "ip_address"
+    t.datetime "performed_at", null: false
+    t.integer "target_id"
+    t.string "target_name"
+    t.string "target_type", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["action"], name: "index_activity_logs_on_action"
+    t.index ["performed_at"], name: "index_activity_logs_on_performed_at"
+    t.index ["target_type", "target_id"], name: "index_activity_logs_on_target_type_and_target_id"
+    t.index ["target_type"], name: "index_activity_logs_on_target_type"
+    t.index ["user_id"], name: "index_activity_logs_on_user_id"
+  end
+
   create_table "authorized_devices", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.string "authorization_token"
@@ -496,6 +515,15 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_26_131532) do
     t.index ["position"], name: "index_storage_locations_on_position"
   end
 
+  create_table "system_settings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.string "key", null: false
+    t.datetime "updated_at", null: false
+    t.string "value"
+    t.index ["key"], name: "index_system_settings_on_key", unique: true
+  end
+
   create_table "users", force: :cascade do |t|
     t.boolean "admin", default: false, null: false
     t.datetime "confirmation_sent_at"
@@ -521,6 +549,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_26_131532) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "activity_logs", "users"
   add_foreign_key "authorized_devices", "users"
   add_foreign_key "checked_ingredients", "opened_items"
   add_foreign_key "checked_ingredients", "production_logs"

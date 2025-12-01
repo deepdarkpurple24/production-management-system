@@ -43,7 +43,9 @@ bin/rails db:migrate
 bin/rails console
 
 # 테스트
-bin/rails test
+bin/rails test                              # 전체 테스트
+bin/rails test test/models/user_test.rb    # 단일 파일 테스트
+bin/rails test test/models/user_test.rb:10 # 특정 라인 테스트
 ```
 
 ## Documentation Index
@@ -67,6 +69,7 @@ bin/rails test
 4. **Position Ordering**: drag & drop용 `position` 컬럼
 5. **Nested Attributes**: `accepts_nested_attributes_for`로 복합 폼 처리
 6. **Unit Conversion**: 모든 중량을 g으로 변환하여 계산
+7. **Batch Completion**: 반죽일지에서 모든 배치 완료 시 자동 `completed` 상태 변경
 
 ## Common Paths
 
@@ -94,4 +97,4 @@ app/assets/stylesheets/             # SCSS 소스
 
 ---
 
-**Version**: 2.1 | **Updated**: 2025-11-29
+**Version**: 2.2 | **Updated**: 2025-11-30

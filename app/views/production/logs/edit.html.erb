@@ -217,7 +217,12 @@
                             end
                             field_key = "batch_#{batch_index}_ri_#{ri.id}"
                             saved_weights = @production_log.ingredient_weights || {}
-                            display_weight = saved_weights[field_key].present? ? saved_weights[field_key].to_i : scaled_weight.round(0)
+                            # 소수점 처리: 10g 미만은 소수점 2자리, 그 외는 정수
+                            if saved_weights[field_key].present?
+                              display_weight = saved_weights[field_key].to_f
+                            else
+                              display_weight = scaled_weight < 10 ? scaled_weight.round(2) : scaled_weight.round(0)
+                            end
                           %>
                           <%
                             checked_ing = @production_log.checked_ingredients.find_by(recipe_id: recipe.id, ingredient_index: ri.position, batch_index: batch_index)
@@ -240,7 +245,7 @@
                               <%= ri.display_name %>
                             </td>
                             <td class="text-end" style="padding: 0.5rem 1rem; color: #1d1d1f; font-weight: 500;">
-                              <%= number_with_delimiter(display_weight) %>
+                              <%= display_weight == display_weight.to_i ? number_with_delimiter(display_weight.to_i) : number_with_precision(display_weight, precision: 2, strip_insignificant_zeros: true) %>
                               <input type="hidden" name="production_log[ingredient_weights][<%= field_key %>]"
                                      value="<%= display_weight %>">
                             </td>

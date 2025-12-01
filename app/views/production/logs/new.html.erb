@@ -358,12 +358,26 @@
             row.dataset.checked = 'false';
           }
 
-          console.log('체크 상태 저장 완료 (status:', data.status + ')');
+          // 유통기한 업데이트
+          if (data.expiration_date) {
+            const expirationCell = row.querySelector('.expiration-date-cell');
+            if (expirationCell) {
+              expirationCell.innerHTML = data.expiration_date;
+            }
+          } else if (!newCheckedState) {
+            const expirationCell = row.querySelector('.expiration-date-cell');
+            if (expirationCell) {
+              expirationCell.innerHTML = '<span style="color: #c7c7cc;">-</span>';
+            }
+          }
         } else {
-          console.error('체크 상태 저장 실패');
+          // 에러 메시지 표시
+          const errorMsg = data.errors ? data.errors.join('\n') : '알 수 없는 오류가 발생했습니다.';
+          alert('재료 체크 실패\n\n' + errorMsg + '\n\n해당 품목의 입고 처리를 먼저 진행해주세요.');
         }
       } catch (error) {
         console.error('서버 통신 오류:', error);
+        alert('서버 통신 오류가 발생했습니다.\n네트워크 연결을 확인해주세요.');
       }
     }
 

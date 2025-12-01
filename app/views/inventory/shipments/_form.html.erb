@@ -35,18 +35,18 @@
       <label for="shipment_item_id" class="form-label" style="font-weight: 500; font-size: 0.875rem;">
         품목 <span class="text-danger">*</span>
       </label>
-      <div class="input-group">
+      <div class="d-flex gap-2">
         <%= f.collection_select :item_id,
                                 @items,
                                 :id,
-                                :name,
-                                { include_blank: "품목을 선택하세요", selected: shipment.item_id },
-                                { class: "form-select", required: true, id: "shipment_item_id" } %>
-        <%= link_to new_inventory_item_path, class: "btn btn-outline-primary", target: "_blank" do %>
-          <i class="bi bi-plus-circle"></i> 새 품목
+                                ->(item) { "#{item.name}#{item.category.present? ? " [#{item.category}]" : ""}" },
+                                { include_blank: "품목명을 입력하여 검색...", selected: shipment.item_id },
+                                { class: "form-select tom-select-item", required: true, id: "shipment_item_id" } %>
+        <%= link_to new_inventory_item_path, class: "btn btn-outline-primary flex-shrink-0", target: "_blank", style: "height: 38px;" do %>
+          <i class="bi bi-plus-circle"></i>
         <% end %>
       </div>
-      <small class="text-muted">출고할 품목을 선택하세요</small>
+      <small class="text-muted">품목명 또는 카테고리를 입력하여 검색하세요</small>
     </div>
 
     <!-- 출고일시 -->
@@ -140,6 +140,8 @@
 
 <!-- Flatpickr 초기화 및 바코드 기능 -->
 <script>
+  var shipmentTomSelectInstance = null;
+
   function initShipmentForm() {
     // Flatpickr 초기화 (날짜 + 시간)
     var shipmentDateInput = document.getElementById('shipment_date_input');
@@ -160,6 +162,38 @@
     var barcodeInput = document.getElementById('barcode_input');
     var barcodeScanBtn = document.getElementById('barcode_scan_btn');
 
+    // Tom Select 초기화 (검색형 드롭다운)
+    if (itemSelect && typeof TomSelect !== 'undefined') {
+      // 기존 Tom Select 인스턴스가 있으면 제거
+      if (shipmentTomSelectInstance) {
+        shipmentTomSelectInstance.destroy();
+        shipmentTomSelectInstance = null;
+      }
+
+      // 이미 Tom Select가 적용되어 있는지 확인
+      if (!itemSelect.tomselect) {
+        shipmentTomSelectInstance = new TomSelect(itemSelect, {
+          placeholder: '품목명을 입력하여 검색...',
+          allowEmptyOption: true,
+          create: false,
+          sortField: { field: 'text', direction: 'asc' },
+          searchField: ['text'],
+          maxOptions: 100,
+          render: {
+            option: function(data, escape) {
+              return '<div class="py-2 px-3">' + escape(data.text) + '</div>';
+            },
+            item: function(data, escape) {
+              return '<div>' + escape(data.text) + '</div>';
+            },
+            no_results: function(data, escape) {
+              return '<div class="no-results py-2 px-3 text-muted">검색 결과가 없습니다</div>';
+            }
+          }
+        });
+      }
+    }
+
     // 바코드로 품목 검색 함수
     function searchItemByBarcode(barcode) {
       if (!barcode || barcode.trim() === '') {
@@ -170,8 +204,12 @@
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            // 품목 선택
-            itemSelect.value = data.item.id;
+            // 품목 선택 (Tom Select 지원)
+            if (itemSelect.tomselect) {
+              itemSelect.tomselect.setValue(data.item.id, true);
+            } else {
+              itemSelect.value = data.item.id;
+            }
             itemSelect.dispatchEvent(new Event('change'));
             if (window.toast) {
               window.toast.success('품목이 선택되었습니다: ' + data.item.name);

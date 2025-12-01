@@ -56,12 +56,7 @@ class IngredientInventoryService
     result = { success: false, errors: [] }
 
     ActiveRecord::Base.transaction do
-      # 개봉품이 있으면 중량 복원
-      if checked_ingredient.opened_item && checked_ingredient.used_weight
-        checked_ingredient.opened_item.restore_weight(checked_ingredient.used_weight)
-      end
-
-      # CheckedIngredient 삭제
+      # CheckedIngredient 삭제 (before_destroy 콜백에서 개봉품 중량 복원됨)
       checked_ingredient.destroy!
 
       result[:success] = true

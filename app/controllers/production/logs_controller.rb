@@ -93,9 +93,18 @@ class Production::LogsController < ApplicationController
   end
 
   def new
-    # 기존 반죽일지가 있으면 찾아서 사용, 없으면 새로 생성
+    # 기존 반죽일지가 있으면 edit로 리다이렉트
     if params[:production_plan_id] && params[:recipe_id]
-      @production_log = ProductionLog.find_or_initialize_by(
+      existing_log = ProductionLog.find_by(
+        production_plan_id: params[:production_plan_id],
+        recipe_id: params[:recipe_id]
+      )
+
+      if existing_log
+        redirect_to edit_production_log_path(existing_log) and return
+      end
+
+      @production_log = ProductionLog.new(
         production_plan_id: params[:production_plan_id],
         recipe_id: params[:recipe_id]
       )

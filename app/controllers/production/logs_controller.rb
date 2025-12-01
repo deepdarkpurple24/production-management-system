@@ -53,35 +53,13 @@ class Production::LogsController < ApplicationController
     when "pending"
       # 레시피별로 평탄화하여 각각 독립적인 항목으로 표시
       @pending_plans = []
-
-      # pending 상태인 반죽일지도 포함 (기정떡 분할로 생성된 것들)
-      pending_logs = ProductionLog
-        .includes(:production_plan, :finished_product, :recipe)
-        .where(production_plan_id: production_plans.pluck(:id), status: "pending")
-        .order(:batch_number)
-
-      # pending 상태 반죽일지가 있는 경우 해당 항목들 추가
-      pending_logs.each do |log|
-        @pending_plans << {
-          plan: log.production_plan,
-          finished_product: log.finished_product,
-          recipe: log.recipe,
-          production_log: log,  # 기존 반죽일지가 있으면 포함
-          batch_number: log.batch_number
-        }
-      end
-
-      # pending 반죽일지가 없는 생산계획+레시피 조합도 추가
-      pending_log_keys = pending_logs.map { |log| [ log.production_plan_id, log.recipe_id ] }.to_set
-
       production_plans.each do |plan|
         finished_product = plan.finished_product
         recipes = finished_product.recipes
 
         if recipes.any?
           recipes.each do |recipe|
-            # 이미 pending_logs에 있거나, 다른 상태의 로그가 있으면 스킵
-            unless pending_log_keys.include?([ plan.id, recipe.id ]) || existing_logs.include?([ plan.id, recipe.id ])
+            unless existing_logs.include?([ plan.id, recipe.id ])
               @pending_plans << {
                 plan: plan,
                 finished_product: finished_product,
@@ -90,7 +68,7 @@ class Production::LogsController < ApplicationController
             end
           end
         else
-          unless pending_log_keys.any? { |key| key[0] == plan.id } || existing_logs.any? { |log| log[0] == plan.id }
+          unless existing_logs.any? { |log| log[0] == plan.id }
             @pending_plans << {
               plan: plan,
               finished_product: finished_product,

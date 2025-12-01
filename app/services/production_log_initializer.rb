@@ -7,52 +7,13 @@ class ProductionLogInitializer
     finished_product = production_plan.finished_product
     logs = []
 
-    # 기정떡 분할 설정 확인
-    is_gijeongddeok = production_plan.is_gijeongddeok || finished_product.name.include?("기정떡")
-    split_count = production_plan.split_count || 1
-    split_unit = production_plan.split_unit || 1.0
-
-    # 완제품의 각 레시피에 대해 반죽일지 생성
+    # 완제품의 각 레시피에 대해 반죽일지 생성 (하나의 반죽일지에 여러 배치 포함)
     finished_product.recipes.each do |recipe|
-      if is_gijeongddeok && split_count > 1
-        # 기정떡이고 분할 설정이 있는 경우: 분할 횟수만큼 반죽일지 생성
-        total_batches = (production_plan.quantity * split_count).to_i
-        total_batches.times do |batch_index|
-          log = create_log_for_gijeongddeok_batch(production_plan, recipe, batch_index, split_unit)
-          logs << log if log
-        end
-      else
-        log = create_log_for_recipe(production_plan, recipe)
-        logs << log if log
-      end
+      log = create_log_for_recipe(production_plan, recipe)
+      logs << log if log
     end
 
     logs
-  end
-
-  # 기정떡 분할 배치용 반죽일지 생성
-  # @param production_plan [ProductionPlan] 생산 계획
-  # @param recipe [Recipe] 레시피
-  # @param batch_index [Integer] 배치 인덱스 (0부터 시작)
-  # @param split_unit [Float] 분할 단위 (0.5, 1.0 등)
-  # @return [ProductionLog] 생성된 반죽일지
-  def self.create_log_for_gijeongddeok_batch(production_plan, recipe, batch_index, split_unit)
-    # ingredient_weights 계산 (분할 단위 적용)
-    ingredient_weights = calculate_gijeongddeok_weights(recipe, split_unit)
-
-    # 반죽일지 생성
-    production_log = ProductionLog.new(
-      production_plan_id: production_plan.id,
-      finished_product_id: production_plan.finished_product_id,
-      recipe_id: recipe.id,
-      production_date: production_plan.production_date,
-      ingredient_weights: ingredient_weights,
-      status: "pending",
-      batch_number: batch_index + 1  # 1부터 시작하는 배치 번호
-    )
-
-    production_log.save
-    production_log
   end
 
   # 특정 레시피에 대한 반죽일지 생성

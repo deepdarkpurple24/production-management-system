@@ -93,26 +93,44 @@
 
         <% if recipe.present? && plan.present? %>
           <%
+            # 기정떡 여부 확인
+            is_gijeongddeok = @production_log.finished_product&.name&.include?('기정떡')
+
             # 레시피 배율 계산
             fpr = @production_log.finished_product.finished_product_recipes.find_by(recipe_id: recipe.id)
             weight_per_unit = fpr&.quantity || 0
-            show_recipe_ingredients = weight_per_unit > 0
+
+            # 기정떡은 항상 레시피 재료 표시
+            show_recipe_ingredients = is_gijeongddeok || weight_per_unit > 0
           %>
           <% if show_recipe_ingredients %>
             <%
               recipe_total = recipe.recipe_ingredients.where(row_type: ['ingredient', nil]).sum(:weight)
               recipe_total = recipe_total.zero? ? 1 : recipe_total
-              multiplier = (plan.quantity.to_f * weight_per_unit) / recipe_total
-              total_scaled = recipe_total * multiplier
 
-              # 장비 최대 작업 중량 확인
-              max_work_capacity = recipe.recipe_equipments.where.not(work_capacity: [nil, 0]).maximum(:work_capacity)
-              max_work_capacity_g = max_work_capacity ? max_work_capacity * 1000 : nil
-
-              if max_work_capacity_g && max_work_capacity_g > 0 && total_scaled > max_work_capacity_g
-                batch_count = (total_scaled / max_work_capacity_g).ceil
+              if is_gijeongddeok
+                # 기정떡: 분할 설정에 따라 배치 수 결정
+                split_count = plan.split_count || 1
+                split_unit = plan.split_unit || 1.0
+                batch_count = (plan.quantity * split_count).to_i
+                batch_count = 1 if batch_count < 1
+                # 기정떡은 배율 없이 분할 단위로 계산
+                multiplier = split_unit
+                total_scaled = recipe_total * split_unit
               else
-                batch_count = 1
+                # 일반 제품: 기존 로직
+                multiplier = (plan.quantity.to_f * weight_per_unit) / recipe_total
+                total_scaled = recipe_total * multiplier
+
+                # 장비 최대 작업 중량 확인
+                max_work_capacity = recipe.recipe_equipments.where.not(work_capacity: [nil, 0]).maximum(:work_capacity)
+                max_work_capacity_g = max_work_capacity ? max_work_capacity * 1000 : nil
+
+                if max_work_capacity_g && max_work_capacity_g > 0 && total_scaled > max_work_capacity_g
+                  batch_count = (total_scaled / max_work_capacity_g).ceil
+                else
+                  batch_count = 1
+                end
               end
             %>
 
@@ -141,6 +159,9 @@
                                 <span class="badge bg-secondary ms-2" style="font-size: 0.75rem;">
                                   <%= batch_index + 1 %>/<%= batch_count %>
                                 </span>
+                              <% end %>
+                              <% if is_gijeongddeok && split_unit == 0.5 %>
+                                <span class="badge bg-warning text-dark ms-1" style="font-size: 0.7rem;">0.5통</span>
                               <% end %>
                             </span>
                             <span class="production-datetime-header"
@@ -180,7 +201,20 @@
                         <% else %>
                           <% running_subtotal += ri.weight.to_f %>
                           <%
-                            scaled_weight = (ri.weight.to_f * multiplier) / batch_count
+                            if is_gijeongddeok
+                              # 기정떡: 분할 단위로 계산 (0.5 또는 1.0)
+                              scaled_weight = ri.weight.to_f * split_unit
+
+                              # 0.5통일 때 추가 재료 반영 (설정에 있는 경우)
+                              if split_unit == 0.5 && ri.item.present?
+                                extra_ingredients = GijeongddeokDefault.instance.half_batch_extra_ingredients || []
+                                extra = extra_ingredients.find { |e| e["item_id"].to_i == ri.item.id }
+                                scaled_weight += extra["weight"].to_f if extra
+                              end
+                            else
+                              # 일반 제품: 배율로 계산
+                              scaled_weight = (ri.weight.to_f * multiplier) / batch_count
+                            end
                             field_key = "batch_#{batch_index}_ri_#{ri.id}"
                             saved_weights = @production_log.ingredient_weights || {}
                             display_weight = saved_weights[field_key].present? ? saved_weights[field_key].to_i : scaled_weight.round(0)
@@ -281,85 +315,36 @@
     }
   }
 
-  // 재료 행 싱글클릭 - 재료 투입 완료 표시 (이벤트 위임 사용)
+  // 재료 행 더블클릭 - 재료 투입 완료 표시 (클라이언트 측 처리)
   (function() {
-    const productionLogId = <%= @production_log.id %>;
+    let lastTapTime = 0;
+    let lastTappedRow = null;
 
-    async function toggleIngredientCheck(row) {
+    function toggleIngredientCheck(row) {
       const isChecked = row.dataset.checked === 'true';
-      const recipeId = row.dataset.recipeId;
-      const ingredientIndex = row.dataset.ingredientIndex;
-      const batchIndex = row.dataset.batchIndex;
-
-      // 토글할 새 상태
       const newCheckedState = !isChecked;
 
-      try {
-        // 서버에 체크 상태 저장
-        const response = await fetch(`/production/logs/${productionLogId}/update_ingredient_check`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
-          },
-          body: JSON.stringify({
-            recipe_id: recipeId,
-            ingredient_index: ingredientIndex,
-            batch_index: batchIndex,
-            checked: newCheckedState
-          })
-        });
+      // 체크 상태 업데이트
+      row.dataset.checked = newCheckedState ? 'true' : 'false';
 
-        const data = await response.json();
+      // CSS 클래스 토글
+      if (newCheckedState) {
+        row.classList.add('ingredient-checked');
+      } else {
+        row.classList.remove('ingredient-checked');
+      }
 
-        if (data.success) {
-          // 체크 상태 업데이트
-          row.dataset.checked = newCheckedState ? 'true' : 'false';
-
-          // CSS 클래스 토글
-          if (newCheckedState) {
-            row.classList.add('ingredient-checked');
-          } else {
-            row.classList.remove('ingredient-checked');
-          }
-
-          // 체크 아이콘 토글
-          const checkIndicator = row.querySelector('.check-indicator');
-          const uncheckIndicator = row.querySelector('.uncheck-indicator');
-          if (checkIndicator && uncheckIndicator) {
-            checkIndicator.style.display = newCheckedState ? '' : 'none';
-            uncheckIndicator.style.display = newCheckedState ? 'none' : '';
-          }
-
-          // 유통기한 업데이트
-          if (data.expiration_date) {
-            const expirationCell = row.querySelector('.expiration-date-cell');
-            if (expirationCell) {
-              expirationCell.innerHTML = data.expiration_date;
-            }
-          } else if (!newCheckedState) {
-            const expirationCell = row.querySelector('.expiration-date-cell');
-            if (expirationCell) {
-              expirationCell.innerHTML = '<span style="color: #c7c7cc;">-</span>';
-            }
-          }
-
-          // 상태 변경 시 알림 (선택사항)
-          if (data.status === 'completed') {
-            console.log('모든 재료 체크 완료 - 작업완료로 이동되었습니다');
-          } else if (data.status === 'in_progress') {
-            console.log('작업중 상태로 변경되었습니다');
-          }
-        } else {
-          console.error('체크 상태 저장 실패');
-        }
-      } catch (error) {
-        console.error('서버 통신 오류:', error);
+      // 체크 아이콘 토글
+      const checkIndicator = row.querySelector('.check-indicator');
+      const uncheckIndicator = row.querySelector('.uncheck-indicator');
+      if (checkIndicator && uncheckIndicator) {
+        checkIndicator.style.display = newCheckedState ? '' : 'none';
+        uncheckIndicator.style.display = newCheckedState ? 'none' : '';
       }
     }
 
-    // 싱글클릭으로 변경 (PC)
-    document.addEventListener('click', function(e) {
+    // 더블클릭 (PC)
+    document.addEventListener('dblclick', function(e) {
       if (e.target.tagName === 'INPUT') return;
       const row = e.target.closest('.ingredient-row');
       if (row) {
@@ -368,13 +353,23 @@
       }
     });
 
-    // 모바일 터치 지원 (싱글탭)
+    // 모바일 더블탭 지원
     document.addEventListener('touchend', function(e) {
       if (e.target.tagName === 'INPUT') return;
       const row = e.target.closest('.ingredient-row');
-      if (row) {
+      if (!row) return;
+
+      const currentTime = new Date().getTime();
+      const tapInterval = currentTime - lastTapTime;
+
+      if (tapInterval < 300 && lastTappedRow === row) {
         e.preventDefault();
         toggleIngredientCheck(row);
+        lastTapTime = 0;
+        lastTappedRow = null;
+      } else {
+        lastTapTime = currentTime;
+        lastTappedRow = row;
       }
     });
 

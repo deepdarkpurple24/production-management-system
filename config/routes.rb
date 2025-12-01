@@ -32,9 +32,9 @@ Rails.application.routes.draw do
 
     # 장비 모드 관리
     post "settings/equipment_modes", to: "settings#create_equipment_mode", as: "settings_create_equipment_mode"
-    delete "settings/equipment_modes/:id", to: "settings#destroy_equipment_mode", as: "settings_destroy_equipment_mode"
     patch "settings/equipment_modes/update_positions", to: "settings#update_equipment_mode_positions", as: "settings_update_equipment_mode_positions"
     get "settings/equipment_modes/:equipment_type_id", to: "settings#get_equipment_modes", as: "settings_get_equipment_modes"
+    delete "settings/equipment_modes/:id", to: "settings#destroy_equipment_mode", as: "settings_destroy_equipment_mode"
 
     # 공정 관리
     post "settings/recipe_processes", to: "settings#create_recipe_process", as: "settings_create_recipe_process"

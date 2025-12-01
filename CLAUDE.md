@@ -17,11 +17,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## ⚠️ Deployment (중요)
 
-**이 폴더는 개발용입니다. 프로덕션 서버는 별도의 Ubuntu 컴퓨터입니다.**
+**이 폴더가 개발용인지 프로덕션 서버인지 확인하세요.**
 
-- **Production**: Ubuntu + Docker + Cloudflare Tunnel
-- **Development**: Windows (현재 PC)
-- **Workflow**: 로컬 수정 → `git push` → 서버에서 `git pull` & `docker-compose up -d --build`
+- **Production Server**: Ubuntu + Docker + Cloudflare Tunnel
+- **Development**: Windows
+- **Workflow**:
+  - 개발용: 로컬 수정 → `git push` → 서버에서 `git pull` & `docker-compose up -d --build`
+  - 서버용: 직접 수정 후 `docker-compose up -d --build`
 
 ## 🤖 Claude Code 작업 규칙
 
@@ -46,6 +48,20 @@ bin/rails console
 bin/rails test                              # 전체 테스트
 bin/rails test test/models/user_test.rb    # 단일 파일 테스트
 bin/rails test test/models/user_test.rb:10 # 특정 라인 테스트
+```
+
+## Docker Commands (서버)
+
+```bash
+# 배포
+docker-compose up -d --build
+
+# ContainerConfig 오류 발생 시
+docker ps -a | grep web | awk '{print $1}' | xargs -r docker rm -f
+docker-compose up -d
+
+# 로그 확인
+docker logs -f production-management-system_web_1
 ```
 
 ## Documentation Index
@@ -118,6 +134,14 @@ scaled_weight = recipe_ingredient.weight * split_unit
 # 예: 레시피 44000g × 0.5 = 22000g (반통)
 ```
 
+## 반죽일지 날짜 구분
+
+- **dough_date**: 반죽일 (1차 반죽) - 소계 이전 재료
+- **production_date**: 생산일 (2차 반죽) - 소계 이후 재료
+- 목록 페이지에서 선택 날짜 기준으로 1차/2차 섹션 분리 표시
+  - 🔵 1차 반죽: 반죽일 = 선택 날짜 (오늘 반죽 → 내일 생산)
+  - 🟠 2차 반죽: 생산일 = 선택 날짜 (어제 반죽 → 오늘 생산)
+
 ---
 
-**Version**: 2.3 | **Updated**: 2025-12-01
+**Version**: 2.4 | **Updated**: 2025-12-01

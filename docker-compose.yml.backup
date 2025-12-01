@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - "3000:80"
+    environment:
+      - RAILS_ENV=production
+      - RAILS_MASTER_KEY=864b086e8130a60ff1273cc89f18ca02
+      - SECRET_KEY_BASE=5bf56eb6b1691c262136ab790006aae16510dc7bf52dda40d9b2381f8869fd7b3b54776fd61d5077cff2ec3ca88e25e484a2362d75ccc5735f203a3c5a02df0a
+      - RAILS_SERVE_STATIC_FILES=true
+    volumes:
+      - ./storage:/rails/storage
+    restart: unless-stopped
+  cloudflared-pms:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run --token eyJhIjoiOGJlM2UzNDAyNDNjNzkzMWQyODNiNTIxNWExMGFkMDUiLCJ0IjoiM2Y3N2VlYTctMzM3Yy00MjViLThlYTEtZDY1YTcyY2IzM2FlIiwicyI6Ik1tWTRPV1ZqTkdVdE0yWmtaQzAwT0RVekxUZzROREV0Wm1Wak1Ua3hNemxoTVdWayJ9
+    restart: unless-stopped
+    network_mode: host

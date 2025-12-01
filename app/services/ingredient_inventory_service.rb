@@ -113,8 +113,8 @@ class IngredientInventoryService
         Rails.logger.info "  품목: #{item.name}"
         Rails.logger.info "    실제 사용량: #{actual_used_weight.round(2)}g"
 
-        # 해당 품목에 대해 재고 차감 (CheckedIngredient 생성하지 않음)
-        item_result = process_item_deduction_only(item, actual_used_weight)
+        # 해당 품목에 대해 재고 차감 (CheckedIngredient 생성하지 않음, 출고 처리 포함)
+        item_result = process_item_deduction_only(item, actual_used_weight, production_log)
 
         unless item_result[:success]
           result[:errors].concat(item_result[:errors])
@@ -155,8 +155,9 @@ class IngredientInventoryService
   # 재고 차감만 수행 (CheckedIngredient 생성 없음) - Referenced Ingredient용
   # @param item [Item] 품목
   # @param used_weight [Float] 사용한 중량 (그램)
+  # @param production_log [ProductionLog] 반죽일지 (출고 처리용)
   # @return [Hash] { success: true/false, opened_item: OpenedItem, errors: [] }
-  def self.process_item_deduction_only(item, used_weight)
+  def self.process_item_deduction_only(item, used_weight, production_log)
     result = { success: false, opened_item: nil, errors: [] }
 
     # FIFO: 유통기한이 있는 입고품은 유통기한 순, 없는 입고품은 입고일 순
@@ -172,8 +173,8 @@ class IngredientInventoryService
       return result
     end
 
-    # 개봉품 찾기 또는 생성
-    opened_item = find_or_create_opened_item(item, available_receipts.first, used_weight)
+    # 개봉품 찾기 또는 생성 (새 개봉품 생성 시 출고 처리 포함)
+    opened_item = find_or_create_opened_item(item, available_receipts.first, used_weight, production_log)
 
     unless opened_item
       error_msg = "#{item.name}의 개봉품을 생성할 수 없습니다."
@@ -289,8 +290,8 @@ class IngredientInventoryService
       return result
     end
 
-    # 개봉품 찾기 또는 생성
-    opened_item = find_or_create_opened_item(item, available_receipts.first, used_weight)
+    # 개봉품 찾기 또는 생성 (새 개봉품 생성 시 출고 처리 포함)
+    opened_item = find_or_create_opened_item(item, available_receipts.first, used_weight, production_log)
 
     unless opened_item
       error_msg = "#{item.name}의 개봉품을 생성할 수 없습니다."
@@ -325,12 +326,6 @@ class IngredientInventoryService
     )
     Rails.logger.info "    CheckedIngredient 생성 완료: ID=#{checked_ingredient.id}"
 
-    # 개봉품이 소진되었으면 출고 처리
-    if opened_item.depleted?
-      Rails.logger.info "    개봉품 소진됨. 출고 처리 중..."
-      create_shipment(item, opened_item.receipt, production_log)
-    end
-
     result[:success] = true
     result[:checked_ingredient] = checked_ingredient
     result
@@ -347,8 +342,9 @@ class IngredientInventoryService
   # @param item [Item] 품목
   # @param receipt [Receipt] 입고품
   # @param required_weight [Float] 필요한 중량
+  # @param production_log [ProductionLog] 반죽일지 (출고 처리용, optional)
   # @return [OpenedItem, nil]
-  def self.find_or_create_opened_item(item, receipt, required_weight)
+  def self.find_or_create_opened_item(item, receipt, required_weight, production_log = nil)
     Rails.logger.info "  > find_or_create_opened_item: 필요 중량=#{required_weight}g"
 
     # 1. 기존 개봉품이 있으면 사용 (유통기한 순으로 정렬)
@@ -380,13 +376,21 @@ class IngredientInventoryService
     unit_weight_g = convert_to_grams(receipt.unit_weight, receipt.unit_weight_unit)
     Rails.logger.info "  > 새 입고품 개봉: Receipt ID=#{receipt.id}, 단위중량=#{unit_weight_g}g"
 
-    OpenedItem.create!(
+    opened_item = OpenedItem.create!(
       item: item,
       receipt: receipt,
       remaining_weight: unit_weight_g,
       expiration_date: receipt.expiration_date,
       opened_at: Time.current
     )
+
+    # 4. 새 개봉품 생성 시 출고 처리 (1개 출고)
+    if opened_item && production_log
+      Rails.logger.info "  > 새 개봉품 생성됨. 출고 처리 중..."
+      create_shipment(item, receipt, production_log)
+    end
+
+    opened_item
   rescue => e
     Rails.logger.error "  > OpenedItem 생성 실패: #{e.class.name} - #{e.message}"
     nil

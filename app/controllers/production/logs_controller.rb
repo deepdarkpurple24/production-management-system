@@ -358,10 +358,12 @@ class Production::LogsController < ApplicationController
     current_time = Time.current
     @production_log.batch_completion_times[batch_index.to_s] = current_time.to_s
 
-    # 첫 번째 배치 완료 시간을 production_date/time으로도 저장
+    # 첫 번째 배치 완료 시간을 production_time으로 저장 (기존에 없는 경우)
+    if @production_log.production_time.nil?
+      @production_log.production_time = current_time
+    end
     if @production_log.production_date.nil?
       @production_log.production_date = Date.today
-      @production_log.production_time = current_time
     end
 
     # 모든 배치가 완료되었는지 확인하여 status 업데이트
@@ -401,29 +403,8 @@ class Production::LogsController < ApplicationController
     return if recipe.nil?
 
     # 배치 개수 계산 (뷰와 동일한 로직)
-    # 뷰에서 사용하는 로직과 동일하게 계산
-    fpr = production_log.finished_product.finished_product_recipes.find_by(recipe_id: recipe.id)
-    weight_per_unit = fpr&.quantity || 0
-
-    # weight_per_unit이 있는 경우에만 배치 계산
-    if weight_per_unit > 0 && production_log.production_plan.present?
-      recipe_total = recipe.recipe_ingredients.where(row_type: [ "ingredient", nil ]).sum(:weight)
-      recipe_total = recipe_total.zero? ? 1 : recipe_total
-      multiplier = (production_log.production_plan.quantity.to_f * weight_per_unit) / recipe_total
-      total_scaled = recipe_total * multiplier
-
-      # 장비 최대 작업 중량 확인
-      max_work_capacity = recipe.recipe_equipments.where.not(work_capacity: [ nil, 0 ]).maximum(:work_capacity)
-      max_work_capacity_g = max_work_capacity ? max_work_capacity * 1000 : nil
-
-      if max_work_capacity_g && max_work_capacity_g > 0 && total_scaled > max_work_capacity_g
-        batch_count = (total_scaled / max_work_capacity_g).ceil
-      else
-        batch_count = 1
-      end
-    else
-      batch_count = 1
-    end
+    batch_count = calculate_batch_count(production_log, recipe)
+    Rails.logger.info "update_work_status: batch_count=#{batch_count}"
 
     # 재료 개수 계산 (subtotal 제외) × 배치 개수
     ingredient_count = recipe.recipe_ingredients.where.not(row_type: "subtotal").count
@@ -450,7 +431,37 @@ class Production::LogsController < ApplicationController
     recipe = production_log.recipe
     return if recipe.nil?
 
-    # 배치 개수 계산 (update_work_status와 동일한 로직)
+    # 배치 개수 계산 (뷰와 동일한 로직)
+    batch_count = calculate_batch_count(production_log, recipe)
+
+    # 모든 배치가 완료되었는지 확인
+    completed_batches = production_log.batch_completion_times&.keys&.map(&:to_i) || []
+
+    if completed_batches.length >= batch_count
+      # 모든 배치가 완료되면 status를 completed로 변경
+      production_log.status = "completed"
+      Rails.logger.info "모든 배치(#{batch_count}개)가 완료되어 작업완료 상태로 변경됨"
+    else
+      # 일부 배치만 완료되면 in_progress 유지
+      production_log.status = "in_progress"
+      Rails.logger.info "#{completed_batches.length}/#{batch_count} 배치 완료, 작업중 상태 유지"
+    end
+  end
+
+  def calculate_batch_count(production_log, recipe)
+    # 기정떡 여부 확인
+    is_gijeongddeok = production_log.finished_product&.name&.include?("기정떡")
+
+    if is_gijeongddeok && production_log.production_plan.present?
+      # 기정떡: split_count와 split_unit 사용
+      plan = production_log.production_plan
+      split_count = plan.split_count || 1
+      batch_count = (plan.quantity * split_count).to_i
+      Rails.logger.info "기정떡 배치 계산: quantity=#{plan.quantity}, split_count=#{split_count}, batch_count=#{batch_count}"
+      return batch_count < 1 ? 1 : batch_count
+    end
+
+    # 일반 제품: 기존 로직
     fpr = production_log.finished_product.finished_product_recipes.find_by(recipe_id: recipe.id)
     weight_per_unit = fpr&.quantity || 0
 
@@ -473,18 +484,7 @@ class Production::LogsController < ApplicationController
       batch_count = 1
     end
 
-    # 모든 배치가 완료되었는지 확인
-    completed_batches = production_log.batch_completion_times&.keys&.map(&:to_i) || []
-
-    if completed_batches.length >= batch_count
-      # 모든 배치가 완료되면 status를 completed로 변경
-      production_log.status = "completed"
-      Rails.logger.info "모든 배치(#{batch_count}개)가 완료되어 작업완료 상태로 변경됨"
-    else
-      # 일부 배치만 완료되면 in_progress 유지
-      production_log.status = "in_progress"
-      Rails.logger.info "#{completed_batches.length}/#{batch_count} 배치 완료, 작업중 상태 유지"
-    end
+    batch_count
   end
 
   def update_production_plan_quantity(production_log)

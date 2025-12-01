@@ -91,10 +91,10 @@
               <thead style="background-color: #f5f5f7; border-bottom: 1px solid #d2d2d7;">
                 <tr>
                   <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem; width: 12%;">날짜</th>
-                  <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem; width: 8%;">반죽 시간</th>
+                  <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem; width: 10%; white-space: nowrap;">반죽시간</th>
                   <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem; width: 15%;">레시피</th>
                   <th class="py-3 px-4 text-center" style="font-weight: 500; font-size: 0.875rem; width: 12%;">생산 수량</th>
-                  <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem; width: 43%;">비고</th>
+                  <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem; width: 41%;">비고</th>
                   <th class="py-3 px-4 text-center" style="font-weight: 500; font-size: 0.875rem; width: 10%;">관리</th>
                 </tr>
               </thead>
@@ -106,8 +106,19 @@
                       <br>
                       <small class="text-muted"><%= log.production_date.strftime('(%a)') %></small>
                     </td>
-                    <td class="py-3 px-4">
-                      <%= log.production_time&.strftime('%H:%M') || '-' %>
+                    <td class="py-3 px-4" style="white-space: nowrap;">
+                      <% if log.batch_completion_times.present? && log.batch_completion_times.any? %>
+                        <% log.batch_completion_times.to_a.sort_by { |k, _| k.to_i }.each_with_index do |(batch_idx, time_str), i| %>
+                          <% time = Time.parse(time_str) rescue nil %>
+                          <% if time %>
+                            <span class="badge bg-secondary"><%= time.strftime('%H:%M') %></span>
+                          <% end %>
+                        <% end %>
+                      <% elsif log.production_time.present? %>
+                        <%= log.production_time.strftime('%H:%M') %>
+                      <% else %>
+                        <span class="text-muted">-</span>
+                      <% end %>
                     </td>
                     <td class="py-3 px-4">
                       <% if log.recipe.present? %>

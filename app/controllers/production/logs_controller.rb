@@ -93,8 +93,9 @@ class Production::LogsController < ApplicationController
   end
 
   def new
-    # 기존 반죽일지가 있으면 edit로 리다이렉트
+    # 생산계획과 레시피가 지정된 경우: 반죽일지 자동 생성 후 edit로 리다이렉트
     if params[:production_plan_id] && params[:recipe_id]
+      # 기존 반죽일지 찾기
       existing_log = ProductionLog.find_by(
         production_plan_id: params[:production_plan_id],
         recipe_id: params[:recipe_id]
@@ -104,30 +105,27 @@ class Production::LogsController < ApplicationController
         redirect_to edit_production_log_path(existing_log) and return
       end
 
+      # 새 반죽일지 생성
+      @production_plan = ProductionPlan.find(params[:production_plan_id])
       @production_log = ProductionLog.new(
         production_plan_id: params[:production_plan_id],
-        recipe_id: params[:recipe_id]
+        recipe_id: params[:recipe_id],
+        finished_product_id: @production_plan.finished_product_id,
+        production_date: @production_plan.production_date,
+        status: "pending"
       )
-    else
-      @production_log = ProductionLog.new
-    end
 
-    @production_log.production_date = params[:date] ? Date.parse(params[:date]) : Date.today
-
-    # 생산계획 ID와 레시피 ID가 주어지면 해당 레시피로 설정
-    if params[:production_plan_id]
-      @production_plan = ProductionPlan.find(params[:production_plan_id])
-      @production_log.production_plan = @production_plan
-      @production_log.finished_product = @production_plan.finished_product
-      @production_log.production_date = @production_plan.production_date
-
-      # 레시피 ID가 주어지면 해당 레시피 설정
-      if params[:recipe_id]
-        @recipe = Recipe.find(params[:recipe_id])
-        @production_log.recipe = @recipe
+      if @production_log.save
+        redirect_to edit_production_log_path(@production_log) and return
+      else
+        flash[:alert] = "반죽일지 생성 실패: #{@production_log.errors.full_messages.join(', ')}"
+        redirect_to production_logs_path and return
       end
     end
 
+    # 생산계획 없이 새로 만드는 경우 (일반적이지 않음)
+    @production_log = ProductionLog.new
+    @production_log.production_date = params[:date] ? Date.parse(params[:date]) : Date.today
     @finished_products = FinishedProduct.order(:name)
     @gijeongddeok_default = GijeongddeokDefault.instance
     @gijeongddeok_fields = GijeongddeokFieldOrder.all

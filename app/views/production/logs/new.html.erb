@@ -39,9 +39,10 @@
           </div>
         <% end %>
 
-        <%= form.hidden_field :production_plan_id %>
-        <%= form.hidden_field :finished_product_id %>
-        <%= form.hidden_field :recipe_id %>
+        <%= form.hidden_field :production_plan_id, value: @production_log.production_plan_id %>
+        <%= form.hidden_field :finished_product_id, value: @production_log.finished_product_id %>
+        <%= form.hidden_field :recipe_id, value: @production_log.recipe_id %>
+        <%= form.hidden_field :production_date, value: @production_log.production_date %>
 
         <!-- 기본 정보 표시 -->
         <div class="row mb-3">

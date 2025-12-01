@@ -5,15 +5,27 @@ class Production::LogsController < ApplicationController
     @status = params[:status] || "pending"
     @selected_date = params[:date] ? Date.parse(params[:date]) : Date.today
 
-    # 모든 탭의 개수를 계산 (항상 표시하기 위해)
+    # 생산 계획 조회: 생산일이 선택된 날짜이거나, 연결된 반죽일지의 반죽일/생산일이 선택된 날짜인 경우
+    # 1. 생산일이 선택된 날짜인 생산 계획
+    plans_by_date = ProductionPlan.where(production_date: @selected_date).pluck(:id)
+
+    # 2. 반죽일지의 반죽일 또는 생산일이 선택된 날짜인 생산 계획
+    plans_by_logs = ProductionLog
+      .where("production_date = ? OR dough_date = ?", @selected_date, @selected_date)
+      .where.not(production_plan_id: nil)
+      .pluck(:production_plan_id)
+
+    # 두 조건을 합쳐서 중복 제거
+    all_plan_ids = (plans_by_date + plans_by_logs).uniq
+
     production_plans = ProductionPlan
       .includes(finished_product: :recipes)
-      .where(production_date: @selected_date)
+      .where(id: all_plan_ids)
       .order(created_at: :desc)
 
     # 이미 반죽일지가 생성된 (plan_id, recipe_id) 조합 찾기
     existing_logs = ProductionLog
-      .where(production_plan_id: production_plans.pluck(:id))
+      .where(production_plan_id: all_plan_ids)
       .where.not(status: "pending")
       .pluck(:production_plan_id, :recipe_id)
       .to_set

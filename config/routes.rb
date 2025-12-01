@@ -46,6 +46,7 @@ Rails.application.routes.draw do
     post "settings/gijeongddeok_fields", to: "settings#create_gijeongddeok_field", as: "settings_create_gijeongddeok_field"
     delete "settings/gijeongddeok_fields/:id", to: "settings#destroy_gijeongddeok_field", as: "settings_destroy_gijeongddeok_field"
     patch "settings/gijeongddeok_fields/update_positions", to: "settings#update_gijeongddeok_field_positions", as: "settings_update_gijeongddeok_field_positions"
+    patch "settings/half_batch_ingredients", to: "settings#update_half_batch_ingredients", as: "settings_update_half_batch_ingredients"
 
     # 품목 카테고리 관리
     post "settings/item_categories", to: "settings#create_item_category", as: "settings_create_item_category"

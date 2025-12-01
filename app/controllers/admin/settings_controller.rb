@@ -21,6 +21,9 @@ class Admin::SettingsController < Admin::BaseController
     @gijeongddeok_default = GijeongddeokDefault.instance
     @gijeongddeok_fields = GijeongddeokFieldOrder.all
     @page_permissions = PagePermission.ordered
+
+    # 0.5통 추가 재료 설정용 재료 품목 목록
+    @ingredient_items = Item.where(item_type: "재료").order(:name)
   end
 
   # 시스템 설정 업데이트
@@ -203,6 +206,31 @@ class Admin::SettingsController < Admin::BaseController
     redirect_to admin_settings_path(tab: "production"), notice: "필드가 삭제되었습니다."
   end
 
+  # 0.5통 추가 재료 설정
+  def update_half_batch_ingredients
+    @gijeongddeok_default = GijeongddeokDefault.instance
+
+    ingredients = []
+    if params[:half_batch_ingredients].present?
+      params[:half_batch_ingredients].each do |_index, ingredient|
+        next if ingredient[:item_id].blank?
+
+        ingredients << {
+          item_id: ingredient[:item_id].to_i,
+          weight: ingredient[:weight].to_f
+        }
+      end
+    end
+
+    @gijeongddeok_default.half_batch_extra_ingredients = ingredients
+
+    if @gijeongddeok_default.save
+      redirect_to admin_settings_path(tab: "production"), notice: "0.5통 추가 재료 설정이 저장되었습니다."
+    else
+      redirect_to admin_settings_path(tab: "production"), alert: "설정 저장에 실패했습니다."
+    end
+  end
+
   # 품목 카테고리 관리
   def create_item_category
     @item_category = ItemCategory.new(item_category_params)
@@ -297,6 +325,7 @@ class Admin::SettingsController < Admin::BaseController
     @gijeongddeok_default = GijeongddeokDefault.instance
     @gijeongddeok_fields = GijeongddeokFieldOrder.all
     @page_permissions = PagePermission.ordered
+    @ingredient_items = Item.where(item_type: "재료").order(:name)
   end
 
   def shipment_purpose_params

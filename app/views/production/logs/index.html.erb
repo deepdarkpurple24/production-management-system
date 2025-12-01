@@ -112,6 +112,9 @@
                     <td class="py-3 px-4">
                       <% if log.recipe.present? %>
                         <span style="font-weight: 500;"><%= log.recipe.name %></span>
+                        <% if log.batch_number.present? %>
+                          <span class="badge bg-info ms-1">#<%= log.batch_number %></span>
+                        <% end %>
                       <% else %>
                         <span class="text-muted">-</span>
                       <% end %>

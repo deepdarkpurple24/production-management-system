@@ -89,7 +89,8 @@ class Production::PlansController < ApplicationController
 
   def production_plan_params
     params.require(:production_plan).permit(
-      :finished_product_id, :production_date, :quantity, :notes
+      :finished_product_id, :production_date, :quantity, :notes,
+      :is_gijeongddeok, :split_count, :split_unit
     )
   end
 end

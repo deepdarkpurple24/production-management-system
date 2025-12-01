@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_28_060000) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_01_140000) do
   create_table "activity_logs", force: :cascade do |t|
     t.string "action", null: false
     t.string "browser"
@@ -147,6 +147,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_28_060000) do
     t.decimal "dough_temp", precision: 10, scale: 1
     t.decimal "fermentation_room_temp", precision: 10, scale: 1
     t.decimal "flour_temp", precision: 10, scale: 1
+    t.json "half_batch_extra_ingredients", default: []
     t.decimal "makgeolli_consumption", precision: 10, scale: 1
     t.decimal "porridge_temp", precision: 10, scale: 1
     t.decimal "refrigeration_room_temp", precision: 10, scale: 1
@@ -306,6 +307,30 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_28_060000) do
     t.index ["receipt_id"], name: "index_opened_items_on_receipt_id"
   end
 
+  create_table "packaging_unit_materials", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "item_id", null: false
+    t.string "material_type"
+    t.text "notes"
+    t.integer "packaging_unit_id", null: false
+    t.integer "position", default: 0
+    t.decimal "quantity_per_unit", precision: 10, scale: 2, default: "1.0"
+    t.datetime "updated_at", null: false
+    t.index ["item_id"], name: "index_packaging_unit_materials_on_item_id"
+    t.index ["packaging_unit_id"], name: "index_packaging_unit_materials_on_packaging_unit_id"
+  end
+
+  create_table "packaging_units", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "finished_product_id", null: false
+    t.string "name", null: false
+    t.text "notes"
+    t.integer "pieces_per_unit", null: false
+    t.integer "position", default: 0
+    t.datetime "updated_at", null: false
+    t.index ["finished_product_id"], name: "index_packaging_units_on_finished_product_id"
+  end
+
   create_table "page_permissions", force: :cascade do |t|
     t.boolean "allowed_for_sub_admins", default: false, null: false
     t.boolean "allowed_for_users", default: true
@@ -320,6 +345,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_28_060000) do
 
   create_table "production_logs", force: :cascade do |t|
     t.json "batch_completion_times"
+    t.integer "batch_number"
     t.datetime "created_at", null: false
     t.decimal "dough_count", precision: 10, scale: 1
     t.decimal "dough_temp", precision: 10, scale: 1
@@ -352,11 +378,28 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_28_060000) do
   create_table "production_plans", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "finished_product_id", null: false
+    t.boolean "is_gijeongddeok", default: false
     t.text "notes"
     t.date "production_date"
     t.decimal "quantity", precision: 10, scale: 2
+    t.integer "split_count", default: 1
+    t.decimal "split_unit", precision: 3, scale: 1, default: "1.0"
     t.datetime "updated_at", null: false
     t.index ["finished_product_id"], name: "index_production_plans_on_finished_product_id"
+  end
+
+  create_table "production_results", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "defect_count", default: 0
+    t.integer "good_quantity", default: 0
+    t.text "notes"
+    t.boolean "packaging_processed", default: false
+    t.integer "packaging_unit_id", null: false
+    t.integer "production_plan_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["packaging_unit_id"], name: "index_production_results_on_packaging_unit_id"
+    t.index ["production_plan_id", "packaging_unit_id"], name: "idx_prod_results_plan_unit", unique: true
+    t.index ["production_plan_id"], name: "index_production_results_on_production_plan_id"
   end
 
   create_table "receipt_versions", force: :cascade do |t|
@@ -404,6 +447,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_28_060000) do
   create_table "recipe_equipments", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "equipment_id"
+    t.boolean "is_batch_standard", default: false
     t.integer "position"
     t.integer "process_id"
     t.integer "recipe_id", null: false
@@ -566,10 +610,15 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_28_060000) do
   add_foreign_key "login_histories", "users"
   add_foreign_key "opened_items", "items"
   add_foreign_key "opened_items", "receipts"
+  add_foreign_key "packaging_unit_materials", "items"
+  add_foreign_key "packaging_unit_materials", "packaging_units"
+  add_foreign_key "packaging_units", "finished_products"
   add_foreign_key "production_logs", "finished_products"
   add_foreign_key "production_logs", "production_plans"
   add_foreign_key "production_logs", "recipes"
   add_foreign_key "production_plans", "finished_products"
+  add_foreign_key "production_results", "packaging_units"
+  add_foreign_key "production_results", "production_plans"
   add_foreign_key "receipt_versions", "receipts"
   add_foreign_key "receipts", "items"
   add_foreign_key "recipe_equipments", "equipment"

@@ -208,6 +208,81 @@
             </div>
           </div>
         </div>
+
+        <!-- 0.5통 추가 재료 설정 -->
+        <div class="col-12">
+          <div class="card-modern">
+            <div class="card-body p-4">
+              <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
+                <i class="bi bi-plus-circle me-2"></i>0.5통 반죽 추가 재료 설정
+              </h5>
+              <p class="text-muted small mb-3">
+                기정떡을 0.5통 단위로 반죽할 때 추가로 넣어야 하는 재료를 설정합니다.
+                이 재료들은 반죽일지에서 자동으로 합산되어 표시됩니다.
+              </p>
+
+              <%= form_with url: admin_settings_update_half_batch_ingredients_path, method: :patch, local: true, id: "half-batch-ingredients-form" do %>
+                <div id="half-batch-ingredients-list">
+                  <% existing_ingredients = @gijeongddeok_default.half_batch_extra_ingredients || [] %>
+                  <% if existing_ingredients.any? %>
+                    <% existing_ingredients.each_with_index do |ingredient, index| %>
+                      <div class="row g-2 mb-2 half-batch-ingredient-row">
+                        <div class="col-md-6">
+                          <select name="half_batch_ingredients[<%= index %>][item_id]" class="form-select" required>
+                            <option value="">재료 선택</option>
+                            <% @ingredient_items.each do |item| %>
+                              <option value="<%= item.id %>" <%= 'selected' if ingredient["item_id"].to_i == item.id %>><%= item.name %></option>
+                            <% end %>
+                          </select>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="input-group">
+                            <input type="number" name="half_batch_ingredients[<%= index %>][weight]" class="form-control" step="0.1" min="0" value="<%= ingredient["weight"] %>" placeholder="중량" required>
+                            <span class="input-group-text">g</span>
+                          </div>
+                        </div>
+                        <div class="col-md-2">
+                          <button type="button" class="btn btn-outline-danger w-100 remove-ingredient-btn">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        </div>
+                      </div>
+                    <% end %>
+                  <% else %>
+                    <div class="row g-2 mb-2 half-batch-ingredient-row">
+                      <div class="col-md-6">
+                        <select name="half_batch_ingredients[0][item_id]" class="form-select" required>
+                          <option value="">재료 선택</option>
+                          <% @ingredient_items.each do |item| %>
+                            <option value="<%= item.id %>"><%= item.name %></option>
+                          <% end %>
+                        </select>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="input-group">
+                          <input type="number" name="half_batch_ingredients[0][weight]" class="form-control" step="0.1" min="0" placeholder="중량" required>
+                          <span class="input-group-text">g</span>
+                        </div>
+                      </div>
+                      <div class="col-md-2">
+                        <button type="button" class="btn btn-outline-danger w-100 remove-ingredient-btn">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+
+                <div class="d-flex justify-content-between mt-3">
+                  <button type="button" class="btn btn-outline-secondary" id="add-half-batch-ingredient-btn">
+                    <i class="bi bi-plus-lg me-1"></i>재료 추가
+                  </button>
+                  <button type="submit" class="btn-modern btn-modern-primary">저장</button>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -938,6 +1013,75 @@
         }
       });
     });
+
+    // 0.5통 추가 재료 관리
+    var halfBatchList = document.getElementById('half-batch-ingredients-list');
+    var addHalfBatchBtn = document.getElementById('add-half-batch-ingredient-btn');
+
+    // 재료 추가 버튼 클릭
+    if (addHalfBatchBtn) {
+      addHalfBatchBtn.addEventListener('click', function() {
+        var rows = halfBatchList.querySelectorAll('.half-batch-ingredient-row');
+        var newIndex = rows.length;
+
+        var ingredientOptions = '<option value="">재료 선택</option>';
+        <% @ingredient_items.each do |item| %>
+          ingredientOptions += '<option value="<%= item.id %>"><%= j item.name %></option>';
+        <% end %>
+
+        var newRow = document.createElement('div');
+        newRow.className = 'row g-2 mb-2 half-batch-ingredient-row';
+        newRow.innerHTML = `
+          <div class="col-md-6">
+            <select name="half_batch_ingredients[${newIndex}][item_id]" class="form-select" required>
+              ${ingredientOptions}
+            </select>
+          </div>
+          <div class="col-md-4">
+            <div class="input-group">
+              <input type="number" name="half_batch_ingredients[${newIndex}][weight]" class="form-control" step="0.1" min="0" placeholder="중량" required>
+              <span class="input-group-text">g</span>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <button type="button" class="btn btn-outline-danger w-100 remove-ingredient-btn">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        `;
+        halfBatchList.appendChild(newRow);
+      });
+    }
+
+    // 재료 삭제 버튼 (이벤트 위임)
+    if (halfBatchList) {
+      halfBatchList.addEventListener('click', function(e) {
+        var removeBtn = e.target.closest('.remove-ingredient-btn');
+        if (removeBtn) {
+          var row = removeBtn.closest('.half-batch-ingredient-row');
+          var rows = halfBatchList.querySelectorAll('.half-batch-ingredient-row');
+          if (rows.length > 1) {
+            row.remove();
+            // 인덱스 재정렬
+            reindexHalfBatchIngredients();
+          } else {
+            // 마지막 행은 입력 초기화
+            row.querySelector('select').value = '';
+            row.querySelector('input[type="number"]').value = '';
+          }
+        }
+      });
+    }
+
+    function reindexHalfBatchIngredients() {
+      var rows = halfBatchList.querySelectorAll('.half-batch-ingredient-row');
+      rows.forEach(function(row, index) {
+        var select = row.querySelector('select');
+        var input = row.querySelector('input[type="number"]');
+        if (select) select.name = `half_batch_ingredients[${index}][item_id]`;
+        if (input) input.name = `half_batch_ingredients[${index}][weight]`;
+      });
+    }
   });
 </script>
 

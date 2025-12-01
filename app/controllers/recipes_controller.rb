@@ -83,7 +83,7 @@ class RecipesController < ApplicationController
       :description,
       :notes,
       recipe_ingredients_attributes: [ :id, :source_type, :item_id, :referenced_ingredient_id, :weight, :is_main, :row_type, :notes, :position, :_destroy ],
-      recipe_equipments_attributes: [ :id, :equipment_id, :work_capacity, :work_capacity_unit, :position, :row_type, :process_id, :_destroy ]
+      recipe_equipments_attributes: [ :id, :equipment_id, :work_capacity, :work_capacity_unit, :position, :row_type, :process_id, :is_batch_standard, :_destroy ]
     )
   end
 end

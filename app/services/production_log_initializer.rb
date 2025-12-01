@@ -70,9 +70,18 @@ class ProductionLogInitializer
     # 총 스케일된 중량
     total_scaled = recipe_total * multiplier
 
-    # 장비 최대 작업 중량 확인
-    max_work_capacity = recipe.recipe_equipments.where.not(work_capacity: [ nil, 0 ]).maximum(:work_capacity)
-    max_work_capacity_g = max_work_capacity ? max_work_capacity * 1000 : nil
+    # 분할 기준 장비들의 최대 작업 중량 합계 계산
+    batch_standard_equipments = recipe.recipe_equipments.where(is_batch_standard: true).where.not(work_capacity: [ nil, 0 ])
+
+    if batch_standard_equipments.any?
+      # 분할 기준 장비가 있으면 해당 장비들의 work_capacity 합계 사용
+      total_work_capacity = batch_standard_equipments.sum(:work_capacity)
+    else
+      # 분할 기준 장비가 없으면 기존 방식 (최대값) 사용
+      total_work_capacity = recipe.recipe_equipments.where.not(work_capacity: [ nil, 0 ]).maximum(:work_capacity)
+    end
+
+    max_work_capacity_g = total_work_capacity ? total_work_capacity * 1000 : nil
 
     # 배치 수 계산
     if max_work_capacity_g && max_work_capacity_g > 0 && total_scaled > max_work_capacity_g

@@ -158,6 +158,7 @@
             <th style="width: 40px; text-align: center;">
               <i class="bi bi-grip-vertical text-muted"></i>
             </th>
+            <th style="width: 70px; text-align: center;" title="체크된 장비들의 최대 작업 중량 합계로 배치를 분할합니다">분할기준</th>
             <th>장비명</th>
             <th style="width: 150px;">최대 작업 중량</th>
             <th style="width: 100px;">단위</th>
@@ -169,6 +170,7 @@
             <% if equipment_fields.object.row_type == 'process' %>
               <tr class="process-row table-secondary" data-sortable-disabled="true">
                 <td class="text-center"><i class="bi bi-grip-vertical text-muted" style="visibility: hidden;"></i></td>
+                <td></td>
                 <td colspan="3">
                   <div class="d-flex align-items-center">
                     <i class="bi bi-folder-fill me-2 text-primary"></i>
@@ -193,6 +195,9 @@
               <tr class="equipment-row">
                 <td style="cursor: move;" class="text-center">
                   <i class="bi bi-grip-vertical text-muted drag-handle-equipment"></i>
+                </td>
+                <td class="text-center">
+                  <%= equipment_fields.check_box :is_batch_standard, class: "form-check-input is-batch-standard-checkbox" %>
                 </td>
                 <td>
                   <%= equipment_fields.collection_select :equipment_id, @equipments, :id, :name,
@@ -675,6 +680,7 @@ document.addEventListener('turbo:load', function() {
       const newRow = `
         <tr class="process-row table-secondary" data-sortable-disabled="true">
           <td class="text-center"><i class="bi bi-grip-vertical text-muted" style="visibility: hidden;"></i></td>
+          <td></td>
           <td colspan="3">
             <div class="d-flex align-items-center">
               <i class="bi bi-folder-fill me-2 text-primary"></i>
@@ -715,6 +721,10 @@ document.addEventListener('turbo:load', function() {
         <tr class="equipment-row">
           <td style="cursor: move;" class="text-center">
             <i class="bi bi-grip-vertical text-muted drag-handle-equipment"></i>
+          </td>
+          <td class="text-center">
+            <input type="checkbox" class="form-check-input is-batch-standard-checkbox"
+                   name="recipe[recipe_equipments_attributes][${equipmentIndex}][is_batch_standard]" value="1">
           </td>
           <td>
             <select class="form-select form-select-sm equipment-select"

@@ -142,6 +142,8 @@ Rails.application.routes.draw do
         patch :complete_work
       end
     end
+    # 생산품관리 (별도 페이지)
+    resources :product_management, only: [:index]
   end
 
   # 레시피 관리

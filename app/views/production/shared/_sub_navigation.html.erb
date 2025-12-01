@@ -24,11 +24,11 @@
         </a>
       </li>
       <li class="nav-item">
-        <a href="#"
-           class="nav-link disabled"
-           style="border-radius: 8px; font-weight: 500; font-size: 0.9rem;">
+        <%= link_to production_product_management_index_path,
+                    class: "nav-link #{controller_name == 'product_management' ? 'active' : ''}",
+                    style: "border-radius: 8px; font-weight: 500; font-size: 0.9rem;" do %>
           <i class="bi bi-box-seam me-1"></i>생산품관리
-        </a>
+        <% end %>
       </li>
     </ul>
   </div>

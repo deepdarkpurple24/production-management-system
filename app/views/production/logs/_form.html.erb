@@ -43,23 +43,32 @@
     <small class="form-text text-muted">생산한 완제품을 선택하세요.</small>
   </div>
 
-  <!-- 생산 일시 -->
+  <!-- 반죽일 / 생산일 -->
   <div class="row mb-3">
-    <div class="col-md-6">
-      <%= form.label :production_date, "생산 일자", class: "form-label", style: "font-weight: 500;" %>
+    <div class="col-md-4">
+      <%= form.label :dough_date, "반죽일", class: "form-label", style: "font-weight: 500;" %>
+      <span class="text-danger">*</span>
+      <%= form.date_field :dough_date,
+                          class: "form-control",
+                          required: true %>
+      <small class="form-text text-muted">1차 발효 시작일 (소계 이전 재료)</small>
+    </div>
+
+    <div class="col-md-4">
+      <%= form.label :production_date, "생산일", class: "form-label", style: "font-weight: 500;" %>
       <span class="text-danger">*</span>
       <%= form.date_field :production_date,
                           class: "form-control",
                           required: true %>
-      <small class="form-text text-muted">실제 생산한 날짜를 입력하세요.</small>
+      <small class="form-text text-muted">최종 생산일 (소계 이후 재료)</small>
     </div>
 
-    <div class="col-md-6">
+    <div class="col-md-4">
       <%= form.label :production_time, "생산 시간", class: "form-label", style: "font-weight: 500;" %>
       <%= form.time_field :production_time,
                           class: "form-control",
                           placeholder: "예: 09:00" %>
-      <small class="form-text text-muted">생산 시작 시간을 입력하세요 (선택사항).</small>
+      <small class="form-text text-muted">생산 시작 시간 (선택사항)</small>
     </div>
   </div>
 
@@ -154,6 +163,14 @@ function initProductionLogForm() {
       const productionDateField = document.getElementById('production_log_production_date');
       if (productionDateField) {
         productionDateField.value = plan.production_date;
+      }
+
+      // 반죽일 자동 입력 (생산일 - 1일)
+      const doughDateField = document.getElementById('production_log_dough_date');
+      if (doughDateField && plan.production_date) {
+        const prodDate = new Date(plan.production_date);
+        prodDate.setDate(prodDate.getDate() - 1);
+        doughDateField.value = prodDate.toISOString().split('T')[0];
       }
 
       // 반죽통수 자동 입력 (dough_count 필드)

@@ -38,14 +38,16 @@ class Production::LogsController < ApplicationController
     end
     @pending_count = pending_count
 
-    # 작업중 개수
+    # 작업중 개수 (반죽일 또는 생산일이 선택된 날짜와 일치)
     @in_progress_count = ProductionLog
-      .where(status: "in_progress", production_date: @selected_date)
+      .where(status: "in_progress")
+      .where("production_date = ? OR dough_date = ?", @selected_date, @selected_date)
       .count
 
-    # 작업완료 개수
+    # 작업완료 개수 (반죽일 또는 생산일이 선택된 날짜와 일치)
     @completed_count = ProductionLog
-      .where(status: "completed", production_date: @selected_date)
+      .where(status: "completed")
+      .where("production_date = ? OR dough_date = ?", @selected_date, @selected_date)
       .count
 
     # 현재 탭에 따라 상세 데이터 로드
@@ -81,13 +83,15 @@ class Production::LogsController < ApplicationController
     when "in_progress"
       @production_logs = ProductionLog
         .includes(:finished_product, :production_plan, :recipe)
-        .where(status: "in_progress", production_date: @selected_date)
+        .where(status: "in_progress")
+        .where("production_date = ? OR dough_date = ?", @selected_date, @selected_date)
         .order(created_at: :desc)
 
     when "completed"
       @production_logs = ProductionLog
         .includes(:finished_product, :production_plan, :recipe)
-        .where(status: "completed", production_date: @selected_date)
+        .where(status: "completed")
+        .where("production_date = ? OR dough_date = ?", @selected_date, @selected_date)
         .order(created_at: :desc)
     end
   end
@@ -112,6 +116,7 @@ class Production::LogsController < ApplicationController
         recipe_id: params[:recipe_id],
         finished_product_id: @production_plan.finished_product_id,
         production_date: @production_plan.production_date,
+        dough_date: @production_plan.production_date - 1.day,
         status: "pending"
       )
 
@@ -126,6 +131,7 @@ class Production::LogsController < ApplicationController
     # 생산계획 없이 새로 만드는 경우 (일반적이지 않음)
     @production_log = ProductionLog.new
     @production_log.production_date = params[:date] ? Date.parse(params[:date]) : Date.today
+    @production_log.dough_date = @production_log.production_date - 1.day
     @finished_products = FinishedProduct.order(:name)
     @gijeongddeok_default = GijeongddeokDefault.instance
     @gijeongddeok_fields = GijeongddeokFieldOrder.all
@@ -421,7 +427,7 @@ class Production::LogsController < ApplicationController
 
   def production_log_params
     params.require(:production_log).permit(
-      :production_plan_id, :finished_product_id, :recipe_id, :production_date, :production_time, :notes,
+      :production_plan_id, :finished_product_id, :recipe_id, :dough_date, :production_date, :production_time, :notes,
       # 기정떡 전용 필드 (온도 관리)
       :dough_count, :fermentation_room_temp, :refrigeration_room_temp,
       :water_temp, :flour_temp, :porridge_temp, :dough_temp,

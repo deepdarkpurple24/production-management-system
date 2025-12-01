@@ -70,6 +70,8 @@ bin/rails test test/models/user_test.rb:10 # 특정 라인 테스트
 5. **Nested Attributes**: `accepts_nested_attributes_for`로 복합 폼 처리
 6. **Unit Conversion**: 모든 중량을 g으로 변환하여 계산
 7. **Batch Completion**: 반죽일지에서 모든 배치 완료 시 자동 `completed` 상태 변경
+8. **Gijeongddeok (기정떡) Special Logic**: split_count/split_unit으로 배치 분할 계산
+9. **Referenced Ingredient**: 재료 구성을 재귀적으로 펼쳐서 최종 Item으로 역산
 
 ## Common Paths
 
@@ -88,13 +90,34 @@ bin/rails test test/models/user_test.rb:10 # 특정 라인 테스트
 ## Important Files
 
 ```
-config/routes.rb                    # 라우트 정의
-app/services/                       # 비즈니스 로직
-app/javascript/interactions.js      # 전역 JS 유틸리티
-app/javascript/barcode_scanner.js   # 바코드 스캐너
-app/assets/stylesheets/             # SCSS 소스
+config/routes.rb                              # 라우트 정의
+app/services/ingredient_inventory_service.rb  # 재고 처리 핵심 로직 (FIFO, 개봉품, 출고)
+app/controllers/production/logs_controller.rb # 반죽일지 (기정떡 배율 계산)
+app/javascript/interactions.js                # 전역 JS 유틸리티
+app/javascript/barcode_scanner.js             # 바코드 스캐너
+app/assets/stylesheets/                       # SCSS 소스
+```
+
+## IngredientInventoryService 핵심 로직
+
+```ruby
+# 재료 체크 시 처리 흐름
+1. source_type == "ingredient" → Referenced Ingredient로 처리 (재귀 역산)
+2. source_type == "item" → 직접 품목으로 처리
+3. FIFO로 입고품 선택 (유통기한 ASC, NULL은 마지막)
+4. 개봉품 찾기/생성 → 새 개봉 시 출고(Shipment) 자동 생성
+5. 개봉품에서 중량 차감 → CheckedIngredient 생성
+6. 체크 해제 시 before_destroy 콜백에서 중량 복원
+```
+
+## 기정떡 배율 계산
+
+```ruby
+# split_unit = 0.5 (반통) or 1.0 (1통)
+scaled_weight = recipe_ingredient.weight * split_unit
+# 예: 레시피 44000g × 0.5 = 22000g (반통)
 ```
 
 ---
 
-**Version**: 2.2 | **Updated**: 2025-11-30
+**Version**: 2.3 | **Updated**: 2025-12-01

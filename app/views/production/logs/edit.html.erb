@@ -4,9 +4,14 @@
     <h4 style="font-weight: 600; color: #1d1d1f;">
       <i class="bi bi-pencil-square me-2"></i>반죽일지 수정
     </h4>
-    <span class="badge bg-secondary" style="font-size: 0.9rem;">
-      <%= @production_log.production_date.strftime('%Y년 %m월 %d일 (%a)') %>
-    </span>
+    <div class="d-flex gap-2">
+      <span class="badge bg-info" style="font-size: 0.85rem;" title="반죽일 (1차 발효)">
+        <i class="bi bi-calendar-event me-1"></i>반죽: <%= @production_log.dough_date&.strftime('%m/%d') || '-' %>
+      </span>
+      <span class="badge bg-success" style="font-size: 0.85rem;" title="생산일 (최종 생산)">
+        <i class="bi bi-calendar-check me-1"></i>생산: <%= @production_log.production_date&.strftime('%m/%d') || '-' %>
+      </span>
+    </div>
   </div>
 
   <div class="card-modern">

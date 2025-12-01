@@ -5,7 +5,9 @@
 
 <div class="p-4">
   <% if day_plans.any? %>
-    <div class="table-responsive">
+    <!-- 생산 계획 테이블 -->
+    <h6 class="mb-3" style="font-weight: 600;"><i class="bi bi-calendar-check me-2"></i>생산 계획</h6>
+    <div class="table-responsive mb-4">
       <table class="table table-hover mb-0">
         <thead style="background-color: #f5f5f7; border-bottom: 1px solid #d2d2d7;">
           <tr>
@@ -64,6 +66,114 @@
         </tfoot>
       </table>
     </div>
+
+    <!-- 생산품관리 섹션 -->
+    <hr class="my-4">
+    <h6 class="mb-3" style="font-weight: 600;"><i class="bi bi-box-seam me-2"></i>생산품관리</h6>
+
+    <% day_plans.each do |plan| %>
+      <% packaging_units = plan.finished_product.packaging_units %>
+      <% if packaging_units.any? %>
+        <div class="card mb-3">
+          <div class="card-header bg-light py-2">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <strong><%= plan.finished_product.name %></strong>
+                <span class="text-muted ms-2">(계획: <%= number_with_delimiter(plan.quantity) %>개)</span>
+              </div>
+              <div>
+                <% total_good = plan.total_good_pieces %>
+                <% total_defect = plan.total_defect_count %>
+                <% remaining = plan.quantity - total_good - total_defect %>
+                <span class="badge bg-success me-1">완제품: <%= number_with_delimiter(total_good) %>개</span>
+                <span class="badge bg-danger me-1">불량: <%= number_with_delimiter(total_defect) %>개</span>
+                <% if remaining > 0 %>
+                  <span class="badge bg-warning text-dark">미처리: <%= number_with_delimiter(remaining) %>개</span>
+                <% end %>
+              </div>
+            </div>
+          </div>
+          <div class="card-body py-2">
+            <div class="table-responsive">
+              <table class="table table-sm mb-0">
+                <thead>
+                  <tr>
+                    <th style="width: 25%;">포장 단위</th>
+                    <th style="width: 20%;" class="text-center">완제품 (박스)</th>
+                    <th style="width: 20%;" class="text-center">완제품 (개수)</th>
+                    <th style="width: 20%;" class="text-center">불량 (개수)</th>
+                    <th style="width: 15%;" class="text-center">관리</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% packaging_units.each do |pu| %>
+                    <% result = plan.production_results.find_by(packaging_unit_id: pu.id) %>
+                    <tr>
+                      <td>
+                        <strong><%= pu.name %></strong>
+                        <small class="text-muted">(<%= pu.pieces_per_unit %>개/박스)</small>
+                      </td>
+                      <% if result %>
+                        <td class="text-center"><%= number_with_delimiter(result.good_quantity) %></td>
+                        <td class="text-center"><%= number_with_delimiter(result.good_pieces) %></td>
+                        <td class="text-center"><%= number_with_delimiter(result.defect_count) %></td>
+                        <td class="text-center">
+                          <button type="button" class="btn btn-sm btn-outline-primary edit-result-btn"
+                                  data-result-id="<%= result.id %>"
+                                  data-plan-id="<%= plan.id %>"
+                                  data-pu-id="<%= pu.id %>"
+                                  data-pu-name="<%= pu.name %>"
+                                  data-pieces="<%= pu.pieces_per_unit %>"
+                                  data-good="<%= result.good_quantity %>"
+                                  data-defect="<%= result.defect_count %>">
+                            <i class="bi bi-pencil"></i>
+                          </button>
+                          <%= button_to production_plan_result_path(plan, result),
+                                        method: :delete,
+                                        class: "btn btn-sm btn-outline-danger",
+                                        data: { turbo_confirm: "삭제하시겠습니까?" } do %>
+                            <i class="bi bi-trash"></i>
+                          <% end %>
+                        </td>
+                      <% else %>
+                        <td class="text-center text-muted">-</td>
+                        <td class="text-center text-muted">-</td>
+                        <td class="text-center text-muted">-</td>
+                        <td class="text-center">
+                          <button type="button" class="btn btn-sm btn-outline-success add-result-btn"
+                                  data-plan-id="<%= plan.id %>"
+                                  data-pu-id="<%= pu.id %>"
+                                  data-pu-name="<%= pu.name %>"
+                                  data-pieces="<%= pu.pieces_per_unit %>">
+                            <i class="bi bi-plus-circle"></i>
+                          </button>
+                        </td>
+                      <% end %>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <% if plan.production_results.where(packaging_processed: false).where("good_quantity > 0").any? %>
+            <div class="card-footer bg-light py-2">
+              <%= button_to process_packaging_production_plan_results_path(plan),
+                            method: :post,
+                            class: "btn btn-sm btn-primary",
+                            data: { turbo_confirm: "포장재 출고를 처리하시겠습니까?" } do %>
+                <i class="bi bi-box-arrow-right me-1"></i>포장재 출고 처리
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="alert alert-info mb-3">
+          <i class="bi bi-info-circle me-2"></i>
+          <strong><%= plan.finished_product.name %></strong>: 등록된 포장 단위가 없습니다.
+          <%= link_to "완제품 수정", edit_finished_product_path(plan.finished_product), class: "alert-link" %>에서 포장 단위를 등록하세요.
+        </div>
+      <% end %>
+    <% end %>
   <% else %>
     <div class="text-center py-5">
       <i class="bi bi-calendar-x" style="font-size: 4rem; color: #d2d2d7;"></i>
@@ -72,3 +182,111 @@
     </div>
   <% end %>
 </div>
+
+<!-- 생산 실적 입력 모달 -->
+<div class="modal fade" id="resultModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="resultModalTitle">생산 실적 등록</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="resultForm" method="post">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <input type="hidden" name="_method" id="resultFormMethod" value="post">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">포장 단위</label>
+            <input type="text" class="form-control" id="resultPuName" readonly>
+            <input type="hidden" name="production_result[packaging_unit_id]" id="resultPuId">
+          </div>
+          <div class="row">
+            <div class="col-6">
+              <label class="form-label">완제품 (박스)</label>
+              <input type="number" class="form-control" name="production_result[good_quantity]" id="resultGoodQuantity" min="0" value="0" required>
+              <small class="text-muted">= <span id="resultGoodPieces">0</span>개</small>
+            </div>
+            <div class="col-6">
+              <label class="form-label">불량 (개수)</label>
+              <input type="number" class="form-control" name="production_result[defect_count]" id="resultDefectCount" min="0" value="0">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+          <button type="submit" class="btn btn-primary">저장</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('turbo:load', function() {
+  const resultModal = document.getElementById('resultModal');
+  if (!resultModal) return;
+
+  const modal = new bootstrap.Modal(resultModal);
+  const form = document.getElementById('resultForm');
+  const methodInput = document.getElementById('resultFormMethod');
+  const titleEl = document.getElementById('resultModalTitle');
+  const puNameInput = document.getElementById('resultPuName');
+  const puIdInput = document.getElementById('resultPuId');
+  const goodQuantityInput = document.getElementById('resultGoodQuantity');
+  const defectCountInput = document.getElementById('resultDefectCount');
+  const goodPiecesSpan = document.getElementById('resultGoodPieces');
+
+  let piecesPerUnit = 1;
+
+  // 완제품 개수 자동 계산
+  goodQuantityInput.addEventListener('input', function() {
+    const boxes = parseInt(this.value) || 0;
+    goodPiecesSpan.textContent = (boxes * piecesPerUnit).toLocaleString();
+  });
+
+  // 추가 버튼 클릭
+  document.querySelectorAll('.add-result-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const planId = this.dataset.planId;
+      const puId = this.dataset.puId;
+      const puName = this.dataset.puName;
+      piecesPerUnit = parseInt(this.dataset.pieces) || 1;
+
+      form.action = `/production/plans/${planId}/results`;
+      methodInput.value = 'post';
+      titleEl.textContent = '생산 실적 등록';
+      puNameInput.value = `${puName} (${piecesPerUnit}개/박스)`;
+      puIdInput.value = puId;
+      goodQuantityInput.value = 0;
+      defectCountInput.value = 0;
+      goodPiecesSpan.textContent = '0';
+
+      modal.show();
+    });
+  });
+
+  // 수정 버튼 클릭
+  document.querySelectorAll('.edit-result-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const resultId = this.dataset.resultId;
+      const planId = this.dataset.planId;
+      const puId = this.dataset.puId;
+      const puName = this.dataset.puName;
+      piecesPerUnit = parseInt(this.dataset.pieces) || 1;
+      const goodQty = parseInt(this.dataset.good) || 0;
+      const defectCnt = parseInt(this.dataset.defect) || 0;
+
+      form.action = `/production/plans/${planId}/results/${resultId}`;
+      methodInput.value = 'patch';
+      titleEl.textContent = '생산 실적 수정';
+      puNameInput.value = `${puName} (${piecesPerUnit}개/박스)`;
+      puIdInput.value = puId;
+      goodQuantityInput.value = goodQty;
+      defectCountInput.value = defectCnt;
+      goodPiecesSpan.textContent = (goodQty * piecesPerUnit).toLocaleString();
+
+      modal.show();
+    });
+  });
+});
+</script>

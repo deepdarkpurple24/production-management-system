@@ -8,6 +8,11 @@
     </h2>
   </div>
 
+  <!-- 검색 필터 -->
+  <% if @opened_items.any? %>
+    <%= render 'inventory/shared/table_filter', placeholder: "품목명, 유통기한으로 검색..." %>
+  <% end %>
+
   <!-- 개봉품 상세 목록 -->
   <div class="card" style="border: 1px solid #e8e8ed; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
     <div class="card-header" style="background-color: #f5f5f7; border-bottom: 1px solid #e8e8ed; padding: 1rem 1.5rem;">

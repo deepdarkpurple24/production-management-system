@@ -12,6 +12,11 @@
     <% end %>
   </div>
 
+  <!-- 검색 필터 -->
+  <% if @receipts.any? %>
+    <%= render 'inventory/shared/table_filter', placeholder: "품목명, 공급업체, 날짜로 검색..." %>
+  <% end %>
+
   <!-- 입고 목록 테이블 -->
   <div class="card-modern">
     <div class="card-body p-0">

@@ -12,6 +12,11 @@
     <% end %>
   </div>
 
+  <!-- 검색 필터 -->
+  <% if @shipments.any? %>
+    <%= render 'inventory/shared/table_filter', placeholder: "품목명, 목적, 요청자로 검색..." %>
+  <% end %>
+
   <!-- 출고 목록 테이블 -->
   <div class="card-modern">
     <div class="card-body p-0">

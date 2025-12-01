@@ -1,0 +1,120 @@
+<%# 테이블 검색/필터 컴포넌트 %>
+<%# 사용법: render 'inventory/shared/table_filter', placeholder: "품목명, 카테고리로 검색..." %>
+<% placeholder ||= "검색어를 입력하세요..." %>
+
+<div class="table-filter-wrapper mb-3">
+  <div class="input-group">
+    <span class="input-group-text" style="background-color: #f5f5f7; border-color: #d2d2d7;">
+      <i class="bi bi-search" style="color: #6e6e73;"></i>
+    </span>
+    <input type="text"
+           id="table-filter-input"
+           class="form-control"
+           placeholder="<%= placeholder %>"
+           style="border-color: #d2d2d7;"
+           autocomplete="off">
+    <button type="button"
+            id="table-filter-clear"
+            class="btn btn-outline-secondary"
+            style="border-color: #d2d2d7; display: none;"
+            title="검색어 지우기">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+  <div id="table-filter-result" class="small text-muted mt-1" style="display: none;">
+    <span id="table-filter-count">0</span>개 항목 표시 중
+  </div>
+</div>
+
+<script>
+(function() {
+  function initTableFilter() {
+    var filterInput = document.getElementById('table-filter-input');
+    var clearButton = document.getElementById('table-filter-clear');
+    var resultDiv = document.getElementById('table-filter-result');
+    var countSpan = document.getElementById('table-filter-count');
+
+    if (!filterInput) return;
+
+    // 테이블 찾기 (filter 다음에 오는 첫 번째 테이블)
+    var table = document.querySelector('.table-filter-wrapper').parentElement.querySelector('table');
+    if (!table) {
+      table = document.querySelector('.table-responsive table');
+    }
+    if (!table) return;
+
+    var tbody = table.querySelector('tbody');
+    if (!tbody) return;
+
+    var rows = tbody.querySelectorAll('tr');
+    var totalRows = rows.length;
+
+    function filterTable() {
+      var searchTerm = filterInput.value.toLowerCase().trim();
+      var visibleCount = 0;
+
+      // 검색어가 있으면 클리어 버튼 표시
+      if (searchTerm) {
+        clearButton.style.display = 'block';
+      } else {
+        clearButton.style.display = 'none';
+      }
+
+      rows.forEach(function(row) {
+        var text = row.textContent.toLowerCase();
+        var match = !searchTerm || text.includes(searchTerm);
+
+        if (match) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      // 결과 표시
+      if (searchTerm) {
+        resultDiv.style.display = 'block';
+        countSpan.textContent = visibleCount;
+
+        // 결과가 없을 때 색상 변경
+        if (visibleCount === 0) {
+          resultDiv.style.color = '#ff3b30';
+          countSpan.parentElement.innerHTML = '검색 결과가 없습니다';
+        } else {
+          resultDiv.style.color = '#6e6e73';
+          countSpan.parentElement.innerHTML = '<span id="table-filter-count">' + visibleCount + '</span>개 항목 표시 중 (전체 ' + totalRows + '개)';
+        }
+      } else {
+        resultDiv.style.display = 'none';
+      }
+    }
+
+    // 입력 이벤트 (디바운스 적용)
+    var debounceTimer;
+    filterInput.addEventListener('input', function() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(filterTable, 150);
+    });
+
+    // 클리어 버튼
+    clearButton.addEventListener('click', function() {
+      filterInput.value = '';
+      filterTable();
+      filterInput.focus();
+    });
+
+    // ESC 키로 검색어 지우기
+    filterInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        filterInput.value = '';
+        filterTable();
+      }
+    });
+  }
+
+  // Turbo 환경 지원
+  document.addEventListener('turbo:load', initTableFilter);
+  document.addEventListener('DOMContentLoaded', initTableFilter);
+})();
+</script>

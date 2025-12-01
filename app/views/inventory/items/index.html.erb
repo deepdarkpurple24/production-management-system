@@ -12,6 +12,11 @@
     <% end %>
   </div>
 
+  <!-- 검색 필터 -->
+  <% if @items.any? %>
+    <%= render 'inventory/shared/table_filter', placeholder: "품목명, 품목코드, 카테고리로 검색..." %>
+  <% end %>
+
   <!-- 품목 목록 테이블 -->
   <div class="card-modern">
     <div class="card-body p-0">

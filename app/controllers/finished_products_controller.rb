@@ -12,12 +12,12 @@ class FinishedProductsController < ApplicationController
     @finished_product = FinishedProduct.new
     @finished_product.finished_product_recipes.build
     @recipes = Recipe.all.order(:name)
-    @packaging_items = Item.all.order(:name)  # 포장재 품목
+    @packaging_items = Item.where(category: [ "내포장재", "외포장재", "기타" ]).order(:name)  # 포장재 품목
   end
 
   def edit
     @recipes = Recipe.all.order(:name)
-    @packaging_items = Item.all.order(:name)  # 포장재 품목
+    @packaging_items = Item.where(category: [ "내포장재", "외포장재", "기타" ]).order(:name)  # 포장재 품목
   end
 
   def create
@@ -28,7 +28,7 @@ class FinishedProductsController < ApplicationController
       redirect_to finished_products_path, notice: "완제품이 성공적으로 등록되었습니다."
     else
       @recipes = Recipe.all.order(:name)
-      @packaging_items = Item.all.order(:name)
+      @packaging_items = Item.where(category: [ "내포장재", "외포장재", "기타" ]).order(:name)
       render :new, status: :unprocessable_entity
     end
   end
@@ -39,7 +39,7 @@ class FinishedProductsController < ApplicationController
       redirect_to finished_products_path, notice: "완제품 정보가 수정되었습니다."
     else
       @recipes = Recipe.all.order(:name)
-      @packaging_items = Item.all.order(:name)
+      @packaging_items = Item.where(category: [ "내포장재", "외포장재", "기타" ]).order(:name)
       render :edit, status: :unprocessable_entity
     end
   end

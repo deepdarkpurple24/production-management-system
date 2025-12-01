@@ -133,18 +133,21 @@
               </thead>
               <tbody class="materials-tbody">
                 <%= pu_fields.fields_for :packaging_unit_materials do |pm_fields| %>
+                  <% filtered_items = @packaging_items.select { |i| i.category == pm_fields.object.material_type } %>
                   <tr class="material-row">
                     <td>
                       <%= pm_fields.select :material_type,
                           options_for_select([['내포장재', '내포장재'], ['외포장재', '외포장재'], ['기타', '기타']], pm_fields.object.material_type),
                           { include_blank: "선택" },
-                          class: "form-select form-select-sm" %>
+                          class: "form-select form-select-sm material-type-select" %>
                       <%= pm_fields.hidden_field :position %>
                     </td>
                     <td>
-                      <%= pm_fields.collection_select :item_id, @packaging_items, :id, :name,
+                      <%= pm_fields.collection_select :item_id,
+                          pm_fields.object.material_type.present? ? filtered_items : @packaging_items,
+                          :id, :name,
                           { include_blank: "포장재 선택" },
-                          { class: "form-select form-select-sm", required: true } %>
+                          { class: "form-select form-select-sm item-select", required: true } %>
                     </td>
                     <td>
                       <%= pm_fields.number_field :quantity_per_unit, step: 0.01, class: "form-control form-control-sm text-end", value: pm_fields.object.quantity_per_unit || 1, required: true, min: 0.01 %>
@@ -338,7 +341,53 @@ document.addEventListener('turbo:load', function() {
 
   // ===== 포장 단위 관리 =====
   let packagingUnitIndex = <%= finished_product.packaging_units.length %>;
-  const packagingItemsData = <%= (@packaging_items || []).map { |i| { id: i.id, name: i.name } }.to_json.html_safe %>;
+  const packagingItemsData = <%= (@packaging_items || []).map { |i| { id: i.id, name: i.name, category: i.category } }.to_json.html_safe %>;
+
+  // 카테고리(material_type)별 품목 필터링 함수
+  function getFilteredItemOptions(materialType) {
+    const filteredItems = materialType
+      ? packagingItemsData.filter(item => item.category === materialType)
+      : packagingItemsData;
+
+    return filteredItems.map(item =>
+      `<option value="${item.id}">${item.name}</option>`
+    ).join('');
+  }
+
+  // material_type 변경 시 품목 드롭다운 업데이트
+  function updateItemDropdown(materialTypeSelect) {
+    const row = materialTypeSelect.closest('tr');
+    const itemSelect = row.querySelector('select[name*="[item_id]"]');
+    if (!itemSelect) return;
+
+    const materialType = materialTypeSelect.value;
+    const currentItemId = itemSelect.value;
+
+    // 옵션 업데이트
+    itemSelect.innerHTML = '<option value="">포장재 선택</option>' + getFilteredItemOptions(materialType);
+
+    // 기존 선택값이 필터링된 목록에 있으면 유지
+    if (currentItemId) {
+      const optionExists = Array.from(itemSelect.options).some(opt => opt.value === currentItemId);
+      if (optionExists) {
+        itemSelect.value = currentItemId;
+      }
+    }
+  }
+
+  // material_type 변경 이벤트 리스너 (이벤트 위임)
+  document.addEventListener('change', function(e) {
+    if (e.target.matches('select[name*="[material_type]"]')) {
+      updateItemDropdown(e.target);
+    }
+  });
+
+  // 기존 material_type 선택에 대해 초기화
+  document.querySelectorAll('select[name*="[material_type]"]').forEach(select => {
+    if (select.value) {
+      updateItemDropdown(select);
+    }
+  });
 
   // 포장 단위 추가
   const addPackagingUnitBtn = document.getElementById('add-packaging-unit-btn');
@@ -407,14 +456,15 @@ document.addEventListener('turbo:load', function() {
       // 현재 포장재 개수로 materialIndex 결정
       const materialIndex = tbody.querySelectorAll('.material-row').length;
 
-      const itemOptions = packagingItemsData.map(item =>
+      // 포장재 유형 미선택 시 모든 품목 표시
+      const allItemOptions = packagingItemsData.map(item =>
         `<option value="${item.id}">${item.name}</option>`
       ).join('');
 
       const newRow = `
         <tr class="material-row">
           <td>
-            <select class="form-select form-select-sm"
+            <select class="form-select form-select-sm material-type-select"
                     name="finished_product[packaging_units_attributes][${unitIndex}][packaging_unit_materials_attributes][${materialIndex}][material_type]">
               <option value="">선택</option>
               <option value="내포장재">내포장재</option>
@@ -424,10 +474,9 @@ document.addEventListener('turbo:load', function() {
             <input type="hidden" name="finished_product[packaging_units_attributes][${unitIndex}][packaging_unit_materials_attributes][${materialIndex}][position]" value="${materialIndex}">
           </td>
           <td>
-            <select class="form-select form-select-sm"
+            <select class="form-select form-select-sm item-select"
                     name="finished_product[packaging_units_attributes][${unitIndex}][packaging_unit_materials_attributes][${materialIndex}][item_id]" required>
-              <option value="">포장재 선택</option>
-              ${itemOptions}
+              <option value="">포장재 선택 (유형 먼저 선택)</option>
             </select>
           </td>
           <td>

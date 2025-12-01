@@ -526,7 +526,7 @@ class Production::LogsController < ApplicationController
 
     fpr = production_log.finished_product&.finished_product_recipes&.find_by(recipe_id: recipe.id)
     weight_per_unit = fpr&.quantity || 0
-    recipe_total = recipe.recipe_ingredients.where(row_type: ["ingredient", nil]).sum(:weight)
+    recipe_total = recipe.recipe_ingredients.where(row_type: [ "ingredient", nil ]).sum(:weight)
     recipe_total = recipe_total.zero? ? 1 : recipe_total
 
     if is_gijeongddeok && production_log.production_plan.present?

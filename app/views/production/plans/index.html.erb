@@ -475,7 +475,7 @@
     box-shadow: inset 0 0 0 2px #0071e3;
   }
 
-  .calendar-cell:not(.past):hover::after {
+  .calendar-cell:hover::after {
     content: '더블클릭하여 입력';
     position: absolute;
     bottom: 2px;
@@ -672,15 +672,8 @@ document.addEventListener('turbo:load', function() {
     cell.addEventListener('dblclick', function(e) {
       e.preventDefault();
       const dateStr = this.dataset.date;
-      const isPast = this.dataset.isPast === 'true';
-
-      if (isPast) {
-        // 과거 날짜: 보기 전용 모달
-        openViewModal(dateStr);
-      } else {
-        // 오늘 또는 미래: 입력/수정 모달
-        openPlanInputModal(dateStr);
-      }
+      // 과거/미래 관계없이 모두 입력 모달 열기
+      openPlanInputModal(dateStr);
     });
 
     // 싱글클릭 시 약간의 하이라이트 효과 (선택적)

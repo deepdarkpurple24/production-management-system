@@ -34,7 +34,7 @@ class Production::LogsController < ApplicationController
     pending_count = 0
     production_plans.each do |plan|
       finished_product = plan.finished_product
-      recipes = finished_product.recipes
+      recipes = finished_product&.recipes || []
 
       if recipes.any?
         recipes.each do |recipe|
@@ -43,8 +43,15 @@ class Production::LogsController < ApplicationController
           end
         end
       else
-        unless existing_logs.any? { |log| log[0] == plan.id }
-          pending_count += 1
+        # 레시피 기반 생산계획인 경우
+        if plan.recipe_id.present?
+          unless existing_logs.include?([ plan.id, plan.recipe_id ])
+            pending_count += 1
+          end
+        else
+          unless existing_logs.any? { |log| log[0] == plan.id }
+            pending_count += 1
+          end
         end
       end
     end
@@ -69,7 +76,7 @@ class Production::LogsController < ApplicationController
       @pending_plans = []
       production_plans.each do |plan|
         finished_product = plan.finished_product
-        recipes = finished_product.recipes
+        recipes = finished_product&.recipes || []
 
         if recipes.any?
           recipes.each do |recipe|
@@ -82,12 +89,23 @@ class Production::LogsController < ApplicationController
             end
           end
         else
-          unless existing_logs.any? { |log| log[0] == plan.id }
-            @pending_plans << {
-              plan: plan,
-              finished_product: finished_product,
-              recipe: nil
-            }
+          # 레시피 기반 생산계획인 경우
+          if plan.recipe_id.present?
+            unless existing_logs.include?([ plan.id, plan.recipe_id ])
+              @pending_plans << {
+                plan: plan,
+                finished_product: finished_product,
+                recipe: plan.recipe
+              }
+            end
+          else
+            unless existing_logs.any? { |log| log[0] == plan.id }
+              @pending_plans << {
+                plan: plan,
+                finished_product: finished_product,
+                recipe: nil
+              }
+            end
           end
         end
       end

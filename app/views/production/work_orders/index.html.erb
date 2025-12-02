@@ -168,7 +168,7 @@
                             <td class="additional-ingredients-cell" style="padding: 0.5rem; font-size: 0.85rem;"
                                 data-plan-id="<%= plan.id %>"
                                 data-product-id="<%= product.id %>"
-                                data-ingredients="<%= additional_ingredients_json.gsub('"', '&quot;') %>">
+                                data-ingredients='<%= additional_ingredients_json.html_safe %>'>
                               <% if additional_ingredients.any? %>
                                 <% additional_ingredients.each do |ing| %>
                                   <div class="text-muted">

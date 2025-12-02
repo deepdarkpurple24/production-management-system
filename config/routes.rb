@@ -143,6 +143,7 @@ Rails.application.routes.draw do
     # 작업지시 페이지 (오늘 기준 실행 화면)
     resources :work_orders, only: [ :index ] do
       collection do
+        post :save_all
         post :save_today_work
         post :save_tomorrow_dough
       end

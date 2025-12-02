@@ -11,11 +11,12 @@ class Production::WorkOrdersController < ApplicationController
 
     # 섹션 1: 기정떡 (D-1 반죽 → D-day 생산)
     # 어제 반죽한 양 = 어제 날짜에 생산계획이 있고 기정떡인 것들
+    # production_date = 반죽일 기준이므로, 어제 반죽 → 오늘 생산
     @gijeongddeok_plans = ProductionPlan
       .includes(:recipe, :production_plan_allocations => :finished_product)
       .joins(:recipe)
       .where("recipes.name LIKE ?", "%기정떡%")
-      .where(production_date: @today)
+      .where(production_date: @yesterday)
       .order(:created_at)
 
     # 기정떡 사용 가능한 총 반죽량 계산
@@ -70,7 +71,65 @@ class Production::WorkOrdersController < ApplicationController
     @planned_dough_count = @tomorrow_gijeongddeok_plans.sum(:quantity)
   end
 
-  # 오늘 작업 저장 (파생 상품 수량)
+  # 통합 저장 (오늘 작업 + 내일 반죽 준비)
+  def save_all
+    allocations_data = params[:allocations] || {}
+    dough_count = params[:dough_count].to_f
+    tomorrow = Date.today + 1.day
+
+    ActiveRecord::Base.transaction do
+      # 1. 오늘 작업 저장 (파생 상품 수량)
+      allocations_data.each do |plan_id, products|
+        plan = ProductionPlan.find(plan_id)
+
+        # 기존 배분 삭제
+        plan.production_plan_allocations.destroy_all
+
+        # 새 배분 생성
+        products.each do |product_id, qty|
+          qty = qty.to_i
+          next if qty <= 0
+
+          plan.production_plan_allocations.create!(
+            finished_product_id: product_id,
+            quantity: qty
+          )
+        end
+      end
+
+      # 2. 내일 반죽 준비 저장
+      gijeongddeok_recipe = Recipe.where("name LIKE ?", "%기정떡%").first
+
+      if gijeongddeok_recipe
+        existing_plan = ProductionPlan
+          .joins(:recipe)
+          .where("recipes.name LIKE ?", "%기정떡%")
+          .where(production_date: tomorrow)
+          .first
+
+        if dough_count > 0
+          if existing_plan
+            existing_plan.update!(quantity: dough_count, unit_type: "통")
+          else
+            ProductionPlan.create!(
+              recipe_id: gijeongddeok_recipe.id,
+              production_date: tomorrow,
+              quantity: dough_count,
+              unit_type: "통"
+            )
+          end
+        else
+          existing_plan&.destroy
+        end
+      end
+    end
+
+    redirect_to production_work_orders_path, notice: "작업지시가 저장되었습니다."
+  rescue => e
+    redirect_to production_work_orders_path, alert: "저장 중 오류가 발생했습니다: #{e.message}"
+  end
+
+  # 오늘 작업 저장 (파생 상품 수량) - 개별 저장용 (하위 호환)
   def save_today_work
     allocations_data = params[:allocations] || {}
 
@@ -99,7 +158,7 @@ class Production::WorkOrdersController < ApplicationController
     redirect_to production_work_orders_path, alert: "저장 중 오류가 발생했습니다: #{e.message}"
   end
 
-  # 내일 반죽 준비 저장
+  # 내일 반죽 준비 저장 - 개별 저장용 (하위 호환)
   def save_tomorrow_dough
     dough_count = params[:dough_count].to_f
     tomorrow = Date.today + 1.day

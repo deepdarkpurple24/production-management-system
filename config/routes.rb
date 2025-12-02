@@ -140,6 +140,13 @@ Rails.application.routes.draw do
         end
       end
     end
+    # 작업지시 페이지 (오늘 기준 실행 화면)
+    resources :work_orders, only: [ :index ] do
+      collection do
+        post :save_today_work
+        post :save_tomorrow_dough
+      end
+    end
     resources :logs do
       collection do
         post :create_draft

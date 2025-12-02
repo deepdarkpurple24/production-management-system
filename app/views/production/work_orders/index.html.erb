@@ -1,0 +1,404 @@
+<%= render 'production/shared/sub_navigation' %>
+
+<div class="container-fluid px-4 py-4">
+  <!-- 헤더 -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-0" style="font-weight: 600; letter-spacing: -0.02em;">작업지시</h4>
+      <p class="text-muted small mb-0"><%= @today.strftime('%Y년 %m월 %d일 (%a)') %> 기준</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- ===============================
+         왼쪽 컬럼: 오늘 작업
+    =============================== -->
+    <div class="col-lg-7 mb-4">
+      <div class="card-modern h-100">
+        <div class="card-header" style="background-color: #e3f2fd; border-bottom: 1px solid #90caf9;">
+          <h5 class="mb-0" style="font-weight: 600; color: #1565c0;">
+            <i class="bi bi-sun me-2"></i>오늘 작업
+          </h5>
+        </div>
+        <div class="card-body">
+          <!-- 섹션 1: 기정떡 -->
+          <div class="mb-4">
+            <div class="d-flex align-items-center mb-3">
+              <span class="badge me-2" style="background-color: #5b9bd5; font-size: 0.9rem; padding: 0.5rem 0.75rem;">
+                <i class="bi bi-1-circle me-1"></i>기정떡
+              </span>
+              <small class="text-muted">D-1 반죽 → D-day 생산</small>
+            </div>
+
+            <% if @gijeongddeok_plans.any? %>
+              <!-- 사용 가능한 반죽량 표시 -->
+              <div class="alert alert-info py-2 mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span>
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>사용 가능한 반죽량</strong>
+                  </span>
+                  <span class="fs-5 fw-bold text-primary">
+                    <%= number_with_delimiter(@available_dough_weight.round(0)) %>g
+                    <small class="text-muted">(약 <%= @gijeongddeok_plans.sum(:quantity) %>통)</small>
+                  </span>
+                </div>
+              </div>
+
+              <!-- 파생 상품 수량 입력 -->
+              <%= form_with url: save_today_work_production_work_orders_path, method: :post, local: true do |f| %>
+                <% @gijeongddeok_plans.each do |plan| %>
+                  <div class="table-responsive mb-3">
+                    <table class="table table-hover mb-0" style="font-size: 0.9rem;">
+                      <thead style="background-color: #fafafa;">
+                        <tr>
+                          <th style="padding: 0.75rem 1rem; font-weight: 600;">제품명</th>
+                          <th style="padding: 0.75rem 1rem; font-weight: 600; width: 100px;">개당 중량</th>
+                          <th class="text-center" style="padding: 0.75rem 1rem; font-weight: 600; width: 150px;">수량</th>
+                          <th class="text-end" style="padding: 0.75rem 1rem; font-weight: 600; width: 120px;">사용 중량</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <%
+                          related_products = plan.recipe.finished_products.order(:name) if plan.recipe
+                          related_products ||= []
+
+                          # 기본 완제품 추가
+                          default_product_ids = @gijeongddeok_default.default_finished_product_ids || []
+                          if default_product_ids.any?
+                            default_products = FinishedProduct.where(id: default_product_ids)
+                            existing_ids = related_products.map(&:id)
+                            additional_products = default_products.reject { |p| existing_ids.include?(p.id) }
+                            related_products = (related_products.to_a + additional_products).sort_by(&:name)
+                          end
+                        %>
+                        <% related_products.each do |product| %>
+                          <%
+                            existing_allocation = plan.production_plan_allocations.find { |a| a.finished_product_id == product.id }
+                            allocation_qty = existing_allocation&.quantity || 0
+                            product_weight = product.weight || 0
+                            is_primary = @primary_product && @primary_product.id == product.id
+                          %>
+                          <tr class="<%= 'table-warning' if is_primary %>">
+                            <td style="padding: 0.75rem 1rem;">
+                              <% if is_primary %>
+                                <i class="bi bi-star-fill me-2" style="color: #ff9500;"></i>
+                              <% else %>
+                                <i class="bi bi-box me-2" style="color: #34c759;"></i>
+                              <% end %>
+                              <%= product.name %>
+                              <% if is_primary %>
+                                <span class="badge bg-warning text-dark ms-1" style="font-size: 0.7rem;">기본</span>
+                              <% end %>
+                            </td>
+                            <td style="padding: 0.75rem 1rem; color: #6e6e73;">
+                              <%= number_with_delimiter(product_weight.round(0)) %>g
+                            </td>
+                            <td class="text-center" style="padding: 0.5rem 1rem;">
+                              <div class="quantity-input-group d-flex justify-content-center align-items-center">
+                                <button type="button" class="btn btn-outline-secondary btn-sm allocation-btn"
+                                        data-action="decrease"
+                                        data-plan-id="<%= plan.id %>"
+                                        data-product-id="<%= product.id %>"
+                                        style="border-radius: 8px 0 0 8px; width: 32px; height: 32px;">
+                                  <i class="bi bi-dash"></i>
+                                </button>
+                                <input type="number"
+                                       name="allocations[<%= plan.id %>][<%= product.id %>]"
+                                       value="<%= allocation_qty %>"
+                                       min="0"
+                                       class="form-control text-center allocation-input"
+                                       data-plan-id="<%= plan.id %>"
+                                       data-product-id="<%= product.id %>"
+                                       data-weight="<%= product_weight %>"
+                                       style="width: 60px; border-radius: 0; border-left: 0; border-right: 0; height: 32px; font-weight: 600;">
+                                <button type="button" class="btn btn-outline-secondary btn-sm allocation-btn"
+                                        data-action="increase"
+                                        data-plan-id="<%= plan.id %>"
+                                        data-product-id="<%= product.id %>"
+                                        style="border-radius: 0 8px 8px 0; width: 32px; height: 32px;">
+                                  <i class="bi bi-plus"></i>
+                                </button>
+                              </div>
+                            </td>
+                            <td class="text-end allocation-weight" style="padding: 0.75rem 1rem; font-weight: 600;"
+                                data-plan-id="<%= plan.id %>"
+                                data-product-id="<%= product.id %>">
+                              <%= number_with_delimiter((product_weight * allocation_qty).round(0)) %>g
+                            </td>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                      <tfoot style="background-color: #f5f5f7;">
+                        <tr>
+                          <td colspan="3" class="text-end" style="padding: 0.75rem 1rem; font-weight: 600;">
+                            사용 중량 합계:
+                          </td>
+                          <td class="text-end used-weight-total" style="padding: 0.75rem 1rem; font-weight: 700; color: #0071e3;"
+                              data-plan-id="<%= plan.id %>"
+                              data-available="<%= plan.recipe&.total_weight.to_f * plan.quantity.to_f %>">
+                            0g
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colspan="3" class="text-end" style="padding: 0.75rem 1rem; font-weight: 600;">
+                            잔여 중량 (기본 <%= @primary_product&.name || '기정떡' %> 용):
+                          </td>
+                          <td class="text-end remaining-weight" style="padding: 0.75rem 1rem; font-weight: 700; color: #ff9500;"
+                              data-plan-id="<%= plan.id %>"
+                              data-primary-weight="<%= @primary_product&.weight || 0 %>">
+                            -
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                <% end %>
+
+                <div class="d-flex justify-content-end">
+                  <button type="submit" class="btn-modern btn-modern-primary">
+                    <i class="bi bi-check-lg me-2"></i>저장
+                  </button>
+                </div>
+              <% end %>
+            <% else %>
+              <div class="text-center py-4">
+                <i class="bi bi-inbox" style="font-size: 3rem; color: #c7c7cc;"></i>
+                <p class="mt-3 mb-0 text-muted">오늘 생산할 기정떡 계획이 없습니다.</p>
+                <small class="text-muted">어제 반죽한 기정떡이 없거나, 생산계획이 등록되지 않았습니다.</small>
+              </div>
+            <% end %>
+          </div>
+
+          <!-- 섹션 2: 기타 제품 -->
+          <% if @other_plans.any? %>
+            <hr class="my-4">
+            <div>
+              <div class="d-flex align-items-center mb-3">
+                <span class="badge me-2" style="background-color: #ed7d31; font-size: 0.9rem; padding: 0.5rem 0.75rem;">
+                  <i class="bi bi-2-circle me-1"></i>기타 제품
+                </span>
+                <small class="text-muted">당일 반죽 → 당일 생산</small>
+              </div>
+
+              <% @other_plans.each do |plan| %>
+                <div class="card mb-3" style="border: 1px solid #e8e8ed;">
+                  <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <h6 class="mb-0" style="font-weight: 600;">
+                          <%= plan.recipe&.name || plan.finished_product&.name || '제품명 없음' %>
+                        </h6>
+                        <small class="text-muted">
+                          계획 수량: <%= number_with_delimiter(plan.quantity) %><%= plan.unit_label %>
+                        </small>
+                      </div>
+                      <%= link_to edit_production_plan_path(plan), class: "btn btn-sm btn-outline-primary" do %>
+                        <i class="bi bi-pencil me-1"></i>수정
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===============================
+         오른쪽 컬럼: 내일 반죽 준비
+    =============================== -->
+    <div class="col-lg-5 mb-4">
+      <div class="card-modern h-100">
+        <div class="card-header" style="background-color: #fff3e0; border-bottom: 1px solid #ffcc80;">
+          <h5 class="mb-0" style="font-weight: 600; color: #e65100;">
+            <i class="bi bi-moon me-2"></i>내일 반죽 준비
+          </h5>
+          <small class="text-muted"><%= @tomorrow.strftime('%Y년 %m월 %d일 (%a)') %></small>
+        </div>
+        <div class="card-body">
+          <%= form_with url: save_tomorrow_dough_production_work_orders_path, method: :post, local: true do |f| %>
+            <div class="mb-4">
+              <label class="form-label fw-bold">반죽량 (통)</label>
+              <div class="quantity-input-group d-flex align-items-center">
+                <button type="button" class="btn btn-outline-secondary dough-btn"
+                        data-action="decrease"
+                        style="border-radius: 8px 0 0 8px; width: 48px; height: 48px;">
+                  <i class="bi bi-dash fs-4"></i>
+                </button>
+                <input type="number"
+                       name="dough_count"
+                       value="<%= @planned_dough_count %>"
+                       min="0"
+                       step="0.5"
+                       class="form-control text-center dough-input"
+                       id="dough-count-input"
+                       style="border-radius: 0; border-left: 0; border-right: 0; height: 48px; font-size: 1.5rem; font-weight: 600; max-width: 120px;">
+                <button type="button" class="btn btn-outline-secondary dough-btn"
+                        data-action="increase"
+                        style="border-radius: 0 8px 8px 0; width: 48px; height: 48px;">
+                  <i class="bi bi-plus fs-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <% if @tomorrow_gijeongddeok_plans.any? %>
+              <div class="alert alert-success py-2">
+                <i class="bi bi-check-circle me-2"></i>
+                생산계획에서 불러온 수량: <strong><%= @planned_dough_count %>통</strong>
+              </div>
+            <% else %>
+              <div class="alert alert-warning py-2">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                내일 날짜에 기정떡 생산계획이 없습니다.
+              </div>
+            <% end %>
+
+            <div class="d-grid">
+              <button type="submit" class="btn-modern btn-modern-primary">
+                <i class="bi bi-check-lg me-2"></i>반죽 준비 저장
+              </button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .quantity-input-group .allocation-btn,
+  .quantity-input-group .dough-btn {
+    transition: all 0.2s ease;
+  }
+
+  .quantity-input-group .allocation-btn:hover,
+  .quantity-input-group .dough-btn:hover {
+    background-color: #0071e3;
+    border-color: #0071e3;
+    color: white;
+  }
+
+  .allocation-input:focus,
+  .dough-input:focus {
+    box-shadow: none;
+    border-color: #0071e3;
+  }
+
+  /* 숫자 입력 스피너 숨기기 */
+  .allocation-input::-webkit-outer-spin-button,
+  .allocation-input::-webkit-inner-spin-button,
+  .dough-input::-webkit-outer-spin-button,
+  .dough-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .allocation-input[type=number],
+  .dough-input[type=number] {
+    -moz-appearance: textfield;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // 파생 상품 수량 +/- 버튼
+  document.querySelectorAll('.allocation-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const action = this.dataset.action;
+      const planId = this.dataset.planId;
+      const productId = this.dataset.productId;
+      const input = document.querySelector(`input.allocation-input[data-plan-id="${planId}"][data-product-id="${productId}"]`);
+      let value = parseInt(input.value) || 0;
+
+      if (action === 'increase') {
+        value++;
+      } else if (action === 'decrease' && value > 0) {
+        value--;
+      }
+
+      input.value = value;
+      updateAllocationWeight(planId, productId);
+      updateTotals(planId);
+    });
+  });
+
+  // 파생 상품 수량 입력 변경
+  document.querySelectorAll('.allocation-input').forEach(function(input) {
+    input.addEventListener('input', function() {
+      updateAllocationWeight(this.dataset.planId, this.dataset.productId);
+      updateTotals(this.dataset.planId);
+    });
+  });
+
+  // 내일 반죽량 +/- 버튼
+  document.querySelectorAll('.dough-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const action = this.dataset.action;
+      const input = document.getElementById('dough-count-input');
+      let value = parseFloat(input.value) || 0;
+
+      if (action === 'increase') {
+        value = Math.round((value + 0.5) * 10) / 10;
+      } else if (action === 'decrease' && value >= 0.5) {
+        value = Math.round((value - 0.5) * 10) / 10;
+      }
+
+      input.value = value;
+    });
+  });
+
+  function updateAllocationWeight(planId, productId) {
+    const input = document.querySelector(`input.allocation-input[data-plan-id="${planId}"][data-product-id="${productId}"]`);
+    const weightCell = document.querySelector(`.allocation-weight[data-plan-id="${planId}"][data-product-id="${productId}"]`);
+    if (!input || !weightCell) return;
+
+    const weight = parseFloat(input.dataset.weight) || 0;
+    const qty = parseInt(input.value) || 0;
+    weightCell.textContent = (weight * qty).toLocaleString() + 'g';
+  }
+
+  function updateTotals(planId) {
+    const totalCell = document.querySelector(`.used-weight-total[data-plan-id="${planId}"]`);
+    const remainingCell = document.querySelector(`.remaining-weight[data-plan-id="${planId}"]`);
+    if (!totalCell || !remainingCell) return;
+
+    const availableWeight = parseFloat(totalCell.dataset.available) || 0;
+    const primaryWeight = parseFloat(remainingCell.dataset.primaryWeight) || 0;
+
+    // 사용 중량 합계 계산
+    let usedWeight = 0;
+    document.querySelectorAll(`input.allocation-input[data-plan-id="${planId}"]`).forEach(function(input) {
+      const weight = parseFloat(input.dataset.weight) || 0;
+      const qty = parseInt(input.value) || 0;
+      usedWeight += weight * qty;
+    });
+
+    totalCell.textContent = usedWeight.toLocaleString() + 'g';
+
+    // 잔여 중량 계산
+    const remaining = availableWeight - usedWeight;
+
+    if (primaryWeight > 0 && remaining > 0) {
+      const primaryQty = Math.floor(remaining / primaryWeight);
+      remainingCell.textContent = remaining.toLocaleString() + 'g (' + primaryQty + '개)';
+    } else {
+      remainingCell.textContent = remaining.toLocaleString() + 'g';
+    }
+
+    // 음수면 빨간색
+    if (remaining < 0) {
+      remainingCell.style.color = '#ff3b30';
+    } else {
+      remainingCell.style.color = '#ff9500';
+    }
+  }
+
+  // 초기 계산
+  document.querySelectorAll('.used-weight-total').forEach(function(cell) {
+    updateTotals(cell.dataset.planId);
+  });
+});
+</script>

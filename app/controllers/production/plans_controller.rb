@@ -22,7 +22,7 @@ class Production::PlansController < ApplicationController
 
     ActiveRecord::Base.transaction do
       plans_data.each do |recipe_id, plan_data|
-        quantity = plan_data[:quantity].to_i
+        quantity = plan_data[:quantity].to_f  # 기정떡은 0.5 단위 지원
         unit_type = plan_data[:unit_type].presence || '개'
         allocations = plan_data[:allocations] || {}
 

@@ -88,13 +88,17 @@
                             product_recipe = product.finished_product_recipes.first&.recipe
 
                             if product_recipe
+                              # 레시피가 다른 레시피를 참조하는지 확인 (예: 울금 기정떡 → 기정떡 반죽)
+                              has_recipe_reference = product_recipe.recipe_ingredients.any? { |ri| ri.source_type == 'recipe' }
+
                               # 레시피 재료 분석
                               product_recipe.recipe_ingredients.each do |ri|
                                 if ri.source_type == 'recipe' && ri.is_main
                                   # 메인 레시피 참조 = 반죽 사용량 (예: 기정떡 반죽 73g)
                                   dough_weight = ri.weight.to_f
-                                elsif ri.source_type == 'item' && ri.item.present?
-                                  # 품목 = 추가 투입재료 (예: 울금가루 2g)
+                                elsif ri.source_type == 'item' && ri.item.present? && has_recipe_reference
+                                  # 레시피가 다른 레시피를 참조할 때만 품목을 추가 투입재료로 처리
+                                  # (백미 기정떡처럼 기본 반죽 레시피를 직접 사용하는 경우는 제외)
                                   additional_ingredients << {
                                     name: ri.item.name,
                                     weight_per_unit: ri.weight.to_f

@@ -129,6 +129,9 @@ Rails.application.routes.draw do
 
   namespace :production do
     resources :plans do
+      collection do
+        post :batch_create
+      end
       resources :results, only: [ :create, :update, :destroy ] do
         collection do
           post :process_packaging

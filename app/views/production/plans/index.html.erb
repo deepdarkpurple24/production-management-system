@@ -7,61 +7,26 @@
       <h4 class="mb-0" style="font-weight: 600; letter-spacing: -0.02em;">생산 계획</h4>
       <p class="text-muted small mb-0">Production Planning</p>
     </div>
-
-    <ul class="nav nav-pills" style="gap: 0.5rem;">
-      <li class="nav-item">
-        <%= link_to production_plans_path(view: 'monthly', date: @date),
-                    class: "nav-link #{@view_type == 'monthly' ? 'active' : ''}",
-                    style: "border-radius: 8px; font-weight: 500; font-size: 0.9rem;" do %>
-          <i class="bi bi-calendar-month me-1"></i>월별
-        <% end %>
-      </li>
-      <li class="nav-item">
-        <%= link_to production_plans_path(view: 'weekly', date: @date),
-                    class: "nav-link #{@view_type == 'weekly' ? 'active' : ''}",
-                    style: "border-radius: 8px; font-weight: 500; font-size: 0.9rem;" do %>
-          <i class="bi bi-calendar-week me-1"></i>주간별
-        <% end %>
-      </li>
-      <li class="nav-item">
-        <%= link_to production_plans_path(view: 'daily', date: @date),
-                    class: "nav-link #{@view_type == 'daily' ? 'active' : ''}",
-                    style: "border-radius: 8px; font-weight: 500; font-size: 0.9rem;" do %>
-          <i class="bi bi-calendar-day me-1"></i>일별
-        <% end %>
-      </li>
-    </ul>
-
-    <%= link_to new_production_plan_path(date: @date, view: @view_type),
-                class: "btn-modern btn-modern-primary" do %>
-      <i class="bi bi-plus-lg me-2"></i>생산 계획 등록
-    <% end %>
   </div>
 
   <!-- 날짜 네비게이션 -->
-  <div class="card-modern mb-3">
-    <div class="card-body py-2 px-3">
+  <div class="card-modern mb-4">
+    <div class="card-body py-3 px-3">
       <div class="d-flex justify-content-between align-items-center">
-        <%= link_to production_plans_path(view: @view_type, date: @date - 1.send(@view_type == 'monthly' ? :month : @view_type == 'weekly' ? :week : :day)),
+        <%= link_to production_plans_path(date: @date - 1.month),
                     class: "btn btn-sm btn-outline-secondary" do %>
           <i class="bi bi-chevron-left"></i>
         <% end %>
 
         <div class="text-center">
           <h5 class="mb-0" style="font-weight: 600;">
-            <% if @view_type == 'monthly' %>
-              <%= @date.strftime('%Y년 %m월') %>
-            <% elsif @view_type == 'weekly' %>
-              <%= @start_date.strftime('%Y년 %m월 %d일') %> - <%= @end_date.strftime('%m월 %d일') %>
-            <% else %>
-              <%= @date.strftime('%Y년 %m월 %d일 (%a)') %>
-            <% end %>
+            <%= @date.strftime('%Y년 %m월') %>
           </h5>
-          <%= link_to "오늘", production_plans_path(view: @view_type, date: Date.today),
+          <%= link_to "오늘", production_plans_path(date: Date.today),
                       class: "btn btn-sm btn-link text-muted" %>
         </div>
 
-        <%= link_to production_plans_path(view: @view_type, date: @date + 1.send(@view_type == 'monthly' ? :month : @view_type == 'weekly' ? :week : :day)),
+        <%= link_to production_plans_path(date: @date + 1.month),
                     class: "btn btn-sm btn-outline-secondary" do %>
           <i class="bi bi-chevron-right"></i>
         <% end %>
@@ -69,117 +34,171 @@
     </div>
   </div>
 
-  <!-- 캘린더 그리드 -->
+  <!-- 완제품 목록 & 수량 입력 -->
   <div class="card-modern">
+    <div class="card-header" style="background-color: #f5f5f7; border-bottom: 1px solid #e8e8ed;">
+      <h5 class="mb-0" style="font-weight: 600;">
+        <i class="bi bi-box-seam me-2" style="color: #0071e3;"></i>
+        완제품 생산 계획
+      </h5>
+    </div>
     <div class="card-body p-0">
-      <% if @view_type == 'monthly' %>
-        <%= render 'calendar_monthly',
-                   date: @date,
-                   start_date: @start_date,
-                   end_date: @end_date,
-                   production_plans: @production_plans %>
-      <% elsif @view_type == 'weekly' %>
-        <%= render 'calendar_weekly',
-                   start_date: @start_date,
-                   end_date: @end_date,
-                   production_plans: @production_plans %>
+      <% if @finished_products.any? %>
+        <%= form_with url: batch_create_production_plans_path, method: :post, local: true, id: "production-plan-form" do |f| %>
+          <%= hidden_field_tag :date, @date.to_s %>
+
+          <div class="table-responsive">
+            <table class="table table-hover mb-0" style="font-size: 0.95rem;">
+              <thead style="background-color: #f5f5f7; border-bottom: 2px solid #e8e8ed;">
+                <tr>
+                  <th style="padding: 1rem; font-weight: 600; color: #1d1d1f; width: 50%;">완제품명</th>
+                  <th class="text-center" style="padding: 1rem; font-weight: 600; color: #1d1d1f; width: 30%;">수량</th>
+                  <th class="text-center" style="padding: 1rem; font-weight: 600; color: #1d1d1f; width: 20%;">현재 계획</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @finished_products.each do |product| %>
+                  <%
+                    # 해당 월의 기존 계획 찾기
+                    existing_plan = @production_plans.find { |p| p.finished_product_id == product.id && p.production_date.month == @date.month && p.production_date.year == @date.year }
+                    current_quantity = existing_plan&.quantity || 0
+                  %>
+                  <tr>
+                    <td style="padding: 1rem; color: #1d1d1f; font-weight: 500;">
+                      <div class="d-flex align-items-center">
+                        <i class="bi bi-box me-2" style="color: #0071e3;"></i>
+                        <%= product.name %>
+                        <% if product.weight.present? %>
+                          <span class="badge bg-light text-muted ms-2" style="font-weight: normal;">
+                            <%= product.weight %><%= product.weight_unit || 'g' %>
+                          </span>
+                        <% end %>
+                      </div>
+                    </td>
+                    <td class="text-center" style="padding: 0.75rem;">
+                      <div class="quantity-input-group d-flex justify-content-center align-items-center">
+                        <button type="button" class="btn btn-outline-secondary btn-sm quantity-btn"
+                                data-action="decrease" data-product-id="<%= product.id %>"
+                                style="border-radius: 8px 0 0 8px; width: 38px; height: 38px;">
+                          <i class="bi bi-dash"></i>
+                        </button>
+                        <input type="number"
+                               name="quantities[<%= product.id %>]"
+                               value="<%= current_quantity %>"
+                               min="0"
+                               class="form-control text-center quantity-input"
+                               data-product-id="<%= product.id %>"
+                               data-original="<%= current_quantity %>"
+                               style="width: 80px; border-radius: 0; border-left: 0; border-right: 0; height: 38px; font-weight: 600;">
+                        <button type="button" class="btn btn-outline-secondary btn-sm quantity-btn"
+                                data-action="increase" data-product-id="<%= product.id %>"
+                                style="border-radius: 0 8px 8px 0; width: 38px; height: 38px;">
+                          <i class="bi bi-plus"></i>
+                        </button>
+                      </div>
+                    </td>
+                    <td class="text-center" style="padding: 1rem;">
+                      <% if existing_plan %>
+                        <span class="badge bg-primary" style="font-size: 0.85rem; padding: 0.5em 0.8em;">
+                          <%= existing_plan.quantity %>개
+                        </span>
+                      <% else %>
+                        <span class="text-muted">-</span>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="p-3 bg-light border-top d-flex justify-content-end">
+            <button type="submit" class="btn-modern btn-modern-primary" id="save-btn">
+              <i class="bi bi-check-lg me-2"></i>저장
+            </button>
+          </div>
+        <% end %>
       <% else %>
-        <%= render 'calendar_daily',
-                   date: @date,
-                   production_plans: @production_plans %>
+        <div class="text-center py-5">
+          <i class="bi bi-inbox" style="font-size: 3rem; color: #c7c7cc;"></i>
+          <p class="mt-3 mb-0" style="color: #6e6e73;">등록된 완제품이 없습니다.</p>
+          <p class="text-muted small">레시피 관리에서 완제품을 먼저 등록해주세요.</p>
+          <%= link_to "완제품 등록하기", finished_products_path, class: "btn btn-outline-primary mt-2" %>
+        </div>
       <% end %>
     </div>
   </div>
 </div>
 
 <style>
-  .nav-pills .nav-link {
-    color: #1d1d1f;
+  .quantity-input-group .quantity-btn {
     transition: all 0.2s ease;
   }
-  .nav-pills .nav-link:hover:not(.active) {
-    background-color: #f5f5f7;
-    color: #0071e3;
-  }
-  .nav-pills .nav-link.active {
+
+  .quantity-input-group .quantity-btn:hover {
     background-color: #0071e3;
+    border-color: #0071e3;
     color: white;
   }
 
-  .calendar-cell {
-    height: 100px;
-    border: 1px solid #e8e8ed;
-    padding: 8px;
-    transition: all 0.2s ease;
-    vertical-align: top;
-    overflow: hidden;
-  }
-
-  .calendar-cell:hover {
-    background-color: #f5f5f7;
-    cursor: pointer;
-  }
-
-  .calendar-cell.today {
-    background-color: #e3f2fd;
+  .quantity-input:focus {
+    box-shadow: none;
     border-color: #0071e3;
   }
 
-  .calendar-cell.other-month {
-    background-color: #fafafa;
-    color: #86868b;
+  .quantity-input.changed {
+    background-color: #fff3cd;
+    border-color: #ffc107;
   }
 
-  .plan-item {
-    font-size: 0.75rem;
-    padding: 2px 6px;
-    margin-bottom: 2px;
-    border-radius: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    background-color: #0071e3;
-    color: white;
-    cursor: pointer;
+  /* 숫자 입력 스피너 숨기기 */
+  .quantity-input::-webkit-outer-spin-button,
+  .quantity-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
   }
-
-  .plan-item:hover {
-    opacity: 0.8;
+  .quantity-input[type=number] {
+    -moz-appearance: textfield;
   }
 </style>
 
 <script>
-  function checkAndUpdateDate() {
-    // URL에서 date 파라미터 추출
-    const urlParams = new URLSearchParams(window.location.search);
-    const dateParam = urlParams.get('date');
-    const viewParam = urlParams.get('view') || 'monthly';
+document.addEventListener('DOMContentLoaded', function() {
+  // +/- 버튼 클릭 이벤트
+  document.querySelectorAll('.quantity-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const action = this.dataset.action;
+      const productId = this.dataset.productId;
+      const input = document.querySelector(`input[data-product-id="${productId}"]`);
+      let value = parseInt(input.value) || 0;
 
-    if (dateParam) {
-      // 오늘 날짜
-      const today = new Date();
-      const todayStr = today.getFullYear() + '-' +
-                       String(today.getMonth() + 1).padStart(2, '0') + '-' +
-                       String(today.getDate()).padStart(2, '0');
-
-      // 세션 스토리지에서 마지막 방문 날짜 확인
-      const lastVisitDate = sessionStorage.getItem('productionPlansLastVisit');
-
-      // 마지막 방문이 오늘이 아니고, URL의 날짜가 오늘이 아니면 오늘로 리다이렉트
-      if (lastVisitDate && lastVisitDate !== todayStr && dateParam !== todayStr) {
-        sessionStorage.setItem('productionPlansLastVisit', todayStr);
-        window.location.replace('/production/plans?view=' + viewParam + '&date=' + todayStr);
-        return;
+      if (action === 'increase') {
+        value++;
+      } else if (action === 'decrease' && value > 0) {
+        value--;
       }
 
-      // 현재 방문 날짜 저장
-      sessionStorage.setItem('productionPlansLastVisit', todayStr);
+      input.value = value;
+      checkIfChanged(input);
+    });
+  });
+
+  // 수량 입력 변경 감지
+  document.querySelectorAll('.quantity-input').forEach(function(input) {
+    input.addEventListener('input', function() {
+      checkIfChanged(this);
+    });
+  });
+
+  function checkIfChanged(input) {
+    const original = parseInt(input.dataset.original) || 0;
+    const current = parseInt(input.value) || 0;
+
+    if (original !== current) {
+      input.classList.add('changed');
+    } else {
+      input.classList.remove('changed');
     }
   }
-
-  // 일반 페이지 로드
-  document.addEventListener('DOMContentLoaded', checkAndUpdateDate);
-
-  // Turbo 페이지 전환
-  document.addEventListener('turbo:load', checkAndUpdateDate);
+});
 </script>

@@ -2,20 +2,9 @@ class Production::PlansController < ApplicationController
   before_action :set_production_plan, only: [ :edit, :update, :destroy ]
 
   def index
-    @view_type = params[:view] || "monthly"
     @date = params[:date] ? Date.parse(params[:date]) : Date.today
-
-    case @view_type
-    when "weekly"
-      @start_date = @date.beginning_of_week
-      @end_date = @date.end_of_week
-    when "daily"
-      @start_date = @date
-      @end_date = @date
-    else # monthly
-      @start_date = @date.beginning_of_month
-      @end_date = @date.end_of_month
-    end
+    @start_date = @date.beginning_of_month
+    @end_date = @date.end_of_month
 
     @production_plans = ProductionPlan
       .includes(:finished_product)
@@ -23,6 +12,59 @@ class Production::PlansController < ApplicationController
       .order(:production_date, :created_at)
 
     @finished_products = FinishedProduct.order(:name)
+  end
+
+  # 일괄 생산계획 생성/수정
+  def batch_create
+    date = params[:date] ? Date.parse(params[:date]) : Date.today
+    quantities = params[:quantities] || {}
+
+    ActiveRecord::Base.transaction do
+      quantities.each do |product_id, quantity|
+        quantity = quantity.to_i
+        product = FinishedProduct.find_by(id: product_id)
+        next unless product
+
+        # 해당 월에 기존 계획이 있는지 확인
+        existing_plan = ProductionPlan
+          .where(finished_product_id: product_id)
+          .where(production_date: date.beginning_of_month..date.end_of_month)
+          .first
+
+        if quantity > 0
+          if existing_plan
+            # 기존 계획 수정
+            old_quantity = existing_plan.quantity
+            if old_quantity != quantity
+              existing_plan.update!(quantity: quantity)
+              # 반죽일지 재생성
+              existing_plan.production_logs.destroy_all
+              ProductionLogInitializer.create_logs_for_plan(existing_plan)
+              log_activity(:update, existing_plan)
+            end
+          else
+            # 새 계획 생성
+            plan = ProductionPlan.create!(
+              finished_product_id: product_id,
+              production_date: date,
+              quantity: quantity
+            )
+            ProductionLogInitializer.create_logs_for_plan(plan)
+            log_activity(:create, plan)
+          end
+        else
+          # 수량이 0이면 기존 계획 삭제
+          if existing_plan
+            log_activity(:destroy, existing_plan)
+            existing_plan.destroy!
+          end
+        end
+      end
+    end
+
+    redirect_to production_plans_path(date: date), notice: "생산 계획이 저장되었습니다."
+  rescue => e
+    redirect_to production_plans_path(date: date), alert: "저장 중 오류가 발생했습니다: #{e.message}"
   end
 
   def new

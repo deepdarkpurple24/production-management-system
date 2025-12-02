@@ -7,6 +7,19 @@ class GijeongddeokDefault < ApplicationRecord
     first_or_create!
   end
 
+  # 기본 완제품 목록 (다중 선택)
+  def default_finished_products
+    ids = default_finished_product_ids || []
+    FinishedProduct.where(id: ids).order(:name)
+  end
+
+  # 기본 완제품 ID 목록 설정
+  def default_finished_product_ids=(ids)
+    # 빈 문자열 및 nil 제거
+    cleaned_ids = Array(ids).reject(&:blank?).map(&:to_i)
+    super(cleaned_ids)
+  end
+
   # 기본 필드 목록 (개별 컬럼으로 존재)
   STANDARD_FIELDS = %w[
     fermentation_room_temp refrigeration_room_temp

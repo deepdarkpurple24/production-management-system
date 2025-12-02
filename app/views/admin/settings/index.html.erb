@@ -111,7 +111,7 @@
       </h4>
 
       <div class="row g-4">
-        <!-- 기정떡 기본 완제품 설정 -->
+        <!-- 기정떡 기본 완제품 설정 (다중 선택) -->
         <div class="col-12">
           <div class="card-modern">
             <div class="card-body p-4">
@@ -119,29 +119,63 @@
                 <i class="bi bi-box-seam me-2"></i>기정떡 기본 완제품 설정
               </h5>
               <p class="text-muted small mb-3">
-                생산계획에서 기정떡 반죽 추가 시 자동으로 연결될 기본 완제품을 선택합니다.
+                생산계획에서 기정떡 반죽 추가 시 자동으로 연결될 완제품 목록입니다.
+                기정떡 반죽에서 여러 완제품을 만들 수 있습니다.
               </p>
 
-              <%= form_with url: admin_settings_update_gijeongddeok_default_product_path, method: :patch, local: true do |f| %>
-                <div class="row g-3 align-items-end">
-                  <div class="col-md-8">
-                    <label class="form-label">기본 완제품</label>
-                    <%= select_tag :default_finished_product_id,
-                                   options_from_collection_for_select(@finished_products, :id, :name, @gijeongddeok_default.default_finished_product_id),
-                                   include_blank: "선택 (기본값 없음)",
-                                   class: "form-select" %>
-                    <small class="text-muted">기정떡 반죽을 생산계획에 추가할 때 이 완제품이 기본으로 연결됩니다.</small>
-                  </div>
-                  <div class="col-md-4">
-                    <%= f.submit "저장", class: "btn-modern btn-modern-primary w-100" %>
-                  </div>
+              <%= form_with url: admin_settings_update_gijeongddeok_default_products_path, method: :patch, local: true, id: "gijeongddeok-products-form" do %>
+                <div id="gijeongddeok-products-list">
+                  <% selected_ids = @gijeongddeok_default.default_finished_product_ids || [] %>
+                  <% if selected_ids.any? %>
+                    <% selected_ids.each_with_index do |product_id, index| %>
+                      <div class="row g-2 mb-2 gijeongddeok-product-row">
+                        <div class="col-md-10">
+                          <select name="default_finished_product_ids[]" class="form-select">
+                            <option value="">완제품 선택</option>
+                            <% @finished_products.each do |product| %>
+                              <option value="<%= product.id %>" <%= 'selected' if product.id == product_id %>><%= product.name %></option>
+                            <% end %>
+                          </select>
+                        </div>
+                        <div class="col-md-2">
+                          <button type="button" class="btn btn-outline-danger w-100 remove-gijeongddeok-product-btn">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        </div>
+                      </div>
+                    <% end %>
+                  <% else %>
+                    <div class="row g-2 mb-2 gijeongddeok-product-row">
+                      <div class="col-md-10">
+                        <select name="default_finished_product_ids[]" class="form-select">
+                          <option value="">완제품 선택</option>
+                          <% @finished_products.each do |product| %>
+                            <option value="<%= product.id %>"><%= product.name %></option>
+                          <% end %>
+                        </select>
+                      </div>
+                      <div class="col-md-2">
+                        <button type="button" class="btn btn-outline-danger w-100 remove-gijeongddeok-product-btn">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+
+                <div class="d-flex justify-content-between mt-3">
+                  <button type="button" class="btn btn-outline-secondary" id="add-gijeongddeok-product-btn">
+                    <i class="bi bi-plus-lg me-1"></i>완제품 추가
+                  </button>
+                  <button type="submit" class="btn-modern btn-modern-primary">저장</button>
                 </div>
               <% end %>
 
-              <% if @gijeongddeok_default.default_finished_product.present? %>
+              <% if @gijeongddeok_default.default_finished_products.any? %>
                 <div class="alert alert-success mt-3 mb-0">
                   <i class="bi bi-check-circle me-2"></i>
-                  현재 설정: <strong><%= @gijeongddeok_default.default_finished_product.name %></strong>
+                  현재 설정된 완제품:
+                  <strong><%= @gijeongddeok_default.default_finished_products.pluck(:name).join(', ') %></strong>
                 </div>
               <% end %>
             </div>
@@ -1117,6 +1151,53 @@
         var input = row.querySelector('input[type="number"]');
         if (select) select.name = `half_batch_ingredients[${index}][item_id]`;
         if (input) input.name = `half_batch_ingredients[${index}][weight]`;
+      });
+    }
+
+    // 기정떡 기본 완제품 관리
+    var gijeongddeokProductsList = document.getElementById('gijeongddeok-products-list');
+    var addGijeongddeokProductBtn = document.getElementById('add-gijeongddeok-product-btn');
+
+    // 완제품 추가 버튼 클릭
+    if (addGijeongddeokProductBtn) {
+      addGijeongddeokProductBtn.addEventListener('click', function() {
+        var productOptions = '<option value="">완제품 선택</option>';
+        <% @finished_products.each do |product| %>
+          productOptions += '<option value="<%= product.id %>"><%= j product.name %></option>';
+        <% end %>
+
+        var newRow = document.createElement('div');
+        newRow.className = 'row g-2 mb-2 gijeongddeok-product-row';
+        newRow.innerHTML = `
+          <div class="col-md-10">
+            <select name="default_finished_product_ids[]" class="form-select">
+              ${productOptions}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button type="button" class="btn btn-outline-danger w-100 remove-gijeongddeok-product-btn">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        `;
+        gijeongddeokProductsList.appendChild(newRow);
+      });
+    }
+
+    // 완제품 삭제 버튼 (이벤트 위임)
+    if (gijeongddeokProductsList) {
+      gijeongddeokProductsList.addEventListener('click', function(e) {
+        var removeBtn = e.target.closest('.remove-gijeongddeok-product-btn');
+        if (removeBtn) {
+          var row = removeBtn.closest('.gijeongddeok-product-row');
+          var rows = gijeongddeokProductsList.querySelectorAll('.gijeongddeok-product-row');
+          if (rows.length > 1) {
+            row.remove();
+          } else {
+            // 마지막 행은 입력 초기화
+            row.querySelector('select').value = '';
+          }
+        }
       });
     }
   });

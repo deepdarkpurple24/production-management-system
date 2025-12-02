@@ -44,6 +44,7 @@ Rails.application.routes.draw do
     # 기정떡 기본값 관리
     patch "settings/gijeongddeok_defaults", to: "settings#update_gijeongddeok_defaults", as: "settings_update_gijeongddeok_defaults"
     patch "settings/gijeongddeok_default_product", to: "settings#update_gijeongddeok_default_product", as: "settings_update_gijeongddeok_default_product"
+    patch "settings/gijeongddeok_default_products", to: "settings#update_gijeongddeok_default_products", as: "settings_update_gijeongddeok_default_products"
     post "settings/gijeongddeok_fields", to: "settings#create_gijeongddeok_field", as: "settings_create_gijeongddeok_field"
     delete "settings/gijeongddeok_fields/:id", to: "settings#destroy_gijeongddeok_field", as: "settings_destroy_gijeongddeok_field"
     patch "settings/gijeongddeok_fields/update_positions", to: "settings#update_gijeongddeok_field_positions", as: "settings_update_gijeongddeok_field_positions"

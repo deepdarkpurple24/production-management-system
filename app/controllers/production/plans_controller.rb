@@ -36,16 +36,23 @@ class Production::PlansController < ApplicationController
           .first
 
         if quantity > 0
-          # 기정떡 레시피인 경우 기본 완제품 자동 설정
-          finished_product_id = nil
-          if recipe.name.include?('기정떡')
-            default_product = GijeongddeokDefault.instance.default_finished_product
-            finished_product_id = default_product&.id
+          # 기정떡 레시피인 경우 기본 완제품들 자동 배분에 추가
+          is_gijeongddeok = recipe.name.include?('기정떡')
+          default_product_ids = []
+          if is_gijeongddeok
+            default_product_ids = GijeongddeokDefault.instance.default_finished_product_ids || []
+          end
+
+          # 기존 allocations에 기본 완제품 추가 (아직 없는 것만)
+          if default_product_ids.any?
+            default_product_ids.each do |product_id|
+              allocations[product_id.to_s] ||= "0"
+            end
           end
 
           if existing_plan
             # 기존 계획 수정
-            existing_plan.update!(quantity: quantity, unit_type: unit_type, production_date: date, finished_product_id: finished_product_id)
+            existing_plan.update!(quantity: quantity, unit_type: unit_type, production_date: date)
             update_allocations(existing_plan, allocations)
 
             # 반죽일지 재생성
@@ -56,7 +63,6 @@ class Production::PlansController < ApplicationController
             # 새 계획 생성
             plan = ProductionPlan.create!(
               recipe_id: recipe_id,
-              finished_product_id: finished_product_id,
               production_date: date,
               quantity: quantity,
               unit_type: unit_type

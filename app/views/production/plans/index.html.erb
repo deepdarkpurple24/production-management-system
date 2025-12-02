@@ -54,6 +54,18 @@
 
           # 해당 레시피를 사용하는 완제품들
           related_products = recipe.finished_products.order(:name)
+
+          # 기정떡인 경우 설정된 기본 완제품들 추가
+          if is_gijeongddeok
+            default_product_ids = GijeongddeokDefault.instance.default_finished_product_ids || []
+            if default_product_ids.any?
+              default_products = FinishedProduct.where(id: default_product_ids)
+              # 기존 related_products에 없는 것만 추가
+              existing_ids = related_products.pluck(:id)
+              additional_products = default_products.reject { |p| existing_ids.include?(p.id) }
+              related_products = (related_products.to_a + additional_products).sort_by(&:name)
+            end
+          end
         %>
 
         <div class="card-modern mb-3">

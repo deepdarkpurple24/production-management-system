@@ -812,7 +812,9 @@ document.addEventListener('turbo:load', function() {
     // 초기 하이라이트
     document.querySelectorAll('.modal-qty-input').forEach(input => highlightIfChanged(input));
 
-    const modal = new bootstrap.Modal(document.getElementById('planInputModal'));
+    // getOrCreateInstance를 사용하여 중복 인스턴스 방지
+    const modalEl = document.getElementById('planInputModal');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
     modal.show();
   }
 
@@ -860,7 +862,9 @@ document.addEventListener('turbo:load', function() {
 
     document.getElementById('dayViewModalBody').innerHTML = html;
 
-    const modal = new bootstrap.Modal(document.getElementById('dayViewModal'));
+    // getOrCreateInstance를 사용하여 중복 인스턴스 방지
+    const modalEl = document.getElementById('dayViewModal');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
     modal.show();
   }
 

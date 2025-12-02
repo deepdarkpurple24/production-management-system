@@ -53,15 +53,21 @@ bin/rails test test/models/user_test.rb:10 # 특정 라인 테스트
 ## Docker Commands (서버)
 
 ```bash
-# 배포
-docker-compose up -d --build
+# 배포 (Docker Compose v2 사용)
+docker compose up -d --build
 
 # ContainerConfig 오류 발생 시
 docker ps -a | grep web | awk '{print $1}' | xargs -r docker rm -f
-docker-compose up -d
+docker compose up -d
 
 # 로그 확인
-docker logs -f production-management-system_web_1
+docker compose logs -f web
+
+# Rails 콘솔 접속
+docker compose exec web bin/rails console
+
+# 스크립트 실행
+cat script.rb | docker compose exec -T web bin/rails runner -
 ```
 
 ## Documentation Index
@@ -98,6 +104,7 @@ docker logs -f production-management-system_web_1
 /inventory/shipments    # 출고
 /recipes                # 레시피
 /production/plans       # 생산 계획
+/production/work_orders # 작업지시
 /production/logs        # 반죽일지
 /settings               # 설정
 /admin/users            # 사용자 관리 (admin)
@@ -134,6 +141,18 @@ scaled_weight = recipe_ingredient.weight * split_unit
 # 예: 레시피 44000g × 0.5 = 22000g (반통)
 ```
 
+## 완제품 추가 투입재료
+
+```ruby
+# FinishedProduct.base_dough_weight: 반죽 사용량 (없으면 총 중량 사용)
+# FinishedProductAdditive: 추가 투입재료 (울금가루 등)
+
+product.effective_dough_weight  # base_dough_weight || weight
+product.finished_product_additives  # 추가 재료 목록
+
+# 예: 울금 기정떡 75g = 반죽 73g + 울금가루 2g
+```
+
 ## 반죽일지 날짜 구분
 
 - **dough_date**: 반죽일 (1차 반죽) - 소계 이전 재료
@@ -144,4 +163,4 @@ scaled_weight = recipe_ingredient.weight * split_unit
 
 ---
 
-**Version**: 2.4 | **Updated**: 2025-12-01
+**Version**: 2.5 | **Updated**: 2025-12-02

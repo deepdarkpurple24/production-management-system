@@ -56,10 +56,17 @@
 ### FinishedProduct
 - 여러 레시피 조합
 - 총 중량 계산
+- `base_dough_weight`: 반죽 사용량 (없으면 weight 사용)
+- `effective_dough_weight`: base_dough_weight || weight
 
 ### FinishedProductRecipe
 - 레시피당 수량
 - position 기반 정렬
+
+### FinishedProductAdditive
+- 추가 투입재료 (울금가루 등)
+- `item_id`, `weight`
+- 예: 울금 기정떡 75g = 반죽 73g + 울금가루 2g
 
 ## 5. Production (생산 관리)
 

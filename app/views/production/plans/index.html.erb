@@ -58,9 +58,7 @@
 
         <div class="card-modern mb-3">
           <div class="card-header d-flex justify-content-between align-items-center"
-               style="background-color: #f5f5f7; border-bottom: 1px solid #e8e8ed; cursor: pointer;"
-               data-bs-toggle="collapse"
-               data-bs-target="#recipe-<%= recipe.id %>">
+               style="background-color: #f5f5f7; border-bottom: 1px solid #e8e8ed;">
             <div class="d-flex align-items-center">
               <i class="bi bi-journal-text me-2" style="color: #0071e3; font-size: 1.2rem;"></i>
               <h5 class="mb-0" style="font-weight: 600;"><%= recipe.name %></h5>
@@ -72,7 +70,7 @@
             </div>
             <div class="d-flex align-items-center">
               <!-- 수량 입력 -->
-              <div class="quantity-input-group d-flex align-items-center me-3" onclick="event.stopPropagation();">
+              <div class="quantity-input-group d-flex align-items-center me-3">
                 <button type="button" class="btn btn-outline-secondary btn-sm quantity-btn"
                         data-action="decrease" data-recipe-id="<%= recipe.id %>" data-step="<%= step_value %>"
                         style="border-radius: 8px 0 0 8px; width: 36px; height: 36px;">
@@ -87,7 +85,6 @@
                        data-recipe-id="<%= recipe.id %>"
                        data-original="<%= current_quantity %>"
                        data-step="<%= step_value %>"
-                       onclick="event.stopPropagation();"
                        style="width: 70px; border-radius: 0; border-left: 0; border-right: 0; height: 36px; font-weight: 600;">
                 <button type="button" class="btn btn-outline-secondary btn-sm quantity-btn"
                         data-action="increase" data-recipe-id="<%= recipe.id %>" data-step="<%= step_value %>"
@@ -98,16 +95,14 @@
               <!-- 단위 선택 -->
               <select name="plans[<%= recipe.id %>][unit_type]"
                       class="form-select form-select-sm"
-                      onclick="event.stopPropagation();"
                       style="width: 70px; height: 36px;">
                 <option value="개" <%= '통' != current_unit_type ? 'selected' : '' %>>개</option>
                 <option value="통" <%= '통' == current_unit_type ? 'selected' : '' %>>통</option>
               </select>
-              <i class="bi bi-chevron-down ms-3 collapse-icon"></i>
             </div>
           </div>
 
-          <div id="recipe-<%= recipe.id %>" class="collapse <%= current_quantity > 0 ? 'show' : '' %>">
+          <div id="recipe-<%= recipe.id %>">
             <div class="card-body p-0">
               <% if related_products.any? %>
                 <table class="table table-hover mb-0" style="font-size: 0.9rem;">
@@ -252,17 +247,6 @@
     -moz-appearance: textfield;
   }
 
-  .collapse-icon {
-    transition: transform 0.3s ease;
-  }
-
-  [aria-expanded="true"] .collapse-icon {
-    transform: rotate(180deg);
-  }
-
-  .card-header[data-bs-toggle="collapse"]:hover {
-    background-color: #eaeaec !important;
-  }
 </style>
 
 <script>

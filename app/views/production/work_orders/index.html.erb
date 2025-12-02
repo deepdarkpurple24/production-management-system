@@ -55,10 +55,10 @@
                       <thead style="background-color: #fafafa;">
                         <tr>
                           <th style="padding: 0.5rem; font-weight: 600;">제품명</th>
-                          <th style="padding: 0.5rem; font-weight: 600; width: 70px;">개당 중량</th>
+                          <th style="padding: 0.5rem; font-weight: 600; width: 80px;">반죽/개</th>
                           <th class="text-center" style="padding: 0.5rem; font-weight: 600; width: 180px;">수량</th>
                           <th style="padding: 0.5rem; font-weight: 600; width: 150px;">추가 투입재료</th>
-                          <th class="text-end" style="padding: 0.5rem; font-weight: 600; width: 90px;">사용 중량</th>
+                          <th class="text-end" style="padding: 0.5rem; font-weight: 600; width: 90px;">반죽 사용</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -82,14 +82,19 @@
                             product_weight = product.weight || 0
                             is_primary = @primary_product && @primary_product.id == product.id
 
-                            # 추가 투입재료 계산
+                            # 반죽 사용량 계산 (추가 재료 제외)
+                            dough_weight = product_weight  # 기본값: 완제품 중량
                             additional_ingredients = []
                             product_recipe = product.finished_product_recipes.first&.recipe
+
                             if product_recipe
-                              # 레시피에서 기정떡 반죽이 아닌 재료 찾기 (추가 투입재료)
+                              # 레시피 재료 분석
                               product_recipe.recipe_ingredients.each do |ri|
-                                # source_type이 'item'인 것만 추가 재료로 처리
-                                if ri.source_type == 'item' && ri.item.present?
+                                if ri.source_type == 'recipe' && ri.is_main
+                                  # 메인 레시피 참조 = 반죽 사용량 (예: 기정떡 반죽 73g)
+                                  dough_weight = ri.weight.to_f
+                                elsif ri.source_type == 'item' && ri.item.present?
+                                  # 품목 = 추가 투입재료 (예: 울금가루 2g)
                                   additional_ingredients << {
                                     name: ri.item.name,
                                     weight_per_unit: ri.weight.to_f
@@ -112,7 +117,7 @@
                               <% end %>
                             </td>
                             <td style="padding: 0.5rem; color: #6e6e73;">
-                              <%= number_with_delimiter(product_weight.round(0)) %>g
+                              <%= number_with_delimiter(dough_weight.round(0)) %>g
                             </td>
                             <td class="text-center" style="padding: 0.5rem;">
                               <% if is_primary %>
@@ -123,7 +128,7 @@
                                        class="form-control text-center primary-allocation-input"
                                        data-plan-id="<%= plan.id %>"
                                        data-product-id="<%= product.id %>"
-                                       data-weight="<%= product_weight %>"
+                                       data-weight="<%= dough_weight %>"
                                        data-is-primary="true"
                                        readonly
                                        style="width: 90px; margin: 0 auto; height: 36px; font-weight: 600; background-color: #fff3cd; border-color: #ffc107;">
@@ -144,7 +149,7 @@
                                          class="form-control text-center allocation-input"
                                          data-plan-id="<%= plan.id %>"
                                          data-product-id="<%= product.id %>"
-                                         data-weight="<%= product_weight %>"
+                                         data-weight="<%= dough_weight %>"
                                          style="width: 90px; border-radius: 0; border-left: 0; border-right: 0; height: 36px; font-weight: 600;">
                                   <button type="button" class="btn btn-outline-secondary btn-sm allocation-btn"
                                           data-action="increase"
@@ -177,7 +182,7 @@
                                 data-plan-id="<%= plan.id %>"
                                 data-product-id="<%= product.id %>"
                                 data-is-primary="<%= is_primary %>">
-                              <%= number_with_delimiter((product_weight * allocation_qty).round(0)) %>g
+                              <%= number_with_delimiter((dough_weight * allocation_qty).round(0)) %>g
                             </td>
                           </tr>
                         <% end %>

@@ -723,14 +723,15 @@ document.addEventListener('turbo:load', function() {
         const existing = existingByRecipe[recipe.id];
         const currentQty = existing ? existing.quantity : 0;
         const currentUnit = existing ? existing.unit_type : recipe.default_unit;
+        const hasExisting = currentQty > 0;
 
         html += `
-          <div class="list-group-item py-3">
+          <div class="list-group-item py-3 modal-recipe-row" data-recipe-id="${recipe.id}">
             <div class="d-flex justify-content-between align-items-center">
               <div class="d-flex align-items-center">
                 <i class="bi ${recipe.is_gijeongddeok ? 'bi-star-fill text-success' : 'bi-journal-text text-primary'} me-2" style="font-size: 1.2rem;"></i>
                 <div>
-                  <h6 class="mb-0" style="font-weight: 600;">${recipe.name}</h6>
+                  <h6 class="mb-0 recipe-name" style="font-weight: 600;">${recipe.name}</h6>
                   ${recipe.total_weight > 0 ? `<small class="text-muted">${recipe.total_weight.toLocaleString()}g/1${recipe.default_unit}</small>` : ''}
                 </div>
               </div>
@@ -749,6 +750,7 @@ document.addEventListener('turbo:load', function() {
                          class="form-control text-center modal-qty-input"
                          data-recipe-id="${recipe.id}"
                          data-step="${recipe.step_value}"
+                         data-original="${currentQty}"
                          style="width: 70px; border-radius: 0; border-left: 0; border-right: 0; height: 36px; font-weight: 600;">
                   <button type="button" class="btn btn-outline-secondary btn-sm modal-qty-btn"
                           data-action="increase" data-recipe-id="${recipe.id}" data-step="${recipe.step_value}"
@@ -756,10 +758,20 @@ document.addEventListener('turbo:load', function() {
                     <i class="bi bi-plus"></i>
                   </button>
                 </div>
-                <select name="plans[${recipe.id}][unit_type]" class="form-select form-select-sm" style="width: 70px; height: 36px;">
+                <select name="plans[${recipe.id}][unit_type]" class="form-select form-select-sm me-2" style="width: 70px; height: 36px;">
                   <option value="개" ${currentUnit !== '통' ? 'selected' : ''}>개</option>
                   <option value="통" ${currentUnit === '통' ? 'selected' : ''}>통</option>
                 </select>
+                ${hasExisting ? `
+                  <button type="button" class="btn btn-outline-danger btn-sm modal-delete-btn"
+                          data-recipe-id="${recipe.id}"
+                          title="삭제"
+                          style="width: 36px; height: 36px;">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                ` : `
+                  <div style="width: 36px; height: 36px;"></div>
+                `}
               </div>
             </div>
           </div>
@@ -800,14 +812,48 @@ document.addEventListener('turbo:load', function() {
 
     function highlightIfChanged(input) {
       const value = parseFloat(input.value) || 0;
+      const original = parseFloat(input.dataset.original) || 0;
+      const row = input.closest('.modal-recipe-row');
+
       if (value > 0) {
         input.style.backgroundColor = '#fff3cd';
         input.style.borderColor = '#ffc107';
+        if (row) {
+          row.style.opacity = '1';
+          row.style.textDecoration = 'none';
+          row.querySelector('.recipe-name').style.textDecoration = 'none';
+        }
+      } else if (original > 0) {
+        // 기존에 있던 것을 0으로 변경 = 삭제 예정
+        input.style.backgroundColor = '#f8d7da';
+        input.style.borderColor = '#f5c6cb';
+        if (row) {
+          row.style.opacity = '0.5';
+          row.querySelector('.recipe-name').style.textDecoration = 'line-through';
+        }
       } else {
         input.style.backgroundColor = '';
         input.style.borderColor = '';
+        if (row) {
+          row.style.opacity = '1';
+          row.querySelector('.recipe-name').style.textDecoration = 'none';
+        }
       }
     }
+
+    // 삭제 버튼 이벤트 바인딩
+    document.querySelectorAll('.modal-delete-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const recipeId = this.dataset.recipeId;
+        const input = document.querySelector(`.modal-qty-input[data-recipe-id="${recipeId}"]`);
+
+        if (confirm('이 계획을 삭제하시겠습니까?')) {
+          input.value = 0;
+          highlightIfChanged(input);
+        }
+      });
+    });
 
     // 초기 하이라이트
     document.querySelectorAll('.modal-qty-input').forEach(input => highlightIfChanged(input));

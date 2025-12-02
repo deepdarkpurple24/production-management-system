@@ -55,9 +55,10 @@
                       <thead style="background-color: #fafafa;">
                         <tr>
                           <th style="padding: 0.5rem; font-weight: 600;">제품명</th>
-                          <th style="padding: 0.5rem; font-weight: 600; width: 80px;">개당 중량</th>
-                          <th class="text-center" style="padding: 0.5rem; font-weight: 600; width: 200px;">수량</th>
-                          <th class="text-end" style="padding: 0.5rem; font-weight: 600; width: 100px;">사용 중량</th>
+                          <th style="padding: 0.5rem; font-weight: 600; width: 70px;">개당 중량</th>
+                          <th class="text-center" style="padding: 0.5rem; font-weight: 600; width: 180px;">수량</th>
+                          <th style="padding: 0.5rem; font-weight: 600; width: 150px;">추가 투입재료</th>
+                          <th class="text-end" style="padding: 0.5rem; font-weight: 600; width: 90px;">사용 중량</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -80,6 +81,23 @@
                             allocation_qty = existing_allocation&.quantity || 0
                             product_weight = product.weight || 0
                             is_primary = @primary_product && @primary_product.id == product.id
+
+                            # 추가 투입재료 계산
+                            additional_ingredients = []
+                            product_recipe = product.finished_product_recipes.first&.recipe
+                            if product_recipe
+                              # 레시피에서 기정떡 반죽이 아닌 재료 찾기 (추가 투입재료)
+                              product_recipe.recipe_ingredients.each do |ri|
+                                # source_type이 'item'인 것만 추가 재료로 처리
+                                if ri.source_type == 'item' && ri.item.present?
+                                  additional_ingredients << {
+                                    name: ri.item.name,
+                                    weight_per_unit: ri.weight.to_f
+                                  }
+                                end
+                              end
+                            end
+                            additional_ingredients_json = additional_ingredients.to_json
                           %>
                           <tr class="<%= 'table-warning' if is_primary %>">
                             <td style="padding: 0.5rem;">
@@ -138,6 +156,23 @@
                                 </div>
                               <% end %>
                             </td>
+                            <td class="additional-ingredients-cell" style="padding: 0.5rem; font-size: 0.85rem;"
+                                data-plan-id="<%= plan.id %>"
+                                data-product-id="<%= product.id %>"
+                                data-ingredients="<%= additional_ingredients_json.gsub('"', '&quot;') %>">
+                              <% if additional_ingredients.any? %>
+                                <% additional_ingredients.each do |ing| %>
+                                  <div class="text-muted">
+                                    <span class="additional-ingredient-name"><%= ing[:name] %></span>:
+                                    <span class="additional-ingredient-weight fw-bold" style="color: #8b5cf6;">
+                                      <%= number_with_delimiter((ing[:weight_per_unit] * allocation_qty).round(1)) %>g
+                                    </span>
+                                  </div>
+                                <% end %>
+                              <% else %>
+                                <span class="text-muted">-</span>
+                              <% end %>
+                            </td>
                             <td class="text-end allocation-weight" style="padding: 0.5rem; font-weight: 600; <%= 'color: #ff9500;' if is_primary %>"
                                 data-plan-id="<%= plan.id %>"
                                 data-product-id="<%= product.id %>"
@@ -149,7 +184,7 @@
                       </tbody>
                       <tfoot style="background-color: #f5f5f7;">
                         <tr>
-                          <td colspan="3" class="text-end" style="padding: 0.5rem; font-weight: 600;">
+                          <td colspan="4" class="text-end" style="padding: 0.5rem; font-weight: 600;">
                             사용 중량 합계:
                           </td>
                           <td class="text-end used-weight-total" style="padding: 0.5rem; font-weight: 700; color: #0071e3;"
@@ -159,7 +194,7 @@
                           </td>
                         </tr>
                         <tr>
-                          <td colspan="3" class="text-end" style="padding: 0.5rem; font-weight: 600;">
+                          <td colspan="4" class="text-end" style="padding: 0.5rem; font-weight: 600;">
                             잔여 중량:
                           </td>
                           <td class="text-end remaining-weight" style="padding: 0.5rem; font-weight: 700; color: #34c759;"
@@ -380,6 +415,38 @@ document.addEventListener('turbo:load', function() {
     const weight = parseFloat(input.dataset.weight) || 0;
     const qty = parseInt(input.value) || 0;
     weightCell.textContent = (weight * qty).toLocaleString() + 'g';
+
+    // 추가 투입재료 업데이트
+    updateAdditionalIngredients(planId, productId, qty);
+  }
+
+  function updateAdditionalIngredients(planId, productId, qty) {
+    const cell = document.querySelector(`.additional-ingredients-cell[data-plan-id="${planId}"][data-product-id="${productId}"]`);
+    if (!cell) return;
+
+    const ingredientsData = cell.dataset.ingredients;
+    if (!ingredientsData) return;
+
+    try {
+      const ingredients = JSON.parse(ingredientsData);
+      if (ingredients.length === 0) {
+        cell.innerHTML = '<span class="text-muted">-</span>';
+        return;
+      }
+
+      let html = '';
+      ingredients.forEach(function(ing) {
+        const totalWeight = (ing.weight_per_unit * qty).toFixed(1);
+        html += '<div class="text-muted">';
+        html += '<span class="additional-ingredient-name">' + ing.name + '</span>: ';
+        html += '<span class="additional-ingredient-weight fw-bold" style="color: #8b5cf6;">';
+        html += parseFloat(totalWeight).toLocaleString() + 'g';
+        html += '</span></div>';
+      });
+      cell.innerHTML = html;
+    } catch (e) {
+      console.error('Failed to parse ingredients:', e);
+    }
   }
 
   function updateTotals(planId) {
@@ -412,6 +479,10 @@ document.addEventListener('turbo:load', function() {
       if (primaryWeightCell) {
         primaryWeightCell.textContent = (primaryWeight * primaryQty).toLocaleString() + 'g';
       }
+
+      // 기본 제품 추가 투입재료 업데이트
+      const primaryProductId = primaryInput.dataset.productId;
+      updateAdditionalIngredients(planId, primaryProductId, primaryQty);
 
       // 실제 잔여 중량 (기본 제품 할당 후)
       const actualRemaining = remaining - (primaryWeight * primaryQty);

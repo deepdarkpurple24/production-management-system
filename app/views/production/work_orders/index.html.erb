@@ -51,13 +51,13 @@
                 <!-- 파생 상품 수량 입력 -->
                 <% @gijeongddeok_plans.each do |plan| %>
                   <div class="table-responsive mb-3">
-                    <table class="table table-hover mb-0" style="font-size: 0.9rem;">
+                    <table class="table table-hover mb-0" style="font-size: 0.9rem; table-layout: fixed;">
                       <thead style="background-color: #fafafa;">
                         <tr>
-                          <th style="padding: 0.75rem 1rem; font-weight: 600;">제품명</th>
-                          <th style="padding: 0.75rem 1rem; font-weight: 600; width: 100px;">개당 중량</th>
-                          <th class="text-center" style="padding: 0.75rem 1rem; font-weight: 600; width: 150px;">수량</th>
-                          <th class="text-end" style="padding: 0.75rem 1rem; font-weight: 600; width: 120px;">사용 중량</th>
+                          <th style="padding: 0.75rem 0.5rem; font-weight: 600; width: 120px;">제품명</th>
+                          <th style="padding: 0.75rem 0.5rem; font-weight: 600; width: 80px;">개당 중량</th>
+                          <th class="text-center" style="padding: 0.75rem 0.5rem; font-weight: 600; width: 180px;">수량</th>
+                          <th class="text-end" style="padding: 0.75rem 0.5rem; font-weight: 600; width: 100px;">사용 중량</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -82,21 +82,21 @@
                             is_primary = @primary_product && @primary_product.id == product.id
                           %>
                           <tr class="<%= 'table-warning' if is_primary %>">
-                            <td style="padding: 0.75rem 1rem;">
+                            <td style="padding: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                               <% if is_primary %>
-                                <i class="bi bi-star-fill me-2" style="color: #ff9500;"></i>
+                                <i class="bi bi-star-fill me-1" style="color: #ff9500; font-size: 0.8rem;"></i>
                               <% else %>
-                                <i class="bi bi-box me-2" style="color: #34c759;"></i>
+                                <i class="bi bi-box me-1" style="color: #34c759; font-size: 0.8rem;"></i>
                               <% end %>
-                              <%= product.name %>
+                              <span title="<%= product.name %>"><%= product.name %></span>
                               <% if is_primary %>
-                                <span class="badge bg-warning text-dark ms-1" style="font-size: 0.7rem;">자동계산</span>
+                                <span class="badge bg-warning text-dark ms-1" style="font-size: 0.6rem;">자동</span>
                               <% end %>
                             </td>
-                            <td style="padding: 0.75rem 1rem; color: #6e6e73;">
+                            <td style="padding: 0.5rem; color: #6e6e73; font-size: 0.85rem;">
                               <%= number_with_delimiter(product_weight.round(0)) %>g
                             </td>
-                            <td class="text-center" style="padding: 0.5rem 1rem;">
+                            <td class="text-center" style="padding: 0.5rem;">
                               <% if is_primary %>
                                 <!-- 기본 제품: 자동 계산 (읽기 전용) -->
                                 <input type="number"
@@ -108,7 +108,7 @@
                                        data-weight="<%= product_weight %>"
                                        data-is-primary="true"
                                        readonly
-                                       style="width: 80px; margin: 0 auto; height: 32px; font-weight: 600; background-color: #fff3cd; border-color: #ffc107;">
+                                       style="width: 70px; margin: 0 auto; height: 32px; font-weight: 600; background-color: #fff3cd; border-color: #ffc107;">
                               <% else %>
                                 <!-- 일반 제품: 수동 입력 -->
                                 <div class="quantity-input-group d-flex justify-content-center align-items-center">
@@ -116,7 +116,7 @@
                                           data-action="decrease"
                                           data-plan-id="<%= plan.id %>"
                                           data-product-id="<%= product.id %>"
-                                          style="border-radius: 8px 0 0 8px; width: 32px; height: 32px;">
+                                          style="border-radius: 8px 0 0 8px; width: 36px; height: 32px;">
                                     <i class="bi bi-dash"></i>
                                   </button>
                                   <input type="number"
@@ -127,18 +127,18 @@
                                          data-plan-id="<%= plan.id %>"
                                          data-product-id="<%= product.id %>"
                                          data-weight="<%= product_weight %>"
-                                         style="width: 60px; border-radius: 0; border-left: 0; border-right: 0; height: 32px; font-weight: 600;">
+                                         style="width: 70px; border-radius: 0; border-left: 0; border-right: 0; height: 32px; font-weight: 600;">
                                   <button type="button" class="btn btn-outline-secondary btn-sm allocation-btn"
                                           data-action="increase"
                                           data-plan-id="<%= plan.id %>"
                                           data-product-id="<%= product.id %>"
-                                          style="border-radius: 0 8px 8px 0; width: 32px; height: 32px;">
+                                          style="border-radius: 0 8px 8px 0; width: 36px; height: 32px;">
                                     <i class="bi bi-plus"></i>
                                   </button>
                                 </div>
                               <% end %>
                             </td>
-                            <td class="text-end allocation-weight" style="padding: 0.75rem 1rem; font-weight: 600; <%= 'color: #ff9500;' if is_primary %>"
+                            <td class="text-end allocation-weight" style="padding: 0.5rem; font-weight: 600; font-size: 0.85rem; <%= 'color: #ff9500;' if is_primary %>"
                                 data-plan-id="<%= plan.id %>"
                                 data-product-id="<%= product.id %>"
                                 data-is-primary="<%= is_primary %>">
@@ -147,22 +147,22 @@
                           </tr>
                         <% end %>
                       </tbody>
-                      <tfoot style="background-color: #f5f5f7;">
+                      <tfoot style="background-color: #f5f5f7; font-size: 0.85rem;">
                         <tr>
-                          <td colspan="3" class="text-end" style="padding: 0.75rem 1rem; font-weight: 600;">
+                          <td colspan="3" class="text-end" style="padding: 0.5rem; font-weight: 600;">
                             사용 중량 합계:
                           </td>
-                          <td class="text-end used-weight-total" style="padding: 0.75rem 1rem; font-weight: 700; color: #0071e3;"
+                          <td class="text-end used-weight-total" style="padding: 0.5rem; font-weight: 700; color: #0071e3;"
                               data-plan-id="<%= plan.id %>"
                               data-available="<%= plan.recipe&.total_weight.to_f * plan.quantity.to_f %>">
                             0g
                           </td>
                         </tr>
                         <tr>
-                          <td colspan="3" class="text-end" style="padding: 0.75rem 1rem; font-weight: 600;">
+                          <td colspan="3" class="text-end" style="padding: 0.5rem; font-weight: 600;">
                             잔여 중량:
                           </td>
-                          <td class="text-end remaining-weight" style="padding: 0.75rem 1rem; font-weight: 700; color: #34c759;"
+                          <td class="text-end remaining-weight" style="padding: 0.5rem; font-weight: 700; color: #34c759;"
                               data-plan-id="<%= plan.id %>"
                               data-primary-weight="<%= @primary_product&.weight || 0 %>">
                             -

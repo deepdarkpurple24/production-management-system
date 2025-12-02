@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_01_140000) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_02_015400) do
   create_table "activity_logs", force: :cascade do |t|
     t.string "action", null: false
     t.string "browser"
@@ -348,6 +348,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_140000) do
     t.integer "batch_number"
     t.datetime "created_at", null: false
     t.decimal "dough_count", precision: 10, scale: 1
+    t.date "dough_date"
     t.decimal "dough_temp", precision: 10, scale: 1
     t.decimal "fermentation_room_temp", precision: 10, scale: 1
     t.integer "finished_product_id", null: false
@@ -375,17 +376,31 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_140000) do
     t.index ["recipe_id"], name: "index_production_logs_on_recipe_id"
   end
 
-  create_table "production_plans", force: :cascade do |t|
+  create_table "production_plan_allocations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "finished_product_id", null: false
+    t.integer "production_plan_id", null: false
+    t.integer "quantity", default: 0
+    t.datetime "updated_at", null: false
+    t.index ["finished_product_id"], name: "index_production_plan_allocations_on_finished_product_id"
+    t.index ["production_plan_id", "finished_product_id"], name: "idx_plan_allocations_unique", unique: true
+    t.index ["production_plan_id"], name: "index_production_plan_allocations_on_production_plan_id"
+  end
+
+  create_table "production_plans", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "finished_product_id"
     t.boolean "is_gijeongddeok", default: false
     t.text "notes"
     t.date "production_date"
     t.decimal "quantity", precision: 10, scale: 2
+    t.integer "recipe_id"
     t.integer "split_count", default: 1
     t.decimal "split_unit", precision: 3, scale: 1, default: "1.0"
+    t.string "unit_type", default: "개"
     t.datetime "updated_at", null: false
     t.index ["finished_product_id"], name: "index_production_plans_on_finished_product_id"
+    t.index ["recipe_id"], name: "index_production_plans_on_recipe_id"
   end
 
   create_table "production_results", force: :cascade do |t|
@@ -616,7 +631,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_140000) do
   add_foreign_key "production_logs", "finished_products"
   add_foreign_key "production_logs", "production_plans"
   add_foreign_key "production_logs", "recipes"
+  add_foreign_key "production_plan_allocations", "finished_products"
+  add_foreign_key "production_plan_allocations", "production_plans"
   add_foreign_key "production_plans", "finished_products"
+  add_foreign_key "production_plans", "recipes"
   add_foreign_key "production_results", "packaging_units"
   add_foreign_key "production_results", "production_plans"
   add_foreign_key "receipt_versions", "receipts"

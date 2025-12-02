@@ -34,142 +34,242 @@
     </div>
   </div>
 
-  <!-- 완제품 목록 & 수량 입력 -->
-  <div class="card-modern">
-    <div class="card-header" style="background-color: #f5f5f7; border-bottom: 1px solid #e8e8ed;">
-      <h5 class="mb-0" style="font-weight: 600;">
-        <i class="bi bi-box-seam me-2" style="color: #0071e3;"></i>
-        완제품 생산 계획
-      </h5>
-    </div>
-    <div class="card-body p-0">
-      <% if @finished_products.any? %>
-        <%= form_with url: batch_create_production_plans_path, method: :post, local: true, id: "production-plan-form" do |f| %>
-          <%= hidden_field_tag :date, @date.to_s %>
+  <!-- 레시피 기반 생산 계획 -->
+  <% if @recipes.any? %>
+    <%= form_with url: batch_create_production_plans_path, method: :post, local: true, id: "production-plan-form" do |f| %>
+      <%= hidden_field_tag :date, @date.to_s %>
 
-          <div class="table-responsive">
-            <table class="table table-hover mb-0" style="font-size: 0.95rem;">
-              <thead style="background-color: #f5f5f7; border-bottom: 2px solid #e8e8ed;">
-                <tr>
-                  <th style="padding: 1rem; font-weight: 600; color: #1d1d1f; width: 50%;">완제품명</th>
-                  <th class="text-center" style="padding: 1rem; font-weight: 600; color: #1d1d1f; width: 30%;">수량</th>
-                  <th class="text-center" style="padding: 1rem; font-weight: 600; color: #1d1d1f; width: 20%;">현재 계획</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% @finished_products.each do |product| %>
-                  <%
-                    # 해당 월의 기존 계획 찾기
-                    existing_plan = @production_plans.find { |p| p.finished_product_id == product.id && p.production_date.month == @date.month && p.production_date.year == @date.year }
-                    current_quantity = existing_plan&.quantity || 0
-                  %>
-                  <tr>
-                    <td style="padding: 1rem; color: #1d1d1f; font-weight: 500;">
-                      <div class="d-flex align-items-center">
-                        <i class="bi bi-box me-2" style="color: #0071e3;"></i>
-                        <%= product.name %>
-                        <% if product.weight.present? %>
-                          <span class="badge bg-light text-muted ms-2" style="font-weight: normal;">
-                            <%= product.weight %><%= product.weight_unit || 'g' %>
-                          </span>
-                        <% end %>
-                      </div>
-                    </td>
-                    <td class="text-center" style="padding: 0.75rem;">
-                      <div class="quantity-input-group d-flex justify-content-center align-items-center">
-                        <button type="button" class="btn btn-outline-secondary btn-sm quantity-btn"
-                                data-action="decrease" data-product-id="<%= product.id %>"
-                                style="border-radius: 8px 0 0 8px; width: 38px; height: 38px;">
-                          <i class="bi bi-dash"></i>
-                        </button>
-                        <input type="number"
-                               name="quantities[<%= product.id %>]"
-                               value="<%= current_quantity %>"
-                               min="0"
-                               class="form-control text-center quantity-input"
-                               data-product-id="<%= product.id %>"
-                               data-original="<%= current_quantity %>"
-                               style="width: 80px; border-radius: 0; border-left: 0; border-right: 0; height: 38px; font-weight: 600;">
-                        <button type="button" class="btn btn-outline-secondary btn-sm quantity-btn"
-                                data-action="increase" data-product-id="<%= product.id %>"
-                                style="border-radius: 0 8px 8px 0; width: 38px; height: 38px;">
-                          <i class="bi bi-plus"></i>
-                        </button>
-                      </div>
-                    </td>
-                    <td class="text-center" style="padding: 1rem;">
-                      <% if existing_plan %>
-                        <span class="badge bg-primary" style="font-size: 0.85rem; padding: 0.5em 0.8em;">
-                          <%= existing_plan.quantity %>개
-                        </span>
-                      <% else %>
-                        <span class="text-muted">-</span>
-                      <% end %>
-                    </td>
-                  </tr>
-                <% end %>
-              </tbody>
-            </table>
+      <% @recipes.each do |recipe| %>
+        <%
+          # 해당 월의 기존 계획 찾기
+          existing_plan = @production_plans.find { |p| p.recipe_id == recipe.id }
+          current_quantity = existing_plan&.quantity || 0
+          current_unit_type = existing_plan&.unit_type || '통'
+
+          # 레시피 이름에 '기정떡'이 포함되면 기본 단위를 '통'으로
+          default_unit = recipe.name.include?('기정떡') ? '통' : '개'
+          current_unit_type = existing_plan ? existing_plan.unit_type : default_unit
+
+          # 해당 레시피를 사용하는 완제품들
+          related_products = recipe.finished_products.order(:name)
+        %>
+
+        <div class="card-modern mb-3">
+          <div class="card-header d-flex justify-content-between align-items-center"
+               style="background-color: #f5f5f7; border-bottom: 1px solid #e8e8ed; cursor: pointer;"
+               data-bs-toggle="collapse"
+               data-bs-target="#recipe-<%= recipe.id %>">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-journal-text me-2" style="color: #0071e3; font-size: 1.2rem;"></i>
+              <h5 class="mb-0" style="font-weight: 600;"><%= recipe.name %></h5>
+              <% if recipe.total_weight > 0 %>
+                <span class="badge bg-light text-muted ms-2" style="font-weight: normal;">
+                  <%= number_with_delimiter(recipe.total_weight.round(0)) %>g/1<%= default_unit %>
+                </span>
+              <% end %>
+            </div>
+            <div class="d-flex align-items-center">
+              <!-- 수량 입력 -->
+              <div class="quantity-input-group d-flex align-items-center me-3" onclick="event.stopPropagation();">
+                <button type="button" class="btn btn-outline-secondary btn-sm quantity-btn"
+                        data-action="decrease" data-recipe-id="<%= recipe.id %>"
+                        style="border-radius: 8px 0 0 8px; width: 36px; height: 36px;">
+                  <i class="bi bi-dash"></i>
+                </button>
+                <input type="number"
+                       name="plans[<%= recipe.id %>][quantity]"
+                       value="<%= current_quantity %>"
+                       min="0"
+                       class="form-control text-center quantity-input"
+                       data-recipe-id="<%= recipe.id %>"
+                       data-original="<%= current_quantity %>"
+                       onclick="event.stopPropagation();"
+                       style="width: 70px; border-radius: 0; border-left: 0; border-right: 0; height: 36px; font-weight: 600;">
+                <button type="button" class="btn btn-outline-secondary btn-sm quantity-btn"
+                        data-action="increase" data-recipe-id="<%= recipe.id %>"
+                        style="border-radius: 0 8px 8px 0; width: 36px; height: 36px;">
+                  <i class="bi bi-plus"></i>
+                </button>
+              </div>
+              <!-- 단위 선택 -->
+              <select name="plans[<%= recipe.id %>][unit_type]"
+                      class="form-select form-select-sm"
+                      onclick="event.stopPropagation();"
+                      style="width: 70px; height: 36px;">
+                <option value="개" <%= '통' != current_unit_type ? 'selected' : '' %>>개</option>
+                <option value="통" <%= '통' == current_unit_type ? 'selected' : '' %>>통</option>
+              </select>
+              <i class="bi bi-chevron-down ms-3 collapse-icon"></i>
+            </div>
           </div>
 
-          <div class="p-3 bg-light border-top d-flex justify-content-end">
-            <button type="submit" class="btn-modern btn-modern-primary" id="save-btn">
-              <i class="bi bi-check-lg me-2"></i>저장
-            </button>
+          <div id="recipe-<%= recipe.id %>" class="collapse <%= current_quantity > 0 ? 'show' : '' %>">
+            <div class="card-body p-0">
+              <% if related_products.any? %>
+                <table class="table table-hover mb-0" style="font-size: 0.9rem;">
+                  <thead style="background-color: #fafafa;">
+                    <tr>
+                      <th style="padding: 0.75rem 1rem; font-weight: 600; color: #6e6e73;">제품명</th>
+                      <th style="padding: 0.75rem 1rem; font-weight: 600; color: #6e6e73; width: 100px;">개당 중량</th>
+                      <th class="text-center" style="padding: 0.75rem 1rem; font-weight: 600; color: #6e6e73; width: 180px;">수량 (개)</th>
+                      <th class="text-end" style="padding: 0.75rem 1rem; font-weight: 600; color: #6e6e73; width: 120px;">사용 중량</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% related_products.each do |product| %>
+                      <%
+                        existing_allocation = existing_plan&.production_plan_allocations&.find { |a| a.finished_product_id == product.id }
+                        allocation_qty = existing_allocation&.quantity || 0
+                        product_weight = product.weight || 0
+                      %>
+                      <tr>
+                        <td style="padding: 0.75rem 1rem; color: #1d1d1f;">
+                          <i class="bi bi-box me-2" style="color: #34c759;"></i>
+                          <%= product.name %>
+                        </td>
+                        <td style="padding: 0.75rem 1rem; color: #6e6e73;">
+                          <%= number_with_delimiter(product_weight.round(0)) %><%= product.weight_unit || 'g' %>
+                        </td>
+                        <td class="text-center" style="padding: 0.5rem 1rem;">
+                          <div class="quantity-input-group d-flex justify-content-center align-items-center">
+                            <button type="button" class="btn btn-outline-secondary btn-sm allocation-btn"
+                                    data-action="decrease"
+                                    data-recipe-id="<%= recipe.id %>"
+                                    data-product-id="<%= product.id %>"
+                                    style="border-radius: 8px 0 0 8px; width: 32px; height: 32px;">
+                              <i class="bi bi-dash"></i>
+                            </button>
+                            <input type="number"
+                                   name="plans[<%= recipe.id %>][allocations][<%= product.id %>]"
+                                   value="<%= allocation_qty %>"
+                                   min="0"
+                                   class="form-control text-center allocation-input"
+                                   data-recipe-id="<%= recipe.id %>"
+                                   data-product-id="<%= product.id %>"
+                                   data-weight="<%= product_weight %>"
+                                   data-original="<%= allocation_qty %>"
+                                   style="width: 60px; border-radius: 0; border-left: 0; border-right: 0; height: 32px; font-weight: 600; font-size: 0.85rem;">
+                            <button type="button" class="btn btn-outline-secondary btn-sm allocation-btn"
+                                    data-action="increase"
+                                    data-recipe-id="<%= recipe.id %>"
+                                    data-product-id="<%= product.id %>"
+                                    style="border-radius: 0 8px 8px 0; width: 32px; height: 32px;">
+                              <i class="bi bi-plus"></i>
+                            </button>
+                          </div>
+                        </td>
+                        <td class="text-end allocation-weight" style="padding: 0.75rem 1rem; color: #0071e3; font-weight: 600;"
+                            data-recipe-id="<%= recipe.id %>"
+                            data-product-id="<%= product.id %>">
+                          <%= number_with_delimiter((product_weight * allocation_qty).round(0)) %>g
+                        </td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                  <tfoot style="background-color: #f5f5f7;">
+                    <tr>
+                      <td colspan="3" class="text-end" style="padding: 0.75rem 1rem; font-weight: 600;">
+                        잔여 중량 (기본 제품용):
+                      </td>
+                      <td class="text-end remaining-weight" style="padding: 0.75rem 1rem; font-weight: 700; color: #ff9500;"
+                          data-recipe-id="<%= recipe.id %>"
+                          data-total-weight="<%= recipe.total_weight %>">
+                        -
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              <% else %>
+                <div class="text-center py-4">
+                  <span class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    이 레시피를 사용하는 완제품이 없습니다.
+                  </span>
+                </div>
+              <% end %>
+            </div>
           </div>
-        <% end %>
-      <% else %>
-        <div class="text-center py-5">
-          <i class="bi bi-inbox" style="font-size: 3rem; color: #c7c7cc;"></i>
-          <p class="mt-3 mb-0" style="color: #6e6e73;">등록된 완제품이 없습니다.</p>
-          <p class="text-muted small">레시피 관리에서 완제품을 먼저 등록해주세요.</p>
-          <%= link_to "완제품 등록하기", finished_products_path, class: "btn btn-outline-primary mt-2" %>
         </div>
       <% end %>
+
+      <div class="d-flex justify-content-end mt-3">
+        <button type="submit" class="btn-modern btn-modern-primary" id="save-btn">
+          <i class="bi bi-check-lg me-2"></i>저장
+        </button>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="card-modern">
+      <div class="card-body text-center py-5">
+        <i class="bi bi-inbox" style="font-size: 3rem; color: #c7c7cc;"></i>
+        <p class="mt-3 mb-0" style="color: #6e6e73;">등록된 레시피가 없습니다.</p>
+        <p class="text-muted small">레시피 관리에서 레시피를 먼저 등록해주세요.</p>
+        <%= link_to "레시피 등록하기", recipes_path, class: "btn btn-outline-primary mt-2" %>
+      </div>
     </div>
-  </div>
+  <% end %>
 </div>
 
 <style>
-  .quantity-input-group .quantity-btn {
+  .quantity-input-group .quantity-btn,
+  .quantity-input-group .allocation-btn {
     transition: all 0.2s ease;
   }
 
-  .quantity-input-group .quantity-btn:hover {
+  .quantity-input-group .quantity-btn:hover,
+  .quantity-input-group .allocation-btn:hover {
     background-color: #0071e3;
     border-color: #0071e3;
     color: white;
   }
 
-  .quantity-input:focus {
+  .quantity-input:focus,
+  .allocation-input:focus {
     box-shadow: none;
     border-color: #0071e3;
   }
 
-  .quantity-input.changed {
+  .quantity-input.changed,
+  .allocation-input.changed {
     background-color: #fff3cd;
     border-color: #ffc107;
   }
 
   /* 숫자 입력 스피너 숨기기 */
   .quantity-input::-webkit-outer-spin-button,
-  .quantity-input::-webkit-inner-spin-button {
+  .quantity-input::-webkit-inner-spin-button,
+  .allocation-input::-webkit-outer-spin-button,
+  .allocation-input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
-  .quantity-input[type=number] {
+  .quantity-input[type=number],
+  .allocation-input[type=number] {
     -moz-appearance: textfield;
+  }
+
+  .collapse-icon {
+    transition: transform 0.3s ease;
+  }
+
+  [aria-expanded="true"] .collapse-icon {
+    transform: rotate(180deg);
+  }
+
+  .card-header[data-bs-toggle="collapse"]:hover {
+    background-color: #eaeaec !important;
   }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // +/- 버튼 클릭 이벤트
+  // 레시피 수량 +/- 버튼
   document.querySelectorAll('.quantity-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
       const action = this.dataset.action;
-      const productId = this.dataset.productId;
-      const input = document.querySelector(`input[data-product-id="${productId}"]`);
+      const recipeId = this.dataset.recipeId;
+      const input = document.querySelector(`input.quantity-input[data-recipe-id="${recipeId}"]`);
       let value = parseInt(input.value) || 0;
 
       if (action === 'increase') {
@@ -180,13 +280,47 @@ document.addEventListener('DOMContentLoaded', function() {
 
       input.value = value;
       checkIfChanged(input);
+      updateRemainingWeight(recipeId);
     });
   });
 
-  // 수량 입력 변경 감지
+  // 완제품 배분 +/- 버튼
+  document.querySelectorAll('.allocation-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const action = this.dataset.action;
+      const recipeId = this.dataset.recipeId;
+      const productId = this.dataset.productId;
+      const input = document.querySelector(`input.allocation-input[data-recipe-id="${recipeId}"][data-product-id="${productId}"]`);
+      let value = parseInt(input.value) || 0;
+
+      if (action === 'increase') {
+        value++;
+      } else if (action === 'decrease' && value > 0) {
+        value--;
+      }
+
+      input.value = value;
+      checkIfChanged(input);
+      updateAllocationWeight(recipeId, productId);
+      updateRemainingWeight(recipeId);
+    });
+  });
+
+  // 레시피 수량 입력 변경
   document.querySelectorAll('.quantity-input').forEach(function(input) {
     input.addEventListener('input', function() {
       checkIfChanged(this);
+      updateRemainingWeight(this.dataset.recipeId);
+    });
+  });
+
+  // 완제품 배분 입력 변경
+  document.querySelectorAll('.allocation-input').forEach(function(input) {
+    input.addEventListener('input', function() {
+      checkIfChanged(this);
+      updateAllocationWeight(this.dataset.recipeId, this.dataset.productId);
+      updateRemainingWeight(this.dataset.recipeId);
     });
   });
 
@@ -200,5 +334,47 @@ document.addEventListener('DOMContentLoaded', function() {
       input.classList.remove('changed');
     }
   }
+
+  function updateAllocationWeight(recipeId, productId) {
+    const input = document.querySelector(`input.allocation-input[data-recipe-id="${recipeId}"][data-product-id="${productId}"]`);
+    const weightCell = document.querySelector(`.allocation-weight[data-recipe-id="${recipeId}"][data-product-id="${productId}"]`);
+    const weight = parseFloat(input.dataset.weight) || 0;
+    const qty = parseInt(input.value) || 0;
+    weightCell.textContent = (weight * qty).toLocaleString() + 'g';
+  }
+
+  function updateRemainingWeight(recipeId) {
+    const quantityInput = document.querySelector(`input.quantity-input[data-recipe-id="${recipeId}"]`);
+    const remainingCell = document.querySelector(`.remaining-weight[data-recipe-id="${recipeId}"]`);
+
+    if (!remainingCell) return;
+
+    const totalWeightPerUnit = parseFloat(remainingCell.dataset.totalWeight) || 0;
+    const quantity = parseInt(quantityInput.value) || 0;
+    const totalWeight = totalWeightPerUnit * quantity;
+
+    // 모든 배분 중량 합계
+    let allocatedWeight = 0;
+    document.querySelectorAll(`input.allocation-input[data-recipe-id="${recipeId}"]`).forEach(function(input) {
+      const weight = parseFloat(input.dataset.weight) || 0;
+      const qty = parseInt(input.value) || 0;
+      allocatedWeight += weight * qty;
+    });
+
+    const remaining = totalWeight - allocatedWeight;
+    remainingCell.textContent = remaining.toLocaleString() + 'g';
+
+    // 음수면 빨간색, 양수면 주황색
+    if (remaining < 0) {
+      remainingCell.style.color = '#ff3b30';
+    } else {
+      remainingCell.style.color = '#ff9500';
+    }
+  }
+
+  // 초기 계산
+  document.querySelectorAll('.remaining-weight').forEach(function(cell) {
+    updateRemainingWeight(cell.dataset.recipeId);
+  });
 });
 </script>

@@ -7,6 +7,7 @@ class Recipe < ApplicationRecord
   has_many :recipe_versions, -> { order(version_number: :desc) }, dependent: :destroy
   has_many :finished_product_recipes, dependent: :destroy
   has_many :finished_products, through: :finished_product_recipes
+  has_many :production_plans, dependent: :nullify
 
   accepts_nested_attributes_for :recipe_ingredients, allow_destroy: true
   accepts_nested_attributes_for :recipe_equipments, allow_destroy: true

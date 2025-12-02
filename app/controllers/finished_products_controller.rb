@@ -12,12 +12,14 @@ class FinishedProductsController < ApplicationController
     @finished_product = FinishedProduct.new
     @finished_product.finished_product_recipes.build
     @recipes = Recipe.all.order(:name)
-    @packaging_items = Item.where(category: [ "내포장재", "외포장재", "기타" ]).order(:name)  # 포장재 품목
+    @packaging_items = Item.where(category: [ "내포장재", "외포장재", "기타" ]).order(:name)
+    @additive_items = Item.all.order(:name)  # 추가 투입재료용 품목
   end
 
   def edit
     @recipes = Recipe.all.order(:name)
-    @packaging_items = Item.where(category: [ "내포장재", "외포장재", "기타" ]).order(:name)  # 포장재 품목
+    @packaging_items = Item.where(category: [ "내포장재", "외포장재", "기타" ]).order(:name)
+    @additive_items = Item.all.order(:name)  # 추가 투입재료용 품목
   end
 
   def create
@@ -29,6 +31,7 @@ class FinishedProductsController < ApplicationController
     else
       @recipes = Recipe.all.order(:name)
       @packaging_items = Item.where(category: [ "내포장재", "외포장재", "기타" ]).order(:name)
+      @additive_items = Item.all.order(:name)
       render :new, status: :unprocessable_entity
     end
   end
@@ -40,6 +43,7 @@ class FinishedProductsController < ApplicationController
     else
       @recipes = Recipe.all.order(:name)
       @packaging_items = Item.where(category: [ "내포장재", "외포장재", "기타" ]).order(:name)
+      @additive_items = Item.all.order(:name)
       render :edit, status: :unprocessable_entity
     end
   end
@@ -61,9 +65,11 @@ class FinishedProductsController < ApplicationController
       :name,
       :weight,
       :weight_unit,
+      :base_dough_weight,
       :description,
       :notes,
       finished_product_recipes_attributes: [ :id, :recipe_id, :quantity, :notes, :position, :_destroy ],
+      finished_product_additives_attributes: [ :id, :item_id, :weight, :_destroy ],
       packaging_units_attributes: [
         :id, :name, :pieces_per_unit, :notes, :position, :_destroy,
         packaging_unit_materials_attributes: [ :id, :item_id, :material_type, :quantity_per_unit, :position, :notes, :_destroy ]

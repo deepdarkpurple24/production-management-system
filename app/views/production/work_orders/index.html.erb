@@ -82,29 +82,15 @@
                             product_weight = product.weight || 0
                             is_primary = @primary_product && @primary_product.id == product.id
 
-                            # 반죽 사용량 계산 (추가 재료 제외)
-                            dough_weight = product_weight  # 기본값: 완제품 중량
-                            additional_ingredients = []
-                            product_recipe = product.finished_product_recipes.first&.recipe
+                            # 반죽 사용량: 완제품에 설정된 값 사용 (없으면 총 중량)
+                            dough_weight = product.effective_dough_weight || product_weight
 
-                            if product_recipe
-                              # 레시피가 다른 레시피를 참조하는지 확인 (예: 울금 기정떡 → 기정떡 반죽)
-                              has_recipe_reference = product_recipe.recipe_ingredients.any? { |ri| ri.source_type == 'recipe' }
-
-                              # 레시피 재료 분석
-                              product_recipe.recipe_ingredients.each do |ri|
-                                if ri.source_type == 'recipe' && ri.is_main
-                                  # 메인 레시피 참조 = 반죽 사용량 (예: 기정떡 반죽 73g)
-                                  dough_weight = ri.weight.to_f
-                                elsif ri.source_type == 'item' && ri.item.present? && has_recipe_reference
-                                  # 레시피가 다른 레시피를 참조할 때만 품목을 추가 투입재료로 처리
-                                  # (백미 기정떡처럼 기본 반죽 레시피를 직접 사용하는 경우는 제외)
-                                  additional_ingredients << {
-                                    name: ri.item.name,
-                                    weight_per_unit: ri.weight.to_f
-                                  }
-                                end
-                              end
+                            # 추가 투입재료: 완제품에 직접 등록된 additives 사용
+                            additional_ingredients = product.finished_product_additives.includes(:item).map do |additive|
+                              {
+                                name: additive.item&.name || '(품목 없음)',
+                                weight_per_unit: additive.weight.to_f
+                              }
                             end
                             additional_ingredients_json = additional_ingredients.to_json
                           %>

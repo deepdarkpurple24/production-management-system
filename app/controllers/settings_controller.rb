@@ -18,6 +18,7 @@ class SettingsController < ApplicationController
     @gijeongddeok_default = GijeongddeokDefault.instance
     @gijeongddeok_fields = GijeongddeokFieldOrder.all
     @page_permissions = PagePermission.ordered
+    @finished_products = FinishedProduct.order(:name)  # 기본 완제품 선택용
   end
 
   def create_purpose
@@ -152,6 +153,17 @@ class SettingsController < ApplicationController
       @equipment_mode = EquipmentMode.new
       @recipe_process = RecipeProcess.new
       render :system, status: :unprocessable_entity
+    end
+  end
+
+  def update_gijeongddeok_default_product
+    @gijeongddeok_default = GijeongddeokDefault.instance
+    product_id = params[:default_finished_product_id].presence
+
+    if @gijeongddeok_default.update(default_finished_product_id: product_id)
+      redirect_to settings_system_path(tab: "production"), notice: "기정떡 기본 완제품이 저장되었습니다."
+    else
+      redirect_to settings_system_path(tab: "production"), alert: "저장 중 오류가 발생했습니다."
     end
   end
 

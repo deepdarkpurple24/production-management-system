@@ -24,6 +24,9 @@ class Admin::SettingsController < Admin::BaseController
 
     # 0.5통 추가 재료 설정용 재료 품목 목록
     @ingredient_items = Item.order(:name)
+
+    # 기본 완제품 선택용
+    @finished_products = FinishedProduct.order(:name)
   end
 
   # 시스템 설정 업데이트
@@ -138,6 +141,18 @@ class Admin::SettingsController < Admin::BaseController
       RecipeProcess.unscoped.find(id).update_column(:position, index + 1)
     end
     head :ok
+  end
+
+  # 기정떡 기본 완제품 설정
+  def update_gijeongddeok_default_product
+    @gijeongddeok_default = GijeongddeokDefault.instance
+    product_id = params[:default_finished_product_id].presence
+
+    if @gijeongddeok_default.update(default_finished_product_id: product_id)
+      redirect_to admin_settings_path(tab: "production"), notice: "기정떡 기본 완제품이 저장되었습니다."
+    else
+      redirect_to admin_settings_path(tab: "production"), alert: "저장 중 오류가 발생했습니다."
+    end
   end
 
   # 기정떡 기본값
@@ -326,6 +341,7 @@ class Admin::SettingsController < Admin::BaseController
     @gijeongddeok_fields = GijeongddeokFieldOrder.all
     @page_permissions = PagePermission.ordered
     @ingredient_items = Item.order(:name)
+    @finished_products = FinishedProduct.order(:name)
   end
 
   def shipment_purpose_params

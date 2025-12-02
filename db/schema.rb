@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_02_021454) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_02_022923) do
   create_table "activity_logs", force: :cascade do |t|
     t.string "action", null: false
     t.string "browser"
@@ -143,6 +143,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_02_021454) do
   create_table "gijeongddeok_defaults", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.json "custom_field_defaults", default: {}
+    t.integer "default_finished_product_id"
     t.decimal "dough_count", precision: 10, scale: 1
     t.decimal "dough_temp", precision: 10, scale: 1
     t.decimal "fermentation_room_temp", precision: 10, scale: 1

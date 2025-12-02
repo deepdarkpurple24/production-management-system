@@ -36,9 +36,16 @@ class Production::PlansController < ApplicationController
           .first
 
         if quantity > 0
+          # 기정떡 레시피인 경우 기본 완제품 자동 설정
+          finished_product_id = nil
+          if recipe.name.include?('기정떡')
+            default_product = GijeongddeokDefault.instance.default_finished_product
+            finished_product_id = default_product&.id
+          end
+
           if existing_plan
             # 기존 계획 수정
-            existing_plan.update!(quantity: quantity, unit_type: unit_type, production_date: date)
+            existing_plan.update!(quantity: quantity, unit_type: unit_type, production_date: date, finished_product_id: finished_product_id)
             update_allocations(existing_plan, allocations)
 
             # 반죽일지 재생성
@@ -49,6 +56,7 @@ class Production::PlansController < ApplicationController
             # 새 계획 생성
             plan = ProductionPlan.create!(
               recipe_id: recipe_id,
+              finished_product_id: finished_product_id,
               production_date: date,
               quantity: quantity,
               unit_type: unit_type

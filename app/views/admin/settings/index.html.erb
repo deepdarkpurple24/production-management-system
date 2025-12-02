@@ -111,6 +111,43 @@
       </h4>
 
       <div class="row g-4">
+        <!-- 기정떡 기본 완제품 설정 -->
+        <div class="col-12">
+          <div class="card-modern">
+            <div class="card-body p-4">
+              <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
+                <i class="bi bi-box-seam me-2"></i>기정떡 기본 완제품 설정
+              </h5>
+              <p class="text-muted small mb-3">
+                생산계획에서 기정떡 반죽 추가 시 자동으로 연결될 기본 완제품을 선택합니다.
+              </p>
+
+              <%= form_with url: admin_settings_update_gijeongddeok_default_product_path, method: :patch, local: true do |f| %>
+                <div class="row g-3 align-items-end">
+                  <div class="col-md-8">
+                    <label class="form-label">기본 완제품</label>
+                    <%= select_tag :default_finished_product_id,
+                                   options_from_collection_for_select(@finished_products, :id, :name, @gijeongddeok_default.default_finished_product_id),
+                                   include_blank: "선택 (기본값 없음)",
+                                   class: "form-select" %>
+                    <small class="text-muted">기정떡 반죽을 생산계획에 추가할 때 이 완제품이 기본으로 연결됩니다.</small>
+                  </div>
+                  <div class="col-md-4">
+                    <%= f.submit "저장", class: "btn-modern btn-modern-primary w-100" %>
+                  </div>
+                </div>
+              <% end %>
+
+              <% if @gijeongddeok_default.default_finished_product.present? %>
+                <div class="alert alert-success mt-3 mb-0">
+                  <i class="bi bi-check-circle me-2"></i>
+                  현재 설정: <strong><%= @gijeongddeok_default.default_finished_product.name %></strong>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
         <!-- 기정떡 기본값 설정 -->
         <div class="col-12">
           <div class="card-modern">

@@ -52,6 +52,41 @@
       </h4>
 
       <div class="row g-4">
+        <!-- 기정떡 기본 완제품 설정 -->
+        <div class="col-12">
+          <div class="card-modern">
+            <div class="card-body p-4">
+              <h5 class="card-title mb-4" style="font-weight: 600; font-size: 1.125rem;">
+                <i class="bi bi-box-seam me-2"></i>기정떡 기본 완제품 설정
+              </h5>
+              <p class="text-muted small mb-3">
+                생산계획에서 기정떡 레시피의 잔여 중량을 자동으로 할당할 기본 완제품을 설정합니다.
+              </p>
+
+              <%= form_with url: update_gijeongddeok_default_product_path, method: :patch, local: true do |f| %>
+                <div class="row g-3 align-items-end">
+                  <div class="col-md-6">
+                    <label class="form-label">기본 완제품 선택</label>
+                    <%= f.select :default_finished_product_id,
+                                 options_for_select(
+                                   @finished_products.map { |fp| [fp.name, fp.id] },
+                                   @gijeongddeok_default.default_finished_product_id
+                                 ),
+                                 { include_blank: "선택 안함 (자동 할당 안함)" },
+                                 class: "form-select" %>
+                    <small class="text-muted">
+                      설정된 완제품이 생산계획의 잔여 중량에 자동으로 표시됩니다.
+                    </small>
+                  </div>
+                  <div class="col-md-2">
+                    <%= f.submit "저장", class: "btn-modern btn-modern-primary" %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
         <!-- 기정떡 기본값 설정 -->
         <div class="col-12">
           <div class="card-modern">

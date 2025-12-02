@@ -136,7 +136,15 @@
                           -
                         <% end %>
                       </td>
-                      <td><%= ingredient.display_name %></td>
+                      <td>
+                        <% case ingredient.source_type %>
+                        <% when 'recipe' %>
+                          <span class="badge bg-info me-1">레시피</span>
+                        <% when 'ingredient' %>
+                          <span class="badge bg-secondary me-1">재료</span>
+                        <% end %>
+                        <%= ingredient.display_name %>
+                      </td>
                       <td class="text-end"><%= number_with_delimiter(ingredient.weight) %></td>
                       <td class="text-end">
                         <% if ingredient.bakery_percentage.present? %>

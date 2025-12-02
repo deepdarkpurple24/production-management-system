@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_02_020407) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_02_021454) do
   create_table "activity_logs", force: :cascade do |t|
     t.string "action", null: false
     t.string "browser"
@@ -482,6 +482,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_02_020407) do
     t.integer "position", default: 0
     t.integer "recipe_id", null: false
     t.integer "referenced_ingredient_id"
+    t.integer "referenced_recipe_id"
     t.string "row_type", default: "ingredient"
     t.string "source_type", default: "item"
     t.datetime "updated_at", null: false

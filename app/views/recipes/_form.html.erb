@@ -80,6 +80,7 @@
                           class="form-select form-select-sm source-type-select" required>
                     <option value="item" <%= 'selected' if (ingredient_fields.object.source_type || 'item') == 'item' %>>품목</option>
                     <option value="ingredient" <%= 'selected' if ingredient_fields.object.source_type == 'ingredient' %>>재료</option>
+                    <option value="recipe" <%= 'selected' if ingredient_fields.object.source_type == 'recipe' %>>레시피</option>
                   </select>
                   <%= ingredient_fields.hidden_field :row_type, value: "ingredient" %>
                   <%= ingredient_fields.hidden_field :position %>
@@ -92,6 +93,11 @@
                   </div>
                   <div class="source-ingredient" style="<%= 'display: none;' unless ingredient_fields.object.source_type == 'ingredient' %>">
                     <%= ingredient_fields.collection_select :referenced_ingredient_id, @ingredients, :id, :name,
+                        {},
+                        { class: "form-select form-select-sm", include_blank: false } %>
+                  </div>
+                  <div class="source-recipe" style="<%= 'display: none;' unless ingredient_fields.object.source_type == 'recipe' %>">
+                    <%= ingredient_fields.collection_select :referenced_recipe_id, @recipes_for_select || [], :id, :name,
                         {},
                         { class: "form-select form-select-sm", include_blank: false } %>
                   </div>
@@ -269,9 +275,11 @@ document.addEventListener('turbo:load', function() {
 
     const itemDiv = row.querySelector('.source-item');
     const ingredientDiv = row.querySelector('.source-ingredient');
+    const recipeDiv = row.querySelector('.source-recipe');
 
     if (itemDiv) itemDiv.style.display = sourceType === 'item' ? 'block' : 'none';
     if (ingredientDiv) ingredientDiv.style.display = sourceType === 'ingredient' ? 'block' : 'none';
+    if (recipeDiv) recipeDiv.style.display = sourceType === 'recipe' ? 'block' : 'none';
   }
 
   // 이벤트 위임 방식으로 source type 변경 처리
@@ -284,6 +292,7 @@ document.addEventListener('turbo:load', function() {
   // 데이터 준비
   const itemsData = <%= @items.map { |item| { id: item.id, name: item.name } }.to_json.html_safe %>;
   const ingredientsData = <%= (@ingredients || []).map { |ing| { id: ing.id, name: ing.name } }.to_json.html_safe %>;
+  const recipesData = <%= (@recipes_for_select || []).map { |r| { id: r.id, name: r.name } }.to_json.html_safe %>;
 
   // 재료 추가
   const addIngredientBtn = document.getElementById('add-ingredient-btn');
@@ -292,6 +301,7 @@ document.addEventListener('turbo:load', function() {
     const tbody = document.getElementById('ingredients-tbody');
     const itemOptions = itemsData.map(item => `<option value="${item.id}">${item.name}</option>`).join('');
     const ingredientOptions = ingredientsData.map(ing => `<option value="${ing.id}">${ing.name}</option>`).join('');
+    const recipeOptions = recipesData.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
 
     const newRow = `
       <tr class="ingredient-row">
@@ -305,6 +315,7 @@ document.addEventListener('turbo:load', function() {
           <select class="form-select form-select-sm source-type-select" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][source_type]" required>
             <option value="item">품목</option>
             <option value="ingredient">재료</option>
+            <option value="recipe">레시피</option>
           </select>
           <input type="hidden" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][row_type]" value="ingredient">
           <input type="hidden" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][position]" value="${ingredientIndex}">
@@ -318,6 +329,11 @@ document.addEventListener('turbo:load', function() {
           <div class="source-ingredient" style="display: none;">
             <select class="form-select form-select-sm" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][referenced_ingredient_id]">
               ${ingredientOptions}
+            </select>
+          </div>
+          <div class="source-recipe" style="display: none;">
+            <select class="form-select form-select-sm" name="recipe[recipe_ingredients_attributes][${ingredientIndex}][referenced_recipe_id]">
+              ${recipeOptions}
             </select>
           </div>
         </td>

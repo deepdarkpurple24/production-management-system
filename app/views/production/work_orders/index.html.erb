@@ -82,18 +82,18 @@
                             is_primary = @primary_product && @primary_product.id == product.id
                           %>
                           <tr class="<%= 'table-warning' if is_primary %>">
-                            <td style="padding: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            <td style="padding: 0.5rem;">
                               <% if is_primary %>
-                                <i class="bi bi-star-fill me-1" style="color: #ff9500; font-size: 0.8rem;"></i>
+                                <i class="bi bi-star-fill me-1" style="color: #ff9500;"></i>
                               <% else %>
-                                <i class="bi bi-box me-1" style="color: #34c759; font-size: 0.8rem;"></i>
+                                <i class="bi bi-box me-1" style="color: #34c759;"></i>
                               <% end %>
                               <span title="<%= product.name %>"><%= product.name %></span>
                               <% if is_primary %>
-                                <span class="badge bg-warning text-dark ms-1" style="font-size: 0.6rem;">자동</span>
+                                <span class="badge bg-warning text-dark ms-1" style="font-size: 0.7rem;">자동</span>
                               <% end %>
                             </td>
-                            <td style="padding: 0.5rem; color: #6e6e73; font-size: 0.85rem;">
+                            <td style="padding: 0.5rem; color: #6e6e73;">
                               <%= number_with_delimiter(product_weight.round(0)) %>g
                             </td>
                             <td class="text-center" style="padding: 0.5rem;">
@@ -108,7 +108,7 @@
                                        data-weight="<%= product_weight %>"
                                        data-is-primary="true"
                                        readonly
-                                       style="width: 90px; margin: 0 auto; height: 36px; font-weight: 600; font-size: 1rem; background-color: #fff3cd; border-color: #ffc107;">
+                                       style="width: 90px; margin: 0 auto; height: 36px; font-weight: 600; background-color: #fff3cd; border-color: #ffc107;">
                               <% else %>
                                 <!-- 일반 제품: 수동 입력 -->
                                 <div class="quantity-input-group d-flex justify-content-center align-items-center">
@@ -127,7 +127,7 @@
                                          data-plan-id="<%= plan.id %>"
                                          data-product-id="<%= product.id %>"
                                          data-weight="<%= product_weight %>"
-                                         style="width: 90px; border-radius: 0; border-left: 0; border-right: 0; height: 36px; font-weight: 600; font-size: 1rem;">
+                                         style="width: 90px; border-radius: 0; border-left: 0; border-right: 0; height: 36px; font-weight: 600;">
                                   <button type="button" class="btn btn-outline-secondary btn-sm allocation-btn"
                                           data-action="increase"
                                           data-plan-id="<%= plan.id %>"
@@ -138,7 +138,7 @@
                                 </div>
                               <% end %>
                             </td>
-                            <td class="text-end allocation-weight" style="padding: 0.5rem; font-weight: 600; font-size: 0.85rem; <%= 'color: #ff9500;' if is_primary %>"
+                            <td class="text-end allocation-weight" style="padding: 0.5rem; font-weight: 600; <%= 'color: #ff9500;' if is_primary %>"
                                 data-plan-id="<%= plan.id %>"
                                 data-product-id="<%= product.id %>"
                                 data-is-primary="<%= is_primary %>">
@@ -147,7 +147,7 @@
                           </tr>
                         <% end %>
                       </tbody>
-                      <tfoot style="background-color: #f5f5f7; font-size: 0.85rem;">
+                      <tfoot style="background-color: #f5f5f7;">
                         <tr>
                           <td colspan="3" class="text-end" style="padding: 0.5rem; font-weight: 600;">
                             사용 중량 합계:

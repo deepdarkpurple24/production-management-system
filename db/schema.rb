@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_02_015400) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_02_020407) do
   create_table "activity_logs", force: :cascade do |t|
     t.string "action", null: false
     t.string "browser"
@@ -393,7 +393,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_02_015400) do
     t.boolean "is_gijeongddeok", default: false
     t.text "notes"
     t.date "production_date"
-    t.decimal "quantity", precision: 10, scale: 2
+    t.decimal "quantity", precision: 10, scale: 1
     t.integer "recipe_id"
     t.integer "split_count", default: 1
     t.decimal "split_unit", precision: 3, scale: 1, default: "1.0"

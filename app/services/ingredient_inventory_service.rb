@@ -171,14 +171,12 @@ class IngredientInventoryService
       return result
     end
 
-    # 기존 개봉품 총 재고 + 입고품 재고 확인
+    # 기존 개봉품 총 재고 + 모든 입고품 재고 확인
     existing_opened_total = item.opened_items.available.sum(:remaining_weight)
-    receipt_total = available_receipts.first&.unit_weight.to_f
-    receipt_unit = available_receipts.first&.unit_weight_unit
-    receipt_total_g = convert_to_grams(receipt_total, receipt_unit)
+    all_receipts_total_g = available_receipts.sum { |r| convert_to_grams(r.unit_weight.to_f, r.unit_weight_unit) }
 
-    total_available = existing_opened_total + receipt_total_g
-    Rails.logger.info "    총 가용 재고: 개봉품 #{existing_opened_total.round(2)}g + 입고품 #{receipt_total_g.round(2)}g = #{total_available.round(2)}g"
+    total_available = existing_opened_total + all_receipts_total_g
+    Rails.logger.info "    총 가용 재고: 개봉품 #{existing_opened_total.round(2)}g + 입고품 #{all_receipts_total_g.round(2)}g = #{total_available.round(2)}g"
 
     if total_available < used_weight
       error_msg = "#{item.name}의 재고가 부족합니다. (필요: #{used_weight.round(2)}g, 가용: #{total_available.round(2)}g)"
@@ -187,9 +185,9 @@ class IngredientInventoryService
       return result
     end
 
-    # 개봉품에서 중량 차감 (기존 개봉품 우선 소진)
+    # 개봉품에서 중량 차감 (기존 개봉품 우선 소진, 부족 시 FIFO로 입고품 순차 개봉)
     Rails.logger.info "    개봉품에서 #{used_weight}g 차감 중... (기존 개봉품 우선 소진)"
-    last_opened_item = deduct_from_opened_items(item, available_receipts.first, used_weight, production_log, current_user)
+    last_opened_item = deduct_from_opened_items(item, available_receipts, used_weight, production_log, current_user)
 
     unless last_opened_item
       error_msg = "#{item.name}의 개봉품에서 차감할 수 없습니다."
@@ -292,14 +290,12 @@ class IngredientInventoryService
       return result
     end
 
-    # 기존 개봉품 총 재고 + 입고품 재고 확인
+    # 기존 개봉품 총 재고 + 모든 입고품 재고 확인
     existing_opened_total = item.opened_items.available.sum(:remaining_weight)
-    receipt_total = available_receipts.first&.unit_weight.to_f
-    receipt_unit = available_receipts.first&.unit_weight_unit
-    receipt_total_g = convert_to_grams(receipt_total, receipt_unit)
+    all_receipts_total_g = available_receipts.sum { |r| convert_to_grams(r.unit_weight.to_f, r.unit_weight_unit) }
 
-    total_available = existing_opened_total + receipt_total_g
-    Rails.logger.info "    총 가용 재고: 개봉품 #{existing_opened_total.round(2)}g + 입고품 #{receipt_total_g.round(2)}g = #{total_available.round(2)}g"
+    total_available = existing_opened_total + all_receipts_total_g
+    Rails.logger.info "    총 가용 재고: 개봉품 #{existing_opened_total.round(2)}g + 입고품 #{all_receipts_total_g.round(2)}g = #{total_available.round(2)}g"
 
     if total_available < used_weight
       error_msg = "#{item.name}의 재고가 부족합니다. (필요: #{used_weight.round(2)}g, 가용: #{total_available.round(2)}g)"
@@ -308,9 +304,9 @@ class IngredientInventoryService
       return result
     end
 
-    # 개봉품에서 중량 차감 (기존 개봉품 우선 소진)
+    # 개봉품에서 중량 차감 (기존 개봉품 우선 소진, 부족 시 FIFO로 입고품 순차 개봉)
     Rails.logger.info "    개봉품에서 #{used_weight}g 차감 중... (기존 개봉품 우선 소진)"
-    last_opened_item = deduct_from_opened_items(item, available_receipts.first, used_weight, production_log, current_user)
+    last_opened_item = deduct_from_opened_items(item, available_receipts, used_weight, production_log, current_user)
 
     unless last_opened_item
       error_msg = "#{item.name}의 개봉품에서 차감할 수 없습니다."
@@ -344,14 +340,14 @@ class IngredientInventoryService
 
   private
 
-  # 개봉품에서 중량 차감 (기존 개봉품 우선 소진)
+  # 개봉품에서 중량 차감 (기존 개봉품 우선 소진, 부족 시 FIFO로 입고품 순차 개봉)
   # @param item [Item] 품목
-  # @param receipt [Receipt] 입고품 (새 개봉 필요시 사용)
+  # @param available_receipts [ActiveRecord::Relation] FIFO 정렬된 입고품들
   # @param required_weight [Float] 필요한 중량
   # @param production_log [ProductionLog] 반죽일지 (출고 처리용)
   # @param current_user [User] 현재 로그인 사용자 (출고 요청자용)
   # @return [OpenedItem, nil] 마지막 사용된 개봉품 (CheckedIngredient 기록용)
-  def self.deduct_from_opened_items(item, receipt, required_weight, production_log, current_user = nil)
+  def self.deduct_from_opened_items(item, available_receipts, required_weight, production_log, current_user = nil)
     Rails.logger.info "  > deduct_from_opened_items: 필요 중량=#{required_weight}g"
 
     remaining_to_deduct = required_weight
@@ -375,12 +371,18 @@ class IngredientInventoryService
       end
     end
 
-    # 2. 기존 개봉품으로 부족하면 새 입고품 개봉
-    while remaining_to_deduct > 0
-      Rails.logger.info "  > 추가 필요량: #{remaining_to_deduct.round(2)}g - 새 입고품 개봉"
+    # 2. 기존 개봉품으로 부족하면 FIFO 순서로 입고품 순차 개봉
+    receipt_index = 0
+    while remaining_to_deduct > 0 && receipt_index < available_receipts.count
+      receipt = available_receipts[receipt_index]
+      Rails.logger.info "  > 추가 필요량: #{remaining_to_deduct.round(2)}g - 입고품 #{receipt_index + 1}/#{available_receipts.count} 개봉 (Receipt ID=#{receipt.id})"
 
       new_opened_item = create_new_opened_item(item, receipt, production_log, current_user)
-      return nil unless new_opened_item
+      unless new_opened_item
+        # 현재 입고품에서 개봉 실패 시 다음 입고품으로 시도
+        receipt_index += 1
+        next
+      end
 
       available = new_opened_item.remaining_weight
       deduct_amount = [ available, remaining_to_deduct ].min
@@ -390,8 +392,14 @@ class IngredientInventoryService
       remaining_to_deduct -= deduct_amount
       last_used_opened_item = new_opened_item
 
-      # 무한 루프 방지 (새 개봉품도 0g이면 중단)
-      break if available <= 0
+      # 무한 루프 방지 (새 개봉품도 0g이면 다음 입고품으로)
+      if available <= 0
+        receipt_index += 1
+      end
+    end
+
+    if remaining_to_deduct > 0
+      Rails.logger.error "  > 경고: #{remaining_to_deduct.round(2)}g 차감 불가 - 모든 입고품 소진"
     end
 
     Rails.logger.info "  > 차감 완료. 마지막 사용 개봉품: ID=#{last_used_opened_item&.id}"

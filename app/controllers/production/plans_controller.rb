@@ -29,10 +29,10 @@ class Production::PlansController < ApplicationController
         recipe = Recipe.find_by(id: recipe_id)
         next unless recipe
 
-        # 해당 월에 해당 레시피의 기존 계획이 있는지 확인
+        # 해당 날짜에 해당 레시피의 기존 계획이 있는지 확인
         existing_plan = ProductionPlan
           .where(recipe_id: recipe_id)
-          .where(production_date: date.beginning_of_month..date.end_of_month)
+          .where(production_date: date)
           .first
 
         if quantity > 0
@@ -82,10 +82,19 @@ class Production::PlansController < ApplicationController
       end
     end
 
-    redirect_to production_plans_path(date: date), notice: "생산 계획이 저장되었습니다."
+    # 캘린더 뷰에서 저장한 경우 캘린더 뷰로 리다이렉트
+    if params[:redirect_to_calendar] == "true"
+      redirect_to production_plans_path(date: date.beginning_of_month), notice: "생산 계획이 저장되었습니다."
+    else
+      redirect_to production_plans_path(date: date, view: 'list'), notice: "생산 계획이 저장되었습니다."
+    end
   rescue => e
     Rails.logger.error "batch_create error: #{e.message}"
-    redirect_to production_plans_path(date: date), alert: "저장 중 오류가 발생했습니다: #{e.message}"
+    if params[:redirect_to_calendar] == "true"
+      redirect_to production_plans_path(date: date.beginning_of_month), alert: "저장 중 오류가 발생했습니다: #{e.message}"
+    else
+      redirect_to production_plans_path(date: date, view: 'list'), alert: "저장 중 오류가 발생했습니다: #{e.message}"
+    end
   end
 
   def new

@@ -94,28 +94,21 @@
                 %>
                 <div class="calendar-cell <%= 'other-month' unless is_current_month %> <%= 'today' if is_today %> <%= 'past' if is_past %> <%= 'has-plans' if has_plans %>"
                      data-date="<%= day.to_s %>"
-                     onclick="openDayModal('<%= day.to_s %>', <%= is_past %>)">
+                     data-is-past="<%= is_past %>">
                   <div class="calendar-date <%= 'sunday' if day.wday == 0 %> <%= 'saturday' if day.wday == 6 %>">
                     <%= day.day %>
                   </div>
                   <div class="calendar-content">
                     <% if has_plans %>
-                      <% day_plans.first(3).each do |plan| %>
+                      <% day_plans.each do |plan| %>
                         <%
                           is_gijeongddeok = plan.recipe&.name&.include?('기정떡')
+                          recipe_name = plan.recipe&.name || plan.finished_product&.name || '기타'
                         %>
                         <div class="plan-badge <%= is_gijeongddeok ? 'gijeongddeok' : 'other' %>">
-                          <% if is_gijeongddeok %>
-                            <i class="bi bi-circle-fill me-1" style="font-size: 0.4rem;"></i>
-                            기정떡 <%= plan.quantity %><%= plan.unit_label %>
-                          <% else %>
-                            <i class="bi bi-circle-fill me-1" style="font-size: 0.4rem;"></i>
-                            <%= truncate(plan.recipe&.name || plan.finished_product&.name || '기타', length: 8) %>
-                          <% end %>
+                          <span class="plan-name"><%= truncate(recipe_name, length: 10) %></span>
+                          <span class="plan-qty"><%= plan.quantity %><%= plan.unit_label %></span>
                         </div>
-                      <% end %>
-                      <% if day_plans.size > 3 %>
-                        <div class="more-plans">+<%= day_plans.size - 3 %>개 더보기</div>
                       <% end %>
                     <% end %>
                   </div>
@@ -384,25 +377,51 @@
   </div>
 </div>
 
-<!-- 날짜 상세 모달 -->
-<div class="modal fade" id="dayModal" tabindex="-1" aria-labelledby="dayModalLabel" aria-hidden="true">
+<!-- 생산계획 입력/수정 모달 -->
+<div class="modal fade" id="planInputModal" tabindex="-1" aria-labelledby="planInputModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="dayModalLabel">
+      <div class="modal-header" style="background-color: #f5f5f7;">
+        <h5 class="modal-title" id="planInputModalLabel">
+          <i class="bi bi-calendar-plus me-2" style="color: #0071e3;"></i>
           <span id="modal-date-display"></span>
           <span id="modal-date-badge" class="badge ms-2"></span>
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body" id="dayModalBody">
+      <%= form_with url: batch_create_production_plans_path, method: :post, local: true, id: "modal-plan-form" do %>
+        <input type="hidden" name="date" id="modal-plan-date" value="">
+        <input type="hidden" name="redirect_to_calendar" value="true">
+        <div class="modal-body" id="planInputModalBody">
+          <!-- 레시피 목록 동적 로드 -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-lg me-1"></i>저장
+          </button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- 날짜 상세 보기 모달 (과거 날짜용) -->
+<div class="modal fade" id="dayViewModal" tabindex="-1" aria-labelledby="dayViewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="dayViewModalLabel">
+          <span id="view-modal-date-display"></span>
+          <span id="view-modal-date-badge" class="badge bg-secondary ms-2">과거 (실적)</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="dayViewModalBody">
         <!-- 동적으로 로드 -->
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-        <a href="#" id="modal-edit-link" class="btn btn-primary d-none">
-          <i class="bi bi-pencil me-1"></i>계획 수정
-        </a>
       </div>
     </div>
   </div>
@@ -451,6 +470,25 @@
     background-color: #f0f7ff;
   }
 
+  .calendar-cell.selected {
+    background-color: #e3f2fd;
+    box-shadow: inset 0 0 0 2px #0071e3;
+  }
+
+  .calendar-cell:not(.past):hover::after {
+    content: '더블클릭하여 입력';
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 0.6rem;
+    color: #0071e3;
+    opacity: 0.7;
+  }
+
+  .calendar-cell {
+    position: relative;
+  }
+
   .calendar-cell:nth-child(7n) {
     border-right: none;
   }
@@ -489,23 +527,52 @@
 
   .plan-badge {
     font-size: 0.7rem;
-    padding: 0.2rem 0.4rem;
+    padding: 0.25rem 0.5rem;
     border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem;
+    margin-bottom: 2px;
+  }
+
+  .plan-badge .plan-name {
+    flex: 1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    display: flex;
-    align-items: center;
+    font-weight: 500;
+  }
+
+  .plan-badge .plan-qty {
+    flex-shrink: 0;
+    font-weight: 700;
+    background-color: rgba(255,255,255,0.6);
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    font-size: 0.65rem;
   }
 
   .plan-badge.gijeongddeok {
     background-color: #e8f5e9;
     color: #2e7d32;
+    border-left: 3px solid #4caf50;
+  }
+
+  .plan-badge.gijeongddeok .plan-qty {
+    background-color: rgba(46, 125, 50, 0.15);
+    color: #1b5e20;
   }
 
   .plan-badge.other {
     background-color: #fff3e0;
     color: #e65100;
+    border-left: 3px solid #ff9800;
+  }
+
+  .plan-badge.other .plan-qty {
+    background-color: rgba(230, 81, 0, 0.15);
+    color: #bf360c;
   }
 
   .more-plans {
@@ -570,44 +637,203 @@ document.addEventListener('DOMContentLoaded', function() {
   // ===============================
   // 캘린더 뷰 관련
   // ===============================
-  const dayModal = document.getElementById('dayModal');
-  const modalDateDisplay = document.getElementById('modal-date-display');
-  const modalDateBadge = document.getElementById('modal-date-badge');
-  const modalBody = document.getElementById('dayModalBody');
-  const modalEditLink = document.getElementById('modal-edit-link');
 
-  window.openDayModal = function(dateStr, isPast) {
-    const date = new Date(dateStr);
-    const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-    modalDateDisplay.textContent = date.toLocaleDateString('ko-KR', options);
-
-    if (isPast) {
-      modalDateBadge.textContent = '과거 (실적)';
-      modalDateBadge.className = 'badge bg-secondary ms-2';
-    } else {
-      modalDateBadge.textContent = '미래 (계획)';
-      modalDateBadge.className = 'badge bg-primary ms-2';
+  // 레시피 데이터 (모달 폼용)
+  const recipesData = <%= raw(@recipes.map { |r|
+    is_gijeongddeok = r.name.include?('기정떡')
+    {
+      id: r.id,
+      name: r.name,
+      total_weight: r.total_weight,
+      is_gijeongddeok: is_gijeongddeok,
+      default_unit: is_gijeongddeok ? '통' : '개',
+      step_value: is_gijeongddeok ? 0.5 : 1
     }
+  }.to_json) %>;
 
-    // 해당 날짜의 계획 정보 표시
-    const plans = <%= raw(@production_plans.group_by { |p| p.production_date.to_s }.transform_values { |plans|
-      plans.map { |p|
-        {
-          id: p.id,
-          recipe_name: p.recipe&.name,
-          quantity: p.quantity,
-          unit_type: p.unit_label,
-          allocations: p.production_plan_allocations.map { |a|
-            { product_name: a.finished_product.name, quantity: a.quantity }
-          }
+  // 날짜별 기존 계획 데이터
+  const plansData = <%= raw(@production_plans.group_by { |p| p.production_date.to_s }.transform_values { |plans|
+    plans.map { |p|
+      {
+        id: p.id,
+        recipe_id: p.recipe_id,
+        recipe_name: p.recipe&.name,
+        quantity: p.quantity,
+        unit_type: p.unit_label,
+        allocations: p.production_plan_allocations.map { |a|
+          { product_name: a.finished_product.name, quantity: a.quantity }
         }
       }
-    }.to_json) %>;
+    }
+  }.to_json) %>;
 
-    const dayPlans = plans[dateStr] || [];
+  // 캘린더 셀 더블클릭 이벤트
+  document.querySelectorAll('.calendar-cell').forEach(function(cell) {
+    cell.addEventListener('dblclick', function(e) {
+      e.preventDefault();
+      const dateStr = this.dataset.date;
+      const isPast = this.dataset.isPast === 'true';
 
+      if (isPast) {
+        // 과거 날짜: 보기 전용 모달
+        openViewModal(dateStr);
+      } else {
+        // 오늘 또는 미래: 입력/수정 모달
+        openPlanInputModal(dateStr);
+      }
+    });
+
+    // 싱글클릭 시 약간의 하이라이트 효과 (선택적)
+    cell.addEventListener('click', function(e) {
+      document.querySelectorAll('.calendar-cell.selected').forEach(c => c.classList.remove('selected'));
+      this.classList.add('selected');
+    });
+  });
+
+  // 생산계획 입력 모달 열기
+  function openPlanInputModal(dateStr) {
+    const date = new Date(dateStr);
+    const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+    document.getElementById('modal-date-display').textContent = date.toLocaleDateString('ko-KR', options);
+    document.getElementById('modal-plan-date').value = dateStr;
+
+    const isToday = dateStr === '<%= Date.today.to_s %>';
+    const badge = document.getElementById('modal-date-badge');
+    if (isToday) {
+      badge.textContent = '오늘';
+      badge.className = 'badge bg-success ms-2';
+    } else {
+      badge.textContent = '계획';
+      badge.className = 'badge bg-primary ms-2';
+    }
+
+    // 기존 계획 데이터 가져오기
+    const existingPlans = plansData[dateStr] || [];
+    const existingByRecipe = {};
+    existingPlans.forEach(p => {
+      existingByRecipe[p.recipe_id] = p;
+    });
+
+    // 폼 내용 생성
+    let html = '';
+    if (recipesData.length === 0) {
+      html = `
+        <div class="text-center py-4">
+          <i class="bi bi-inbox" style="font-size: 3rem; color: #c7c7cc;"></i>
+          <p class="mt-3 mb-0 text-muted">등록된 레시피가 없습니다.</p>
+          <a href="/recipes" class="btn btn-outline-primary mt-2">레시피 등록하기</a>
+        </div>
+      `;
+    } else {
+      html = '<div class="list-group list-group-flush">';
+      recipesData.forEach(function(recipe) {
+        const existing = existingByRecipe[recipe.id];
+        const currentQty = existing ? existing.quantity : 0;
+        const currentUnit = existing ? existing.unit_type : recipe.default_unit;
+
+        html += `
+          <div class="list-group-item py-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center">
+                <i class="bi ${recipe.is_gijeongddeok ? 'bi-star-fill text-success' : 'bi-journal-text text-primary'} me-2" style="font-size: 1.2rem;"></i>
+                <div>
+                  <h6 class="mb-0" style="font-weight: 600;">${recipe.name}</h6>
+                  ${recipe.total_weight > 0 ? `<small class="text-muted">${recipe.total_weight.toLocaleString()}g/1${recipe.default_unit}</small>` : ''}
+                </div>
+              </div>
+              <div class="d-flex align-items-center">
+                <div class="quantity-input-group d-flex align-items-center me-2">
+                  <button type="button" class="btn btn-outline-secondary btn-sm modal-qty-btn"
+                          data-action="decrease" data-recipe-id="${recipe.id}" data-step="${recipe.step_value}"
+                          style="border-radius: 8px 0 0 8px; width: 36px; height: 36px;">
+                    <i class="bi bi-dash"></i>
+                  </button>
+                  <input type="number"
+                         name="plans[${recipe.id}][quantity]"
+                         value="${currentQty}"
+                         min="0"
+                         step="${recipe.step_value}"
+                         class="form-control text-center modal-qty-input"
+                         data-recipe-id="${recipe.id}"
+                         data-step="${recipe.step_value}"
+                         style="width: 70px; border-radius: 0; border-left: 0; border-right: 0; height: 36px; font-weight: 600;">
+                  <button type="button" class="btn btn-outline-secondary btn-sm modal-qty-btn"
+                          data-action="increase" data-recipe-id="${recipe.id}" data-step="${recipe.step_value}"
+                          style="border-radius: 0 8px 8px 0; width: 36px; height: 36px;">
+                    <i class="bi bi-plus"></i>
+                  </button>
+                </div>
+                <select name="plans[${recipe.id}][unit_type]" class="form-select form-select-sm" style="width: 70px; height: 36px;">
+                  <option value="개" ${currentUnit !== '통' ? 'selected' : ''}>개</option>
+                  <option value="통" ${currentUnit === '통' ? 'selected' : ''}>통</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+    }
+
+    document.getElementById('planInputModalBody').innerHTML = html;
+
+    // +/- 버튼 이벤트 바인딩
+    document.querySelectorAll('.modal-qty-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const action = this.dataset.action;
+        const recipeId = this.dataset.recipeId;
+        const step = parseFloat(this.dataset.step) || 1;
+        const input = document.querySelector(`.modal-qty-input[data-recipe-id="${recipeId}"]`);
+        let value = parseFloat(input.value) || 0;
+
+        if (action === 'increase') {
+          value = Math.round((value + step) * 10) / 10;
+        } else if (action === 'decrease' && value >= step) {
+          value = Math.round((value - step) * 10) / 10;
+        }
+
+        input.value = value;
+        highlightIfChanged(input);
+      });
+    });
+
+    // 입력값 변경 시 하이라이트
+    document.querySelectorAll('.modal-qty-input').forEach(function(input) {
+      input.addEventListener('input', function() {
+        highlightIfChanged(this);
+      });
+    });
+
+    function highlightIfChanged(input) {
+      const value = parseFloat(input.value) || 0;
+      if (value > 0) {
+        input.style.backgroundColor = '#fff3cd';
+        input.style.borderColor = '#ffc107';
+      } else {
+        input.style.backgroundColor = '';
+        input.style.borderColor = '';
+      }
+    }
+
+    // 초기 하이라이트
+    document.querySelectorAll('.modal-qty-input').forEach(input => highlightIfChanged(input));
+
+    const modal = new bootstrap.Modal(document.getElementById('planInputModal'));
+    modal.show();
+  }
+
+  // 과거 날짜 보기 모달
+  function openViewModal(dateStr) {
+    const date = new Date(dateStr);
+    const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+    document.getElementById('view-modal-date-display').textContent = date.toLocaleDateString('ko-KR', options);
+
+    const dayPlans = plansData[dateStr] || [];
+
+    let html = '';
     if (dayPlans.length > 0) {
-      let html = '<div class="list-group">';
+      html = '<div class="list-group">';
       dayPlans.forEach(function(plan) {
         html += `
           <div class="list-group-item">
@@ -630,28 +856,20 @@ document.addEventListener('DOMContentLoaded', function() {
         html += '</div>';
       });
       html += '</div>';
-      modalBody.innerHTML = html;
-      modalEditLink.href = `/production/plans?date=${dateStr}&view=list`;
-      modalEditLink.classList.remove('d-none');
     } else {
-      modalBody.innerHTML = `
+      html = `
         <div class="text-center py-4">
           <i class="bi bi-calendar-x" style="font-size: 3rem; color: #c7c7cc;"></i>
-          <p class="mt-3 mb-0 text-muted">${isPast ? '이 날짜에 생산 실적이 없습니다.' : '이 날짜에 생산 계획이 없습니다.'}</p>
+          <p class="mt-3 mb-0 text-muted">이 날짜에 생산 실적이 없습니다.</p>
         </div>
       `;
-      if (!isPast) {
-        modalEditLink.href = `/production/plans?date=${dateStr}&view=list`;
-        modalEditLink.classList.remove('d-none');
-        modalEditLink.innerHTML = '<i class="bi bi-plus me-1"></i>계획 추가';
-      } else {
-        modalEditLink.classList.add('d-none');
-      }
     }
 
-    const modal = new bootstrap.Modal(dayModal);
+    document.getElementById('dayViewModalBody').innerHTML = html;
+
+    const modal = new bootstrap.Modal(document.getElementById('dayViewModal'));
     modal.show();
-  };
+  }
 
   // ===============================
   // 리스트 뷰 관련 (기존 코드)

@@ -22,6 +22,7 @@
               <tr>
                 <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">레시피명</th>
                 <th class="py-3 px-4" style="font-weight: 500; font-size: 0.875rem;">설명</th>
+                <th class="py-3 px-4 text-center" style="font-weight: 500; font-size: 0.875rem;">생산계획</th>
                 <th class="py-3 px-4 text-center" style="font-weight: 500; font-size: 0.875rem;">관리</th>
               </tr>
             </thead>
@@ -36,6 +37,17 @@
                       <%= truncate(recipe.description, length: 50) %>
                     <% else %>
                       <span class="text-muted">-</span>
+                    <% end %>
+                  </td>
+                  <td class="py-3 px-4 text-center">
+                    <% if recipe.show_in_production_plan %>
+                      <span class="badge bg-success">
+                        <i class="bi bi-check-lg"></i> 표시
+                      </span>
+                    <% else %>
+                      <span class="badge bg-secondary">
+                        <i class="bi bi-x-lg"></i> 숨김
+                      </span>
                     <% end %>
                   </td>
                   <td class="py-3 px-4 text-center">

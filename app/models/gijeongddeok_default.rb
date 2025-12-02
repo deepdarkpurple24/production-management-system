@@ -1,6 +1,7 @@
 # 기정떡 기본값 - 생산일지 초기값
 class GijeongddeokDefault < ApplicationRecord
   belongs_to :default_finished_product, class_name: "FinishedProduct", optional: true
+  belongs_to :primary_finished_product, class_name: "FinishedProduct", optional: true
 
   # 단일 레코드만 존재하도록 보장
   def self.instance
@@ -18,6 +19,11 @@ class GijeongddeokDefault < ApplicationRecord
     # 빈 문자열 및 nil 제거
     cleaned_ids = Array(ids).reject(&:blank?).map(&:to_i)
     super(cleaned_ids)
+  end
+
+  # 주요 완제품(잔여 중량 자동 계산 대상) 여부 확인
+  def primary_product?(product_id)
+    primary_finished_product_id == product_id.to_i
   end
 
   # 기본 필드 목록 (개별 컬럼으로 존재)

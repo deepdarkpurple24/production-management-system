@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_02_024844) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_02_031056) do
   create_table "activity_logs", force: :cascade do |t|
     t.string "action", null: false
     t.string "browser"
@@ -152,6 +152,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_02_024844) do
     t.json "half_batch_extra_ingredients", default: []
     t.decimal "makgeolli_consumption", precision: 10, scale: 1
     t.decimal "porridge_temp", precision: 10, scale: 1
+    t.integer "primary_finished_product_id"
     t.decimal "refrigeration_room_temp", precision: 10, scale: 1
     t.integer "salt_amount"
     t.decimal "steiva_amount", precision: 10, scale: 1
@@ -525,6 +526,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_02_024844) do
     t.text "description"
     t.string "name"
     t.text "notes"
+    t.boolean "show_in_production_plan", default: true, null: false
     t.datetime "updated_at", null: false
   end
 

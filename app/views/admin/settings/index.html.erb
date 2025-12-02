@@ -120,10 +120,26 @@
               </h5>
               <p class="text-muted small mb-3">
                 생산계획에서 기정떡 반죽 추가 시 자동으로 연결될 완제품 목록입니다.
-                기정떡 반죽에서 여러 완제품을 만들 수 있습니다.
+                <strong>주요 완제품</strong>은 다른 완제품들의 수량을 제외한 잔여 중량으로 자동 계산됩니다.
               </p>
 
               <%= form_with url: admin_settings_update_gijeongddeok_default_products_path, method: :patch, local: true, id: "gijeongddeok-products-form" do %>
+                <!-- 주요 완제품 선택 -->
+                <div class="mb-4 p-3" style="background-color: #f8f9fa; border-radius: 8px;">
+                  <label class="form-label fw-bold">
+                    <i class="bi bi-star-fill text-warning me-1"></i>주요 완제품 (잔여 중량 자동 계산)
+                  </label>
+                  <select name="primary_finished_product_id" class="form-select">
+                    <option value="">선택 안함</option>
+                    <% @finished_products.each do |product| %>
+                      <option value="<%= product.id %>" <%= 'selected' if @gijeongddeok_default.primary_finished_product_id == product.id %>><%= product.name %></option>
+                    <% end %>
+                  </select>
+                  <small class="text-muted">이 완제품의 수량과 중량은 다른 완제품들의 합계를 뺀 나머지로 자동 계산됩니다.</small>
+                </div>
+
+                <!-- 추가 완제품 목록 -->
+                <label class="form-label fw-bold mb-2">추가 완제품 목록</label>
                 <div id="gijeongddeok-products-list">
                   <% selected_ids = @gijeongddeok_default.default_finished_product_ids || [] %>
                   <% if selected_ids.any? %>
@@ -171,11 +187,15 @@
                 </div>
               <% end %>
 
-              <% if @gijeongddeok_default.default_finished_products.any? %>
+              <% if @gijeongddeok_default.primary_finished_product.present? || @gijeongddeok_default.default_finished_products.any? %>
                 <div class="alert alert-success mt-3 mb-0">
                   <i class="bi bi-check-circle me-2"></i>
-                  현재 설정된 완제품:
-                  <strong><%= @gijeongddeok_default.default_finished_products.pluck(:name).join(', ') %></strong>
+                  <% if @gijeongddeok_default.primary_finished_product.present? %>
+                    <strong>주요 완제품:</strong> <%= @gijeongddeok_default.primary_finished_product.name %> (자동 계산)<br>
+                  <% end %>
+                  <% if @gijeongddeok_default.default_finished_products.any? %>
+                    <strong>추가 완제품:</strong> <%= @gijeongddeok_default.default_finished_products.pluck(:name).join(', ') %>
+                  <% end %>
                 </div>
               <% end %>
             </div>

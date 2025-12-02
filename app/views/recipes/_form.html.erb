@@ -15,6 +15,15 @@
       <label for="recipe_name" class="form-label">레시피명 <span class="text-danger">*</span></label>
       <%= f.text_field :name, class: "form-control", required: true %>
     </div>
+    <div class="col-md-6 d-flex align-items-end">
+      <div class="form-check">
+        <%= f.check_box :show_in_production_plan, class: "form-check-input", id: "show_in_production_plan" %>
+        <label class="form-check-label" for="show_in_production_plan">
+          <i class="bi bi-calendar3 me-1"></i>생산계획에 표시
+        </label>
+        <small class="d-block text-muted mt-1">체크하면 생산계획 페이지에서 이 레시피가 표시됩니다.</small>
+      </div>
+    </div>
   </div>
 
   <div class="mb-3">

@@ -86,6 +86,7 @@ class RecipesController < ApplicationController
       :name,
       :description,
       :notes,
+      :show_in_production_plan,
       recipe_ingredients_attributes: [ :id, :source_type, :item_id, :referenced_ingredient_id, :referenced_recipe_id, :weight, :is_main, :row_type, :notes, :position, :_destroy ],
       recipe_equipments_attributes: [ :id, :equipment_id, :work_capacity, :work_capacity_unit, :position, :row_type, :process_id, :is_batch_standard, :_destroy ]
     )

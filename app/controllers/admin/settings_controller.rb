@@ -159,8 +159,12 @@ class Admin::SettingsController < Admin::BaseController
   def update_gijeongddeok_default_products
     @gijeongddeok_default = GijeongddeokDefault.instance
     product_ids = params[:default_finished_product_ids] || []
+    primary_id = params[:primary_finished_product_id].presence
 
-    if @gijeongddeok_default.update(default_finished_product_ids: product_ids)
+    if @gijeongddeok_default.update(
+      default_finished_product_ids: product_ids,
+      primary_finished_product_id: primary_id
+    )
       redirect_to admin_settings_path(tab: "production"), notice: "기정떡 기본 완제품이 저장되었습니다."
     else
       redirect_to admin_settings_path(tab: "production"), alert: "저장 중 오류가 발생했습니다."

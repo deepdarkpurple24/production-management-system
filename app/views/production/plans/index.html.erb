@@ -56,8 +56,11 @@
           related_products = recipe.finished_products.order(:name)
 
           # 기정떡인 경우 설정된 기본 완제품들 추가
+          gijeongddeok_default = GijeongddeokDefault.instance
+          primary_product_id = nil
           if is_gijeongddeok
-            default_product_ids = GijeongddeokDefault.instance.default_finished_product_ids || []
+            default_product_ids = gijeongddeok_default.default_finished_product_ids || []
+            primary_product_id = gijeongddeok_default.primary_finished_product_id
             if default_product_ids.any?
               default_products = FinishedProduct.where(id: default_product_ids)
               # 기존 related_products에 없는 것만 추가
@@ -132,46 +135,72 @@
                         existing_allocation = existing_plan&.production_plan_allocations&.find { |a| a.finished_product_id == product.id }
                         allocation_qty = existing_allocation&.quantity || 0
                         product_weight = product.weight || 0
+                        is_primary = primary_product_id && primary_product_id == product.id
                       %>
-                      <tr>
+                      <tr class="<%= 'table-warning' if is_primary %>">
                         <td style="padding: 0.75rem 1rem; color: #1d1d1f;">
-                          <i class="bi bi-box me-2" style="color: #34c759;"></i>
+                          <% if is_primary %>
+                            <i class="bi bi-star-fill me-2" style="color: #ff9500;"></i>
+                          <% else %>
+                            <i class="bi bi-box me-2" style="color: #34c759;"></i>
+                          <% end %>
                           <%= product.name %>
+                          <% if is_primary %>
+                            <span class="badge bg-warning text-dark ms-1" style="font-size: 0.7rem;">자동계산</span>
+                          <% end %>
                         </td>
                         <td style="padding: 0.75rem 1rem; color: #6e6e73;">
                           <%= number_with_delimiter(product_weight.round(0)) %><%= product.weight_unit || 'g' %>
                         </td>
                         <td class="text-center" style="padding: 0.5rem 1rem;">
-                          <div class="quantity-input-group d-flex justify-content-center align-items-center">
-                            <button type="button" class="btn btn-outline-secondary btn-sm allocation-btn"
-                                    data-action="decrease"
-                                    data-recipe-id="<%= recipe.id %>"
-                                    data-product-id="<%= product.id %>"
-                                    style="border-radius: 8px 0 0 8px; width: 32px; height: 32px;">
-                              <i class="bi bi-dash"></i>
-                            </button>
-                            <input type="number"
-                                   name="plans[<%= recipe.id %>][allocations][<%= product.id %>]"
-                                   value="<%= allocation_qty %>"
-                                   min="0"
-                                   class="form-control text-center allocation-input"
-                                   data-recipe-id="<%= recipe.id %>"
-                                   data-product-id="<%= product.id %>"
-                                   data-weight="<%= product_weight %>"
-                                   data-original="<%= allocation_qty %>"
-                                   style="width: 60px; border-radius: 0; border-left: 0; border-right: 0; height: 32px; font-weight: 600; font-size: 0.85rem;">
-                            <button type="button" class="btn btn-outline-secondary btn-sm allocation-btn"
-                                    data-action="increase"
-                                    data-recipe-id="<%= recipe.id %>"
-                                    data-product-id="<%= product.id %>"
-                                    style="border-radius: 0 8px 8px 0; width: 32px; height: 32px;">
-                              <i class="bi bi-plus"></i>
-                            </button>
-                          </div>
+                          <% if is_primary %>
+                            <!-- 주요 완제품: 자동 계산되므로 읽기 전용 -->
+                            <div class="d-flex justify-content-center align-items-center">
+                              <input type="number"
+                                     name="plans[<%= recipe.id %>][allocations][<%= product.id %>]"
+                                     value="<%= allocation_qty %>"
+                                     min="0"
+                                     class="form-control text-center primary-allocation-input"
+                                     data-recipe-id="<%= recipe.id %>"
+                                     data-product-id="<%= product.id %>"
+                                     data-weight="<%= product_weight %>"
+                                     data-is-primary="true"
+                                     readonly
+                                     style="width: 80px; height: 32px; font-weight: 600; font-size: 0.85rem; background-color: #fff3cd; border-color: #ffc107;">
+                            </div>
+                          <% else %>
+                            <div class="quantity-input-group d-flex justify-content-center align-items-center">
+                              <button type="button" class="btn btn-outline-secondary btn-sm allocation-btn"
+                                      data-action="decrease"
+                                      data-recipe-id="<%= recipe.id %>"
+                                      data-product-id="<%= product.id %>"
+                                      style="border-radius: 8px 0 0 8px; width: 32px; height: 32px;">
+                                <i class="bi bi-dash"></i>
+                              </button>
+                              <input type="number"
+                                     name="plans[<%= recipe.id %>][allocations][<%= product.id %>]"
+                                     value="<%= allocation_qty %>"
+                                     min="0"
+                                     class="form-control text-center allocation-input"
+                                     data-recipe-id="<%= recipe.id %>"
+                                     data-product-id="<%= product.id %>"
+                                     data-weight="<%= product_weight %>"
+                                     data-original="<%= allocation_qty %>"
+                                     style="width: 60px; border-radius: 0; border-left: 0; border-right: 0; height: 32px; font-weight: 600; font-size: 0.85rem;">
+                              <button type="button" class="btn btn-outline-secondary btn-sm allocation-btn"
+                                      data-action="increase"
+                                      data-recipe-id="<%= recipe.id %>"
+                                      data-product-id="<%= product.id %>"
+                                      style="border-radius: 0 8px 8px 0; width: 32px; height: 32px;">
+                                <i class="bi bi-plus"></i>
+                              </button>
+                            </div>
+                          <% end %>
                         </td>
-                        <td class="text-end allocation-weight" style="padding: 0.75rem 1rem; color: #0071e3; font-weight: 600;"
+                        <td class="text-end allocation-weight" style="padding: 0.75rem 1rem; color: <%= is_primary ? '#ff9500' : '#0071e3' %>; font-weight: 600;"
                             data-recipe-id="<%= recipe.id %>"
-                            data-product-id="<%= product.id %>">
+                            data-product-id="<%= product.id %>"
+                            data-is-primary="<%= is_primary %>">
                           <%= number_with_delimiter((product_weight * allocation_qty).round(0)) %>g
                         </td>
                       </tr>
@@ -347,6 +376,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateRemainingWeight(recipeId) {
     const quantityInput = document.querySelector(`input.quantity-input[data-recipe-id="${recipeId}"]`);
     const remainingCell = document.querySelector(`.remaining-weight[data-recipe-id="${recipeId}"]`);
+    const primaryInput = document.querySelector(`input.primary-allocation-input[data-recipe-id="${recipeId}"]`);
 
     if (!remainingCell) return;
 
@@ -354,7 +384,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const quantity = parseFloat(quantityInput.value) || 0;
     const totalWeight = totalWeightPerUnit * quantity;
 
-    // 모든 배분 중량 합계
+    // 주요 완제품을 제외한 다른 배분 중량 합계
     let allocatedWeight = 0;
     document.querySelectorAll(`input.allocation-input[data-recipe-id="${recipeId}"]`).forEach(function(input) {
       const weight = parseFloat(input.dataset.weight) || 0;
@@ -363,13 +393,56 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     const remaining = totalWeight - allocatedWeight;
-    remainingCell.textContent = remaining.toLocaleString() + 'g';
 
-    // 음수면 빨간색, 양수면 주황색
-    if (remaining < 0) {
-      remainingCell.style.color = '#ff3b30';
+    // 주요 완제품이 있으면 자동 계산
+    if (primaryInput) {
+      const primaryWeight = parseFloat(primaryInput.dataset.weight) || 0;
+      if (primaryWeight > 0 && remaining > 0) {
+        // 잔여 중량을 주요 완제품 개당 중량으로 나누어 개수 계산
+        const primaryQty = Math.floor(remaining / primaryWeight);
+        primaryInput.value = primaryQty;
+
+        // 주요 완제품의 중량 셀 업데이트
+        const primaryWeightCell = document.querySelector(`.allocation-weight[data-recipe-id="${recipeId}"][data-is-primary="true"]`);
+        if (primaryWeightCell) {
+          primaryWeightCell.textContent = (primaryWeight * primaryQty).toLocaleString() + 'g';
+        }
+
+        // 주요 완제품 배분 후 실제 잔여 중량
+        const actualRemaining = remaining - (primaryWeight * primaryQty);
+        remainingCell.textContent = actualRemaining.toLocaleString() + 'g';
+
+        if (actualRemaining < 0) {
+          remainingCell.style.color = '#ff3b30';
+        } else if (actualRemaining > 0) {
+          remainingCell.style.color = '#ff9500';
+        } else {
+          remainingCell.style.color = '#34c759'; // 정확히 맞으면 녹색
+        }
+      } else {
+        primaryInput.value = 0;
+        const primaryWeightCell = document.querySelector(`.allocation-weight[data-recipe-id="${recipeId}"][data-is-primary="true"]`);
+        if (primaryWeightCell) {
+          primaryWeightCell.textContent = '0g';
+        }
+        remainingCell.textContent = remaining.toLocaleString() + 'g';
+
+        if (remaining < 0) {
+          remainingCell.style.color = '#ff3b30';
+        } else {
+          remainingCell.style.color = '#ff9500';
+        }
+      }
     } else {
-      remainingCell.style.color = '#ff9500';
+      // 주요 완제품이 없으면 기존 로직
+      remainingCell.textContent = remaining.toLocaleString() + 'g';
+
+      // 음수면 빨간색, 양수면 주황색
+      if (remaining < 0) {
+        remainingCell.style.color = '#ff3b30';
+      } else {
+        remainingCell.style.color = '#ff9500';
+      }
     }
   }
 

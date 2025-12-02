@@ -11,7 +11,7 @@ class Production::PlansController < ApplicationController
       .where(production_date: @start_date..@end_date)
       .order(:production_date, :created_at)
 
-    @recipes = Recipe.order(:name)
+    @recipes = Recipe.where(show_in_production_plan: true).order(:name)
     @finished_products = FinishedProduct.order(:name)
   end
 

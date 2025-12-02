@@ -21,7 +21,11 @@
                   <small class="text-muted"><%= item[:plan].production_date.strftime('(%a)') %></small>
                 </td>
                 <td class="py-3 px-4">
-                  <span style="font-weight: 500;"><%= item[:finished_product].name %></span>
+                  <% if item[:finished_product].present? %>
+                    <span style="font-weight: 500;"><%= item[:finished_product].name %></span>
+                  <% else %>
+                    <span class="text-muted">-</span>
+                  <% end %>
                 </td>
                 <td class="py-3 px-4">
                   <% if item[:recipe].present? %>
@@ -31,7 +35,7 @@
                   <% end %>
                 </td>
                 <td class="py-3 px-4 text-center">
-                  <% is_gijeongddeok = item[:finished_product].name.include?('기정떡') %>
+                  <% is_gijeongddeok = item[:finished_product]&.name&.include?('기정떡') || item[:recipe]&.name&.include?('기정떡') %>
                   <span class="badge bg-secondary">
                     <% if is_gijeongddeok %>
                       <%= number_with_delimiter(item[:plan].quantity) %>통
